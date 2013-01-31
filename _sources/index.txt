@@ -1,0 +1,40 @@
+.. include::  ../README.rst
+
+
+User Guide
+----------
+.. toctree::
+    :maxdepth: 2
+
+    installing
+    running
+    stack_configs
+    playbooks
+    help
+
+
+Releases
+--------
+.. toctree::
+    :maxdepth: 2
+
+    releases
+    roadmap
+
+
+Hacking
+-------
+.. toctree::
+    :maxdepth: 2
+
+    design
+    api
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

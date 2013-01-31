@@ -1,0 +1,563 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bang.providers.openstack &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="../../../index.html" />
+    <link rel="up" title="bang.providers" href="../providers.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../bang.html" >bang</a> &raquo;</li>
+          <li><a href="../providers.html" accesskey="U">bang.providers</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bang.providers.openstack</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2012 - John Calixto</span>
+<span class="c">#</span>
+<span class="c"># This file is part of bang.</span>
+<span class="c">#</span>
+<span class="c"># bang is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># bang is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">novaclient.client</span> <span class="kn">import</span> <span class="n">Client</span> <span class="k">as</span> <span class="n">NovaClient</span>
+<span class="kn">from</span> <span class="nn">swiftclient.client</span> <span class="kn">import</span> <span class="n">Connection</span> <span class="k">as</span> <span class="n">SwiftConn</span>
+<span class="kn">from</span> <span class="nn">reddwarfclient</span> <span class="kn">import</span> <span class="n">Dbaas</span>
+
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">BangError</span><span class="p">,</span> <span class="n">TimeoutError</span><span class="p">,</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span><span class="p">,</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
+<span class="kn">from</span> <span class="nn">...util</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">poll_with_timeout</span>
+<span class="kn">from</span> <span class="nn">..bases</span> <span class="kn">import</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">Consul</span>
+
+
+<span class="n">DEFAULT_TIMEOUT_S</span> <span class="o">=</span> <span class="mi">120</span>
+<span class="n">DEFAULT_STORAGE_SIZE_GB</span> <span class="o">=</span> <span class="mi">20</span>
+
+
+<div class="viewcode-block" id="server_to_dict"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.server_to_dict">[docs]</a><span class="k">def</span> <span class="nf">server_to_dict</span><span class="p">(</span><span class="n">server</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the :class:`dict` representation of a server object.</span>
+
+<span class="sd">    The returned :class:`dict` is meant to be consumed by</span>
+<span class="sd">    :class:`~bang.deployers.cloud.ServerDeployer` objects.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">addresses</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">addresses</span>
+    <span class="n">pub</span> <span class="o">=</span> <span class="n">addresses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;public&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">priv</span> <span class="o">=</span> <span class="n">addresses</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;private&#39;</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="k">return</span> <span class="p">{</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span> <span class="n">server</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PUBLIC_IPS</span><span class="p">:</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="s">&#39;addr&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">pub</span><span class="p">],</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PRIVATE_IPS</span><span class="p">:</span> <span class="p">[</span><span class="n">a</span><span class="p">[</span><span class="s">&#39;addr&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">priv</span><span class="p">],</span>
+            <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="db_to_dict"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.db_to_dict">[docs]</a><span class="k">def</span> <span class="nf">db_to_dict</span><span class="p">(</span><span class="n">db</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the :class:`dict` representation of a database object.</span>
+
+<span class="sd">    The returned :class:`dict` is meant to be consumed by</span>
+<span class="sd">    :class:`~bang.deployers.cloud.ServerDeployer` objects.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">HOST</span><span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span>
+            <span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">PORT</span><span class="p">:</span> <span class="n">db</span><span class="o">.</span><span class="n">port</span><span class="p">,</span>
+            <span class="p">}</span>
+
+</div>
+<div class="viewcode-block" id="Nova"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova">[docs]</a><span class="k">class</span> <span class="nc">Nova</span><span class="p">(</span><span class="n">Consul</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The consul for the OpenStack compute service.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Nova.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Nova</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nova</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">nova_client</span>
+</div>
+<div class="viewcode-block" id="Nova.set_region"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.set_region">[docs]</a>    <span class="k">def</span> <span class="nf">set_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_name</span><span class="p">):</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">client</span>
+        <span class="n">management_url</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">service_catalog</span><span class="o">.</span><span class="n">url_for</span><span class="p">(</span>
+                <span class="n">attr</span><span class="o">=</span><span class="s">&#39;region&#39;</span><span class="p">,</span>
+                <span class="n">filter_value</span><span class="o">=</span><span class="n">region_name</span><span class="p">,</span>
+                <span class="n">service_type</span><span class="o">=</span><span class="n">client</span><span class="o">.</span><span class="n">service_type</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">set_management_url</span><span class="p">(</span><span class="n">management_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Nova.find_servers"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.find_servers">[docs]</a>    <span class="k">def</span> <span class="nf">find_servers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">running</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns any servers in the region that have tags that match the</span>
+<span class="sd">        key-value pairs in :attr:`tags`.</span>
+
+<span class="sd">        :param Mapping tags:  A mapping object in which the keys are the tag</span>
+<span class="sd">            names and the values are the tag values.</span>
+
+<span class="sd">        :param bool running:  A flag to limit server list to instances that are</span>
+<span class="sd">            actually *running*.</span>
+
+<span class="sd">        :rtype:  :class:`list` of :class:`dict` objects.  Each :class:`dict`</span>
+<span class="sd">            describes a single server instance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Finding instances with tags: </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">tags</span><span class="p">)</span>
+        <span class="n">search_opts</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">running</span><span class="p">:</span>
+            <span class="n">search_opts</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;ACTIVE&#39;</span>
+        <span class="n">all_servers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">servers</span><span class="o">.</span><span class="n">list</span><span class="p">(</span><span class="n">search_opts</span><span class="o">=</span><span class="n">search_opts</span><span class="p">)</span>
+        <span class="n">servers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">all_servers</span><span class="p">:</span>
+            <span class="n">md</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">metadata</span>
+            <span class="n">mismatches</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">tags</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="n">md</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">mismatches</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">servers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">server_to_dict</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">servers</span>
+</div>
+<div class="viewcode-block" id="Nova.create_server"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.create_server">[docs]</a>    <span class="k">def</span> <span class="nf">create_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">disk_image_id</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">,</span>
+            <span class="n">ssh_key_name</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">availability_zone</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">timeout_s</span><span class="o">=</span><span class="n">DEFAULT_TIMEOUT_S</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new server instance.  This call blocks until the server is</span>
+<span class="sd">        created and available for normal use, or :attr:`timeout_s` has elapsed.</span>
+
+<span class="sd">        :param str basename:  An identifier for the server.  A random postfix</span>
+<span class="sd">            will be appended to this basename to work around OpenStack Nova</span>
+<span class="sd">            REST API limitations.</span>
+
+<span class="sd">        :param str disk_image_id:  The identifier of the base disk image to use</span>
+<span class="sd">            as the rootfs.</span>
+
+<span class="sd">        :param str instance_type:  The name of an OpenStack instance type, or</span>
+<span class="sd">            *flavor*.  This is specific to the OpenStack provider installation.</span>
+
+<span class="sd">        :param str ssh_key_name:  The name of the ssh key to inject into the</span>
+<span class="sd">            target server&#39;s ``authorized_keys`` file.  The key must already</span>
+<span class="sd">            have been registered with the OpenStack Nova provider.</span>
+
+<span class="sd">        :param tags:  Up to 5 key-value pairs of arbitrary strings to use as</span>
+<span class="sd">            *tags* for the server instance.</span>
+<span class="sd">        :type tags:  :class:`Mapping`</span>
+
+<span class="sd">        :param str availability_zone:  The name of the availability zone in</span>
+<span class="sd">            which to place the server.</span>
+
+<span class="sd">        :param float timeout_s:  The number of seconds to poll for an active</span>
+<span class="sd">            server before failing.  Defaults to ``0`` (i.e. Expect server to be</span>
+<span class="sd">            active immediately).</span>
+
+<span class="sd">        :rtype:  :class:`dict`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nova</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">gen_component_name</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Launching server </span><span class="si">%s</span><span class="s">... this could take a while...&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">flavor</span> <span class="o">=</span> <span class="n">nova</span><span class="o">.</span><span class="n">flavors</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">instance_type</span><span class="p">)</span>
+        <span class="n">server</span> <span class="o">=</span> <span class="n">nova</span><span class="o">.</span><span class="n">servers</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">disk_image_id</span><span class="p">,</span>
+                <span class="n">flavor</span><span class="p">,</span>
+                <span class="n">key_name</span><span class="o">=</span><span class="n">ssh_key_name</span><span class="p">,</span>
+                <span class="n">meta</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+                <span class="n">availability_zone</span><span class="o">=</span><span class="n">availability_zone</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">find_active</span><span class="p">():</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">nova</span><span class="o">.</span><span class="n">servers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">server</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">and</span> <span class="n">s</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s">&#39;ACTIVE&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">s</span>
+
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">poll_with_timeout</span><span class="p">(</span><span class="n">timeout_s</span><span class="p">,</span> <span class="n">find_active</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">instance</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TimeoutError</span><span class="p">(</span>
+                    <span class="s">&#39;Server </span><span class="si">%s</span><span class="s"> failed to launch within allotted time.&#39;</span>
+                    <span class="o">%</span> <span class="n">server</span><span class="o">.</span><span class="n">id</span>
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="n">server_to_dict</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Nova.find_secgroup"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.find_secgroup">[docs]</a>    <span class="k">def</span> <span class="nf">find_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Searches for, and returns a</span>
+<span class="sd">        :class:`novaclient.v1_1.security_groups.SecurityGroup` named</span>
+<span class="sd">        :attr:`name`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">security_groups</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="c"># TODO: will this ever happen?</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Found too many groups named </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;... found group </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">groups</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Nova.create_secgroup"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.create_secgroup">[docs]</a>    <span class="k">def</span> <span class="nf">create_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">desc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new server security group.</span>
+
+<span class="sd">        :param str name:  The name of the security group to create.</span>
+<span class="sd">        :param str desc:  A short description of the group.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">security_groups</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">desc</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Nova.create_secgroup_rule"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.create_secgroup_rule">[docs]</a>    <span class="k">def</span> <span class="nf">create_secgroup_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">from_port</span><span class="p">,</span> <span class="n">to_port</span><span class="p">,</span>
+            <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new server security group rule.</span>
+
+<span class="sd">        :param str protocol:  E.g. ``tcp``, ``icmp``, etc...</span>
+<span class="sd">        :param int from_port:  E.g. ``1``</span>
+<span class="sd">        :param int to_port:  E.g. ``65535``</span>
+<span class="sd">        :param str source:</span>
+<span class="sd">        :param str target:</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">nova</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova</span>
+
+        <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="n">gname</span><span class="p">):</span>
+            <span class="n">sg</span> <span class="o">=</span> <span class="n">nova</span><span class="o">.</span><span class="n">security_groups</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">gname</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sg</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BangError</span><span class="p">(</span><span class="s">&quot;Security group not found, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">gname</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">sg</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;ip_protocol&#39;</span><span class="p">:</span> <span class="n">protocol</span><span class="p">,</span>
+                <span class="s">&#39;from_port&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">from_port</span><span class="p">),</span>
+                <span class="s">&#39;to_port&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">to_port</span><span class="p">),</span>
+                <span class="s">&#39;parent_group_id&#39;</span><span class="p">:</span> <span class="n">get_id</span><span class="p">(</span><span class="n">target</span><span class="p">),</span>
+                <span class="p">}</span>
+        <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;cidr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;group_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_id</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="c"># not sure if this is an openstack hack or an hpcloud hack, but</span>
+            <span class="c"># this is definitely required to get it working on hpcloud:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;cidr&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;null&#39;</span>
+        <span class="n">nova</span><span class="o">.</span><span class="n">security_group_rules</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Nova.delete_secgroup_rule"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.delete_secgroup_rule">[docs]</a>    <span class="k">def</span> <span class="nf">delete_secgroup_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes the security group rule identified by :attr:`rule_id`&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">security_group_rules</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">rule_id</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Swift"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Swift">[docs]</a><span class="k">class</span> <span class="nc">Swift</span><span class="p">(</span><span class="n">Consul</span><span class="p">):</span>
+<div class="viewcode-block" id="Swift.find_buckets"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Swift.find_buckets">[docs]</a>    <span class="k">def</span> <span class="nf">find_buckets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">buckets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">swift_client</span><span class="o">.</span><span class="n">get_account</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="n">prefix</span><span class="p">)</span>
+        <span class="c"># TODO: standardize the return value across providers</span>
+        <span class="k">return</span> <span class="n">buckets</span>
+</div>
+<div class="viewcode-block" id="Swift.create_bucket"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Swift.create_bucket">[docs]</a>    <span class="k">def</span> <span class="nf">create_bucket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a bucket named :attr:`name`.</span>
+
+<span class="sd">        :param dict headers:  Any headers to use when performing the HTTP PUT.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">swift_client</span><span class="o">.</span><span class="n">put_container</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">headers</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="RedDwarf"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.RedDwarf">[docs]</a><span class="k">class</span> <span class="nc">RedDwarf</span><span class="p">(</span><span class="n">Consul</span><span class="p">):</span>
+<div class="viewcode-block" id="RedDwarf.find_db_instance"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.RedDwarf.find_db_instance">[docs]</a>    <span class="k">def</span> <span class="nf">find_db_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">running</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Searches for a db instance named :attr:`name`.</span>
+
+<span class="sd">        :param str name:  The name of the target db instance.</span>
+
+<span class="sd">        :param bool running:  A flag to only look for instances that are</span>
+<span class="sd">            actually *running*.</span>
+
+<span class="sd">        :rtype:  :class:`dict`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">found</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">reddwarf_client</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">list</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">running</span><span class="p">:</span>  <span class="c"># don&#39;t care if it&#39;s running or not</span>
+                    <span class="n">found</span> <span class="o">=</span> <span class="n">i</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s">&#39;running&#39;</span><span class="p">:</span>
+                    <span class="n">found</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Found existing db, </span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">found</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">found</span><span class="o">.</span><span class="n">id</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">db_to_dict</span><span class="p">(</span><span class="n">found</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_create_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance_name</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">,</span>
+            <span class="n">storage_size_gb</span><span class="p">):</span>
+        <span class="n">rd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">reddwarf_client</span>
+        <span class="n">flavor</span> <span class="o">=</span> <span class="n">rd</span><span class="o">.</span><span class="n">flavors</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">instance_type</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Launching db server </span><span class="si">%s</span><span class="s">...&#39;</span> <span class="o">%</span> <span class="n">instance_name</span><span class="p">)</span>
+        <span class="c"># TODO:  Upstream RedDwarf has some notion of ``databases`` and</span>
+        <span class="c"># ``users``, both of which are optional args to the create() call</span>
+        <span class="c"># below.  Figure out what that means in practice.</span>
+        <span class="k">return</span> <span class="n">rd</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                <span class="n">instance_name</span><span class="p">,</span>
+                <span class="n">flavor</span><span class="o">.</span><span class="n">links</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;href&#39;</span><span class="p">],</span>
+                <span class="p">{</span><span class="s">&#39;size&#39;</span><span class="p">:</span> <span class="n">storage_size_gb</span><span class="p">}</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_poll_instance_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">db</span><span class="p">,</span> <span class="n">timeout_s</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Polling for db status...&#39;</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">find_active</span><span class="p">():</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">reddwarf_client</span><span class="o">.</span><span class="n">instances</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="ow">and</span> <span class="n">i</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s">&#39;running&#39;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">i</span>
+
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">poll_with_timeout</span><span class="p">(</span><span class="n">timeout_s</span><span class="p">,</span> <span class="n">find_active</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">instance</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TimeoutError</span><span class="p">(</span>
+                    <span class="s">&#39;DB </span><span class="si">%s</span><span class="s"> failed to launch within allotted time.&#39;</span> <span class="o">%</span> <span class="n">db</span><span class="o">.</span><span class="n">id</span>
+                    <span class="p">)</span>
+        <span class="k">return</span> <span class="n">instance</span>
+
+<div class="viewcode-block" id="RedDwarf.create_db"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.RedDwarf.create_db">[docs]</a>    <span class="k">def</span> <span class="nf">create_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance_name</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">,</span> <span class="n">admin_username</span><span class="p">,</span>
+            <span class="n">admin_password</span><span class="p">,</span> <span class="n">security_groups</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">storage_size_gb</span><span class="o">=</span><span class="n">DEFAULT_STORAGE_SIZE_GB</span><span class="p">,</span>
+            <span class="n">timeout_s</span><span class="o">=</span><span class="n">DEFAULT_TIMEOUT_S</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a database instance.</span>
+
+<span class="sd">        This method blocks until the db instance is active, or until</span>
+<span class="sd">        :attr:`timeout_s` has elapsed.</span>
+
+<span class="sd">        :param str instance_name:  A name to assign to the db instance.</span>
+
+<span class="sd">        :param str instance_type:  The server instance type (e.g. ``medium``).</span>
+
+<span class="sd">        :param str admin_username:  The admin username.</span>
+
+<span class="sd">        :param str admin_password:  The admin password.</span>
+
+<span class="sd">        :param security_groups:  A list of security groups in which to place</span>
+<span class="sd">            the db instance.</span>
+<span class="sd">        :type security_groups:  :class:`~collections.Iterable`</span>
+
+<span class="sd">        :param str db_name:  The database name.  If this is not specified, the</span>
+<span class="sd">            database will be named the same as the :attr:`instance_name`.</span>
+
+<span class="sd">        :param int storage_size_gb:  The size of the storage volume in GB.</span>
+
+<span class="sd">        :param float timeout_s:  The number of seconds to poll for an active</span>
+<span class="sd">            database server before failing.</span>
+
+<span class="sd">        :rtype:  :class:`dict`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># TODO: investigate what upstream RedDwarf does for admin users</span>
+        <span class="k">return</span> <span class="n">db_to_dict</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_poll_instance_status</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_create_db</span><span class="p">(</span><span class="n">instance_name</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">,</span>
+                        <span class="n">storage_size_gb</span><span class="p">),</span>
+                    <span class="n">timeout_s</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="authenticated"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.authenticated">[docs]</a><span class="k">def</span> <span class="nf">authenticated</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator that authenticates to Keystone automatically.&quot;&quot;&quot;</span>
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">new_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">auth_token</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">authenticate</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_f</span>
+
+</div>
+<div class="viewcode-block" id="OpenStack"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack">[docs]</a><span class="k">class</span> <span class="nc">OpenStack</span><span class="p">(</span><span class="n">Provider</span><span class="p">):</span>
+
+    <span class="n">CONSUL_MAP</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">:</span> <span class="n">Nova</span><span class="p">,</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">:</span> <span class="n">Nova</span><span class="p">,</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUP_RULES</span><span class="p">:</span> <span class="n">Nova</span><span class="p">,</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">BUCKETS</span><span class="p">:</span> <span class="n">Swift</span><span class="p">,</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">:</span> <span class="n">RedDwarf</span><span class="p">,</span>
+            <span class="p">}</span>
+
+    <span class="n">REDDWARF_SERVICE_TYPE</span> <span class="o">=</span> <span class="s">&#39;reddwarf&#39;</span>
+    <span class="n">REDDWARF_CLIENT_CLASS</span> <span class="o">=</span> <span class="n">Dbaas</span>
+
+<div class="viewcode-block" id="OpenStack.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">creds</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">OpenStack</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">creds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_swift</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reddwarf</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">authenticate</span><span class="p">()</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="nd">@authenticated</span>
+<div class="viewcode-block" id="OpenStack.os_auth_token"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.os_auth_token">[docs]</a>    <span class="k">def</span> <span class="nf">os_auth_token</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Authentication token returned from Keystone.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">auth_token</span>
+</div>
+    <span class="nd">@property</span>
+    <span class="nd">@authenticated</span>
+<div class="viewcode-block" id="OpenStack.os_catalog"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.os_catalog">[docs]</a>    <span class="k">def</span> <span class="nf">os_catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Service catalog returned from Keystone (Identity Service).</span>
+
+<span class="sd">        This is specific to OpenStack providers.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">service_catalog</span><span class="o">.</span><span class="n">catalog</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_nova_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nova_client_args</span><span class="p">()</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nova_client_kwargs</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">NovaClient</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="OpenStack.nova_client"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.nova_client">[docs]</a>    <span class="k">def</span> <span class="nf">nova_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Each of the OpenStack client libraries (i.e. the ``python-*client``</span>
+<span class="sd">        projects that live under https://github.com/openstack/) has its own way</span>
+<span class="sd">        of connecting to the identity service (keystone).</span>
+
+<span class="sd">        The object returned here is a :class:`novaclient.v1_1.client.Client`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_nova_client</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="OpenStack.swift_client"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.swift_client">[docs]</a>    <span class="k">def</span> <span class="nf">swift_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_swift</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">service_catalog</span><span class="o">.</span><span class="n">url_for</span><span class="p">(</span>
+                    <span class="n">service_type</span><span class="o">=</span><span class="s">&#39;object-store&#39;</span>
+                    <span class="p">)</span>
+            <span class="n">sconn</span> <span class="o">=</span> <span class="n">SwiftConn</span><span class="p">(</span>
+                    <span class="s">&#39;usetoken&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;usetoken&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;usetoken&#39;</span><span class="p">,</span>
+                    <span class="n">preauthurl</span><span class="o">=</span><span class="n">url</span><span class="p">,</span>
+                    <span class="n">auth_version</span><span class="o">=</span><span class="s">&#39;2.0&#39;</span><span class="p">,</span>
+                    <span class="n">preauthtoken</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">os_auth_token</span>
+                    <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_swift</span> <span class="o">=</span> <span class="n">sconn</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_swift</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="OpenStack.reddwarf_client"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.reddwarf_client">[docs]</a>    <span class="k">def</span> <span class="nf">reddwarf_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reddwarf</span><span class="p">:</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">service_catalog</span><span class="o">.</span><span class="n">url_for</span><span class="p">(</span>
+                    <span class="n">service_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">REDDWARF_SERVICE_TYPE</span>
+                    <span class="p">)</span>
+            <span class="n">cli</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">REDDWARF_CLIENT_CLASS</span><span class="p">(</span><span class="s">&#39;usenova&#39;</span><span class="p">,</span> <span class="s">&#39;usenova&#39;</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">creds</span><span class="o">.</span><span class="n">TENANT</span><span class="p">))</span>
+            <span class="n">cli</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">authenticate_with_token</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">os_auth_token</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_reddwarf</span> <span class="o">=</span> <span class="n">cli</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reddwarf</span>
+</div>
+<div class="viewcode-block" id="OpenStack.get_nova_client_args"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.get_nova_client_args">[docs]</a>    <span class="k">def</span> <span class="nf">get_nova_client_args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">creds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span>
+        <span class="c"># novaclient supports authentication plugins, so username + password</span>
+        <span class="c"># might not be the only set of credentials used to authenticate, so we</span>
+        <span class="c"># won&#39;t validate their existence here.  we do need tenant_name though.</span>
+        <span class="n">tenant_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;tenant_name&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tenant_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span>
+                    <span class="s">&#39;1.1&#39;</span><span class="p">,</span>
+                    <span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;username&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">),</span>
+                    <span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;password&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">),</span>
+                    <span class="n">tenant_name</span><span class="p">,</span>
+                    <span class="p">]</span>
+        <span class="k">raise</span> <span class="n">BangError</span><span class="p">(</span><span class="s">&quot;Need tenant_name to authenticate!&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="OpenStack.get_nova_client_kwargs"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.get_nova_client_kwargs">[docs]</a>    <span class="k">def</span> <span class="nf">get_nova_client_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">creds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">k</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;auth_url&#39;</span><span class="p">,</span> <span class="s">&#39;region_name&#39;</span><span class="p">))</span>
+        <span class="c"># region_name is optional, but auth_url is required:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;auth_url&#39;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">BangError</span><span class="p">(</span><span class="s">&quot;Need auth_url to authenticate!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kwargs</span>
+</div>
+<div class="viewcode-block" id="OpenStack.authenticate"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.OpenStack.authenticate">[docs]</a>    <span class="k">def</span> <span class="nf">authenticate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Authenticating to OpenStack...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">authenticate</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../bang.html" >bang</a> &raquo;</li>
+          <li><a href="../providers.html" >bang.providers</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

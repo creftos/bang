@@ -1,0 +1,321 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bang.providers.hpcloud &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="../../../index.html" />
+    <link rel="up" title="bang.providers" href="../providers.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../bang.html" >bang</a> &raquo;</li>
+          <li><a href="../providers.html" accesskey="U">bang.providers</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bang.providers.hpcloud</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2012 - John Calixto</span>
+<span class="c">#</span>
+<span class="c"># This file is part of bang.</span>
+<span class="c">#</span>
+<span class="c"># bang is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># bang is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">import</span> <span class="nn">pymysql</span>
+<span class="kn">from</span> <span class="nn">novaclient.client</span> <span class="kn">import</span> <span class="n">Client</span> <span class="k">as</span> <span class="n">NovaClient</span>
+
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span><span class="p">,</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span>
+<span class="kn">from</span> <span class="nn">...util</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">poll_with_timeout</span>
+<span class="kn">from</span> <span class="nn">..openstack</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OpenStack</span><span class="p">,</span> <span class="n">Nova</span><span class="p">,</span> <span class="n">RedDwarf</span><span class="p">,</span>
+        <span class="n">DEFAULT_STORAGE_SIZE_GB</span><span class="p">,</span> <span class="n">DEFAULT_TIMEOUT_S</span><span class="p">,</span> <span class="n">db_to_dict</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.nova_ext</span> <span class="kn">import</span> <span class="n">DiabloVolumeManager</span>
+<span class="kn">from</span> <span class="nn">.reddwarf</span> <span class="kn">import</span> <span class="n">HPDbaas</span>
+
+
+<div class="viewcode-block" id="fix_hp_addrs"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.fix_hp_addrs">[docs]</a><span class="k">def</span> <span class="nf">fix_hp_addrs</span><span class="p">(</span><span class="n">server</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Works around hpcloud&#39;s peculiar &quot;all ip addresses are returned as private</span>
+<span class="sd">    even though one is public&quot; bug.  This is also what the official hpfog gem</span>
+<span class="sd">    does in the ``Fog::Compute::HP::Server#public_ip_address`` method.</span>
+
+<span class="sd">    :param dict server:  Contains the server ID, a list of public IP addresses,</span>
+<span class="sd">        and a list of private IP addresses.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">fixed</span> <span class="o">=</span> <span class="p">{</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span> <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">ID</span><span class="p">]}</span>
+    <span class="n">both</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PRIVATE_IPS</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">both</span><span class="p">:</span>
+        <span class="n">fixed</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PUBLIC_IPS</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">both</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">fixed</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PRIVATE_IPS</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">both</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="k">return</span> <span class="n">fixed</span>
+
+</div>
+<div class="viewcode-block" id="HPNova"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPNova">[docs]</a><span class="k">class</span> <span class="nc">HPNova</span><span class="p">(</span><span class="n">Nova</span><span class="p">):</span>
+<div class="viewcode-block" id="HPNova.find_servers"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPNova.find_servers">[docs]</a>    <span class="k">def</span> <span class="nf">find_servers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps :meth:`bang.providers.openstack.Nova.find_servers` to apply</span>
+<span class="sd">        hpcloud specialization, namely pulling IP addresses from the hpcloud&#39;s</span>
+<span class="sd">        non-standard return values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">servers</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">HPNova</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">find_servers</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">fix_hp_addrs</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="HPNova.create_server"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPNova.create_server">[docs]</a>    <span class="k">def</span> <span class="nf">create_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Wraps :meth:`bang.providers.openstack.Nova.create_server` to apply</span>
+<span class="sd">        hpcloud specialization, namely pulling IP addresses from the hpcloud&#39;s</span>
+<span class="sd">        non-standard return values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">HPNova</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">create_server</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fix_hp_addrs</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="HPRedDwarf"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPRedDwarf">[docs]</a><span class="k">class</span> <span class="nc">HPRedDwarf</span><span class="p">(</span><span class="n">RedDwarf</span><span class="p">):</span>
+<div class="viewcode-block" id="HPRedDwarf.create_db"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPRedDwarf.create_db">[docs]</a>    <span class="k">def</span> <span class="nf">create_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance_name</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">,</span>
+            <span class="n">admin_username</span><span class="p">,</span> <span class="n">admin_password</span><span class="p">,</span> <span class="n">security_groups</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">storage_size_gb</span><span class="o">=</span><span class="n">DEFAULT_STORAGE_SIZE_GB</span><span class="p">,</span>
+            <span class="n">timeout_s</span><span class="o">=</span><span class="n">DEFAULT_TIMEOUT_S</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a database instance.</span>
+
+<span class="sd">        This method blocks until the db instance is active, or until</span>
+<span class="sd">        :attr:`timeout_s` has elapsed.</span>
+
+<span class="sd">        By default, hpcloud *assigns* an automatically-generated set of</span>
+<span class="sd">        credentials for an admin user.  In addition to launching the db</span>
+<span class="sd">        instance, this method uses the autogenerated credentials to login to</span>
+<span class="sd">        the server and create the intended admin user based on the credentials</span>
+<span class="sd">        supplied as method arguments.</span>
+
+<span class="sd">        :param str instance_name:  A name to assign to the db instance.</span>
+
+<span class="sd">        :param str instance_type:  The server instance type (e.g. ``medium``).</span>
+
+<span class="sd">        :param str admin_username:  The admin username.</span>
+
+<span class="sd">        :param str admin_password:  The admin password.</span>
+
+<span class="sd">        :param security_groups:  *Not used in hpcloud*.</span>
+
+<span class="sd">        :param str db_name:  The database name.  If this is not specified, the</span>
+<span class="sd">            database will be named the same as the :attr:`instance_name`.</span>
+
+<span class="sd">        :param int storage_size_gb:  The size of the storage volume in GB.</span>
+
+<span class="sd">        :param float timeout_s:  The number of seconds to poll for an active</span>
+<span class="sd">            database server before failing.  This value is also used when</span>
+<span class="sd">            attempting to connect to the running mysql server.</span>
+
+<span class="sd">        :rtype:  :class:`dict`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_db</span><span class="p">(</span><span class="n">instance_name</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">,</span>
+                <span class="n">storage_size_gb</span><span class="p">)</span>
+
+        <span class="c"># hang on to these... hpcloud only provides a way to generate a new</span>
+        <span class="c"># set of username/password - there is no way to retrieve the originals.</span>
+        <span class="n">default_creds</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">credential</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Credentials for </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">instance_name</span><span class="p">,</span> <span class="n">default_creds</span><span class="p">))</span>
+
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_poll_instance_status</span><span class="p">(</span><span class="n">db</span><span class="p">,</span> <span class="n">timeout_s</span><span class="p">)</span>
+
+        <span class="c"># we&#39;re taking advantage of a security bug in hpcloud&#39;s dbaas security</span>
+        <span class="c"># group rules.  the default *security* is to allow connections from</span>
+        <span class="c"># everywhere in the world.</span>
+        <span class="k">def</span> <span class="nf">connect</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">pymysql</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+                        <span class="n">host</span><span class="o">=</span><span class="n">instance</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span>
+                        <span class="n">port</span><span class="o">=</span><span class="n">instance</span><span class="o">.</span><span class="n">port</span><span class="p">,</span>
+                        <span class="c"># db=self.database,</span>
+                        <span class="n">user</span><span class="o">=</span><span class="n">default_creds</span><span class="p">[</span><span class="s">&#39;username&#39;</span><span class="p">],</span>
+                        <span class="n">passwd</span><span class="o">=</span><span class="n">default_creds</span><span class="p">[</span><span class="s">&#39;password&#39;</span><span class="p">],</span>
+                        <span class="n">connect_timeout</span><span class="o">=</span><span class="n">timeout_s</span><span class="p">,</span>
+                        <span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Could not connect to db, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">instance_name</span><span class="p">)</span>
+                <span class="c"># log.debug(&quot;Connection exception&quot;, exc_info=True)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Connecting to </span><span class="si">%s</span><span class="s">...&quot;</span> <span class="o">%</span> <span class="n">instance_name</span><span class="p">)</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="n">poll_with_timeout</span><span class="p">(</span><span class="n">timeout_s</span><span class="p">,</span> <span class="n">connect</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+                <span class="s">&quot;grant all privileges on *.* &quot;</span>
+                <span class="s">&quot;to &#39;</span><span class="si">%s</span><span class="s">&#39;@&#39;</span><span class="si">%%</span><span class="s">&#39; identified by &#39;</span><span class="si">%s</span><span class="s">&#39; &quot;</span>
+                <span class="s">&quot;with grant option&quot;</span>
+                <span class="o">%</span> <span class="p">(</span><span class="n">admin_username</span><span class="p">,</span> <span class="n">admin_password</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s">&quot;flush privileges&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">db_to_dict</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="HPCloud"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPCloud">[docs]</a><span class="k">class</span> <span class="nc">HPCloud</span><span class="p">(</span><span class="n">OpenStack</span><span class="p">):</span>
+
+    <span class="n">REDDWARF_SERVICE_TYPE</span> <span class="o">=</span> <span class="s">&#39;hpext:dbaas&#39;</span>
+    <span class="n">REDDWARF_CLIENT_CLASS</span> <span class="o">=</span> <span class="n">HPDbaas</span>
+
+<div class="viewcode-block" id="HPCloud.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPCloud.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">HPCloud</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONSUL_MAP</span>
+        <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">]</span> <span class="o">=</span> <span class="n">HPNova</span>
+        <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">]</span> <span class="o">=</span> <span class="n">HPRedDwarf</span>
+</div>
+    <span class="k">def</span> <span class="nf">_get_nova_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nova_client_args</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">&#39;access_key_id&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span> <span class="ow">and</span> <span class="s">&#39;secret_access_key&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span><span class="p">:</span>
+            <span class="c"># this pluggable auth requires api version 2</span>
+            <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;2&#39;</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_nova_client_kwargs</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s">&#39;access_key_id&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span> <span class="ow">and</span> <span class="s">&#39;secret_access_key&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;auth_system&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;secretkey&#39;</span>
+
+        <span class="n">nc</span> <span class="o">=</span> <span class="n">NovaClient</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">nc</span><span class="o">.</span><span class="n">volumes</span> <span class="o">=</span> <span class="n">DiabloVolumeManager</span><span class="p">(</span><span class="n">nc</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">nc</span>
+
+<div class="viewcode-block" id="HPCloud.authenticate"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPCloud.authenticate">[docs]</a>    <span class="k">def</span> <span class="nf">authenticate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Authenticate against the HP Cloud Identity Service.  This is the first</span>
+<span class="sd">        step in any hpcloud.com session, although this method is automatically</span>
+<span class="sd">        called when accessing higher-level methods/attributes.</span>
+
+<span class="sd">        **Examples of Credentials Configuration**</span>
+
+<span class="sd">        - Bare minimum for authentication using HP API keys::</span>
+
+<span class="sd">            deployer_credentials:</span>
+<span class="sd">              hpcloud:</span>
+<span class="sd">                auth_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/</span>
+<span class="sd">                tenant_name: farley.mowat-tenant1</span>
+<span class="sd">                access_key_id: MZOFIE9S83FOS248FIE3</span>
+<span class="sd">                secret_access_key: EU859vjksor73gkY378f9gkslbkrabcxwfyW2loo</span>
+
+<span class="sd">        - With multiple *compute* availability zones activated, the region must</span>
+<span class="sd">          also be specified (due to current limitations in the OpenStack client</span>
+<span class="sd">          libraries)::</span>
+
+<span class="sd">            deployer_credentials:</span>
+<span class="sd">              hpcloud:</span>
+<span class="sd">                auth_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/</span>
+<span class="sd">                tenant_name: farley.mowat-tenant1</span>
+<span class="sd">                access_key_id: MZOFIE9S83FOS248FIE3</span>
+<span class="sd">                secret_access_key: EU859vjksor73gkY378f9gkslbkrabcxwfyW2loo</span>
+<span class="sd">                region_name: az-1.region-a.geo-1</span>
+
+<span class="sd">        - Using ``username`` and ``password`` is also allowed, but</span>
+<span class="sd">          discouraged::</span>
+
+<span class="sd">            deployer_credentials:</span>
+<span class="sd">              hpcloud:</span>
+<span class="sd">                auth_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/</span>
+<span class="sd">                tenant_name: farley.mowat-tenant1</span>
+<span class="sd">                username: farley.mowat</span>
+<span class="sd">                password: NeverCryW0lf</span>
+
+<span class="sd">        When both API keys and ``username+password`` are specified, the API</span>
+<span class="sd">        keys are used.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Authenticating to HP Cloud...&quot;</span><span class="p">)</span>
+        <span class="n">creds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">creds</span>
+        <span class="n">access_key_id</span> <span class="o">=</span> <span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;access_key_id&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="n">secret_access_key</span> <span class="o">=</span> <span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;secret_access_key&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="c"># prefer api key + secret key, but fallback to username + password</span>
+        <span class="k">if</span> <span class="n">access_key_id</span> <span class="ow">and</span> <span class="n">secret_access_key</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">os_access_key_id</span> <span class="o">=</span> <span class="n">access_key_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">os_secret_key</span> <span class="o">=</span> <span class="n">secret_access_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nova_client</span><span class="o">.</span><span class="n">authenticate</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../bang.html" >bang</a> &raquo;</li>
+          <li><a href="../providers.html" >bang.providers</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

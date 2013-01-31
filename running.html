@@ -1,0 +1,231 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Running Bang &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="index.html" />
+    <link rel="next" title="Stack Configurations" href="stack_configs.html" />
+    <link rel="prev" title="Installing Bang" href="installing.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stack_configs.html" title="Stack Configurations"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="installing.html" title="Installing Bang"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="running-bang">
+<h1>Running Bang<a class="headerlink" href="#running-bang" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<p>With all of your deployer credentials (e.g. AWS API keys) and stack
+configuration in the same file, <tt class="docutils literal"><span class="pre">mywebapp.yml</span></tt>, you simply run:</p>
+<div class="highlight-python"><pre>bang mywebapp.yml</pre>
+</div>
+<p>As a convenience for successive invocations, you can set the
+<a class="reference internal" href="#bang-configs">BANG_CONFIGS</a> environment variable:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="nb">export </span><span class="nv">BANG_CONFIGS</span><span class="o">=</span>mywebapp.yml
+
+<span class="c"># Deploy!</span>
+bang
+
+<span class="c"># ... Hack on mywebapp.yml</span>
+
+<span class="c"># Deploy again!</span>
+bang
+
+<span class="c"># ... Uh-oh, connection issues on one of the hosts.  Could be</span>
+<span class="c"># transient interweb goblins - deploy again!</span>
+bang
+
+<span class="c"># Yay!</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="bang-configs">
+<h2><tt class="docutils literal"><span class="pre">BANG_CONFIGS</span></tt><a class="headerlink" href="#bang-configs" title="Permalink to this headline">¶</a></h2>
+<p>Set this to a colon-separated list of configuration specs.</p>
+</div>
+<div class="section" id="other-options">
+<h2>Other Options<a class="headerlink" href="#other-options" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-text"><div class="highlight"><pre>usage: bang [-h] [--list] [--host HOST] [--no-configure] [--version]
+            [CONFIG_SPEC [CONFIG_SPEC ...]]
+
+Deploys a full server stack based on a stack configuration file.
+
+In order to SSH into remote servers, ``bang`` needs the corresponding private
+key for the public key specified in the ``ssh_key_name`` fields of the config
+file.  This is easily managed with ssh-agent, so ``bang`` does not provide any
+ssh key management features.
+
+positional arguments:
+  CONFIG_SPEC     Stack config specs(s).
+                  
+                  A *config spec* can either be a basename of a config file
+                  (e.g.  ``mynewstack``), or a path to a config file (e.g.
+                  ``../bang-stacks/mynewstack.yml``).
+                  
+                  A basename is resolved into a proper path this way:
+                  
+                      - Append ``.yml`` to the given name.
+                      - Search the ``config_dir`` path for the resulting
+                        filename, where the value for ``config_dir`` comes
+                        from ``$HOME/.bangrc``.
+                  
+                  When multiple config specs are supplied, the attributes
+                  from all of the configs are deep-merged together into a
+                  single, *union* config in the order specified in the
+                  argument list.
+                  
+                  If there are collisions in attribute names between separate
+                  config files, the attributes in later files override those
+                  in earlier files.
+                  
+                  At deploy time, this can be used to provide secrets (e.g.
+                  API keys, SSL certs, etc...) that you don&#39;t normally want
+                  to check in to version control with the main stack
+                  configuration.
+
+optional arguments:
+  -h, --help      show this help message and exit
+  --list          Dump stack inventory in ansible-compatible JSON.
+                  
+                  Be sure to set the ``BANG_CONFIGS`` environment
+                  variable to a colon-separated list of config specs.
+                  
+                  E.g.
+                  
+                      # specify the configs to use
+                      MYSTACK=/path/to/mystack.yml
+                      SECRETS=/path/to/secrets.yml
+                      export BANG_CONFIGS=&quot;$MYSTACK:$SECRETS&quot;
+                  
+                      # dump the inventory to stdout
+                      bang --list
+                  
+                      # run some command
+                      ansible webservers -i /path/to/bang -m ping
+  --host HOST     Show host variables in ansible-compatible JSON.
+                  
+                  Be sure to set the ``BANG_CONFIGS`` environment
+                  variable to a colon-separated list of config specs.
+  --no-configure  Do *not* configure the servers (i.e. do *not* run the
+                  ansible playbooks).
+                  
+                  This allows the person performing the deployment to
+                  perform some manual tweaking between resource
+                  deployment and server configuration.
+  --version, -v   show program&#39;s version number and exit
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Running Bang</a><ul>
+<li><a class="reference internal" href="#quick-start">Quick Start</a></li>
+<li><a class="reference internal" href="#bang-configs"><tt class="docutils literal"><span class="pre">BANG_CONFIGS</span></tt></a></li>
+<li><a class="reference internal" href="#other-options">Other Options</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installing.html"
+                        title="previous chapter">Installing Bang</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="stack_configs.html"
+                        title="next chapter">Stack Configurations</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/running.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="stack_configs.html" title="Stack Configurations"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="installing.html" title="Installing Bang"
+             >previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

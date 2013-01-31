@@ -1,0 +1,1806 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>API &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="index.html" />
+    <link rel="prev" title="Design" href="design.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="Design"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-bang">
+<span id="bang"></span><h2><a class="reference internal" href="#module-bang" title="bang"><tt class="xref py py-mod docutils literal"><span class="pre">bang</span></tt></a><a class="headerlink" href="#module-bang" title="Permalink to this headline">¶</a></h2>
+<dl class="exception">
+<dt id="bang.BangError">
+<em class="property">exception </em><tt class="descclassname">bang.</tt><tt class="descname">BangError</tt><a class="reference internal" href="_modules/bang.html#BangError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.BangError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="bang.TimeoutError">
+<em class="property">exception </em><tt class="descclassname">bang.</tt><tt class="descname">TimeoutError</tt><a class="reference internal" href="_modules/bang.html#TimeoutError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.TimeoutError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.BangError" title="bang.BangError"><tt class="xref py py-class docutils literal"><span class="pre">bang.BangError</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.config">
+<span id="bang-config"></span><h2><a class="reference internal" href="#module-bang.config" title="bang.config"><tt class="xref py py-mod docutils literal"><span class="pre">bang.config</span></tt></a><a class="headerlink" href="#module-bang.config" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.config.Config">
+<em class="property">class </em><tt class="descclassname">bang.config.</tt><tt class="descname">Config</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/config.html#Config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.Config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+<p>A dict-alike that provides a convenient constructor, stashes the path
+to the config file as an instance attribute, and performs some validation
+of the values.</p>
+<dl class="method">
+<dt id="bang.config.Config.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/config.html#Config.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.Config.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path_to_yaml</strong> (<em>str</em>) &#8211; Path to a yaml file to use as the data source
+for the returned instance.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.config.Config.autoinc">
+<tt class="descname">autoinc</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/config.html#Config.autoinc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.Config.autoinc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Conditionally updates the stack version in the file associated with
+this config.</p>
+<p>This  handles both official releases (i.e. QA configs), and release
+candidates.  Assumptions about version:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">Official release versions are MAJOR.minor, where MAJOR and minor
+are both non-negative integers.  E.g.</p>
+<blockquote>
+<div><p>2.9
+2.10
+2.11
+3.0
+3.1
+3.2
+etc...</p>
+</div></blockquote>
+</li>
+<li><p class="first">Release candidate versions are MAJOR.minor-rc.N, where MAJOR,
+minor, and N are all non-negative integers.</p>
+<blockquote>
+<div><p>3.5-rc.1
+3.5-rc.2</p>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="bang.config.Config.from_config_specs">
+<em class="property">classmethod </em><tt class="descname">from_config_specs</tt><big>(</big><em>config_specs</em>, <em>prepare=True</em><big>)</big><a class="reference internal" href="_modules/bang/config.html#Config.from_config_specs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.Config.from_config_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alternate constructor that merges config attributes from
+<tt class="docutils literal"><span class="pre">$HOME/.bangrc</span></tt> and <tt class="xref py py-attr docutils literal"><span class="pre">config_specs</span></tt> into a single
+<a class="reference internal" href="#bang.config.Config" title="bang.config.Config"><tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt></a> object.</p>
+<p>The first (and potentially <em>only</em> spec) in <tt class="xref py py-attr docutils literal"><span class="pre">config_specs</span></tt> should
+be main configuration file for the stack to be deployed.  The returned
+object&#8217;s <tt class="xref py py-attr docutils literal"><span class="pre">filepath</span></tt> will be set to the absolute path of the first
+config file.</p>
+<p>If multiple config specs are supplied, their values are merged together
+in the order specified in <tt class="xref py py-attr docutils literal"><span class="pre">config_specs</span></tt> - That is, later values
+override earlier values.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>config_specs</strong> (<tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">str</span></tt>) &#8211; List of config specs.</li>
+<li><strong>prepare</strong> (<em>bool</em>) &#8211; Flag to control whether or not <a class="reference internal" href="#bang.config.Config.prepare" title="bang.config.Config.prepare"><tt class="xref py py-meth docutils literal"><span class="pre">prepare()</span></tt></a> is
+called automatically before returning the object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#bang.config.Config" title="bang.config.Config"><tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.config.Config.prepare">
+<tt class="descname">prepare</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/config.html#Config.prepare"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.Config.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reorganizes the data such that the deployment logic can find it all
+where it expects to be.</p>
+<p>The raw configuration file is intended to be as human-friendly as
+possible partly through the following mechanisms:</p>
+<blockquote>
+<div><ul class="simple">
+<li>In order to minimize repetition, any attributes that are common
+to all server configurations can be specified in the
+<tt class="docutils literal"><span class="pre">server_common_attributes</span></tt> stanza even though the stanza itself
+does not map directly to a deployable resource.</li>
+<li>For reference locality, each security group stanza contains its
+list of rules even though rules are actually created in a
+separate stage from the groups themselves.</li>
+</ul>
+</div></blockquote>
+<p>In order to make the <a class="reference internal" href="#bang.config.Config" title="bang.config.Config"><tt class="xref py py-class docutils literal"><span class="pre">Config</span></tt></a> object more useful to the program
+logic, this method performs the following transformations:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Distributes the <tt class="docutils literal"><span class="pre">server_common_attributes</span></tt> among all the
+members of the <tt class="docutils literal"><span class="pre">servers</span></tt> stanza.</li>
+<li>Extracts security group rules to a top-level key, and
+interpolates all source and target values.</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.config.Config.validate">
+<tt class="descname">validate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/config.html#Config.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.Config.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs all validation checks on this config.</p>
+<p>Raises <tt class="xref py py-class docutils literal"><span class="pre">ValueError</span></tt> for invalid configs.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.config.find_component_tarball">
+<tt class="descclassname">bang.config.</tt><tt class="descname">find_component_tarball</tt><big>(</big><em>bucket</em>, <em>comp_name</em>, <em>comp_config</em><big>)</big><a class="reference internal" href="_modules/bang/config.html#find_component_tarball"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.find_component_tarball" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the component tarball is found in the bucket.</p>
+<p>Otherwise, returns False.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.config.parse_bangrc">
+<tt class="descclassname">bang.config.</tt><tt class="descname">parse_bangrc</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/config.html#parse_bangrc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.parse_bangrc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses <tt class="docutils literal"><span class="pre">$HOME/.bangrc</span></tt> for global settings and deployer credentials.  The
+<tt class="docutils literal"><span class="pre">.bangrc</span></tt> file is expected to be a YAML file whose outermost structure is
+a key-value map.</p>
+<p>Note that even though <tt class="docutils literal"><span class="pre">.bangrc</span></tt> is just a YAML file in which a user could
+store any top-level keys, it is not expected to be used as a holder of
+default values for stack-specific configuration attributes - if present,
+they will be ignored.</p>
+<p>Returns {} if <tt class="docutils literal"><span class="pre">$HOME/.bangrc</span></tt> does not exist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.config.resolve_config_spec">
+<tt class="descclassname">bang.config.</tt><tt class="descname">resolve_config_spec</tt><big>(</big><em>config_spec</em>, <em>config_dir=''</em><big>)</big><a class="reference internal" href="_modules/bang/config.html#resolve_config_spec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.resolve_config_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resolves <tt class="xref py py-attr docutils literal"><span class="pre">config_spec</span></tt> to a path to a config file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>config_spec</strong> (<em>str</em>) &#8211; <p>Valid config specs:</p>
+<ul>
+<li>The basename of a YAML config file <em>without</em> the <tt class="docutils literal"><span class="pre">.yml</span></tt> extension.
+The full path to the config file is resolved by appending <tt class="docutils literal"><span class="pre">.yml</span></tt> to
+the basename, then by searching for the result in the
+<tt class="xref py py-attr docutils literal"><span class="pre">config_dir</span></tt>.</li>
+<li>The path to a YAML config file.  The path may be absolute or may be
+relative to the current working directory.  If <tt class="xref py py-attr docutils literal"><span class="pre">config_spec</span></tt>
+contains a <tt class="docutils literal"><span class="pre">/</span></tt> (forward slash), or if it ends in <tt class="docutils literal"><span class="pre">.yml</span></tt>, it is
+treated as a path.</li>
+</ul>
+</li>
+<li><strong>config_dir</strong> (<em>str</em>) &#8211; The directory in which to search for stack
+configuration files.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">str</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.deployers">
+<span id="bang-deployers"></span><h2><a class="reference internal" href="#module-bang.deployers" title="bang.deployers"><tt class="xref py py-mod docutils literal"><span class="pre">bang.deployers</span></tt></a><a class="headerlink" href="#module-bang.deployers" title="Permalink to this headline">¶</a></h2>
+<p>Base classes and definitions for bang deployers (deployable components)</p>
+<dl class="function">
+<dt id="bang.deployers.get_stage_deployers">
+<tt class="descclassname">bang.deployers.</tt><tt class="descname">get_stage_deployers</tt><big>(</big><em>keys</em>, <em>stack</em><big>)</big><a class="reference internal" href="_modules/bang/deployers.html#get_stage_deployers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.get_stage_deployers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of deployer objects that <em>create</em> cloud resources.  Each
+member of the list is responsible for provisioning a single stack resource
+(e.g. a virtual server, a security group, a bucket, etc...).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>keys</strong> (<tt class="xref py py-class docutils literal"><span class="pre">Iterable</span></tt>) &#8211; A list of top-level configuration keys for which to create
+deployers.</li>
+<li><strong>config</strong> (<a class="reference internal" href="#bang.stack.Stack" title="bang.stack.Stack"><tt class="xref py py-class docutils literal"><span class="pre">Stack</span></tt></a>) &#8211; A stack object.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">Deployer</span></tt></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.deployers.cloud">
+<span id="bang-deployers-cloud"></span><h2><a class="reference internal" href="#module-bang.deployers.cloud" title="bang.deployers.cloud"><tt class="xref py py-mod docutils literal"><span class="pre">bang.deployers.cloud</span></tt></a><a class="headerlink" href="#module-bang.deployers.cloud" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.deployers.cloud.BaseDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">BaseDeployer</tt><big>(</big><em>stack</em>, <em>config</em>, <em>consul</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#BaseDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.BaseDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.deployer.Deployer</span></tt></a></p>
+<p>Base class for all cloud resource deployers</p>
+<dl class="method">
+<dt id="bang.deployers.cloud.BaseDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>stack</em>, <em>config</em>, <em>consul</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#BaseDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.BaseDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="bang.deployers.cloud.BaseDeployer.consul">
+<tt class="descname">consul</tt><a class="reference internal" href="_modules/bang/deployers/cloud.html#BaseDeployer.consul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.BaseDeployer.consul" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.BucketDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">BucketDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#BucketDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.BucketDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.BaseDeployer" title="bang.deployers.cloud.BaseDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.BaseDeployer</span></tt></a></p>
+<dl class="method">
+<dt id="bang.deployers.cloud.BucketDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#BucketDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.BucketDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.BucketDeployer.create">
+<tt class="descname">create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#BucketDeployer.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.BucketDeployer.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new bucket</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.DatabaseDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">DatabaseDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#DatabaseDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.DatabaseDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.BaseDeployer" title="bang.deployers.cloud.BaseDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.BaseDeployer</span></tt></a></p>
+<dl class="method">
+<dt id="bang.deployers.cloud.DatabaseDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#DatabaseDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.DatabaseDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.DatabaseDeployer.add_to_inventory">
+<tt class="descname">add_to_inventory</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#DatabaseDeployer.add_to_inventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.DatabaseDeployer.add_to_inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds db host to stack inventory</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.DatabaseDeployer.create">
+<tt class="descname">create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#DatabaseDeployer.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.DatabaseDeployer.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new database</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.DatabaseDeployer.find_existing">
+<tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#DatabaseDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.DatabaseDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for existing db instance with matching name.  To match, the
+existing instance must also be &#8220;running&#8221;.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.RegionedDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">RegionedDeployer</tt><big>(</big><em>stack</em>, <em>config</em>, <em>consul</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#RegionedDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.RegionedDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.BaseDeployer" title="bang.deployers.cloud.BaseDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.BaseDeployer</span></tt></a></p>
+<p>Deployer that automatically sets its region</p>
+<dl class="attribute">
+<dt id="bang.deployers.cloud.RegionedDeployer.consul">
+<tt class="descname">consul</tt><a class="reference internal" href="_modules/bang/deployers/cloud.html#RegionedDeployer.consul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.RegionedDeployer.consul" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.SecurityGroupDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">SecurityGroupDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.RegionedDeployer" title="bang.deployers.cloud.RegionedDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.RegionedDeployer</span></tt></a></p>
+<dl class="method">
+<dt id="bang.deployers.cloud.SecurityGroupDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.SecurityGroupDeployer.create">
+<tt class="descname">create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupDeployer.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupDeployer.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new security group</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.SecurityGroupDeployer.find_existing">
+<tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds existing secgroup</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.SecurityGroupRulesetDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">SecurityGroupRulesetDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupRulesetDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupRulesetDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.RegionedDeployer" title="bang.deployers.cloud.RegionedDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.RegionedDeployer</span></tt></a></p>
+<dl class="method">
+<dt id="bang.deployers.cloud.SecurityGroupRulesetDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupRulesetDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupRulesetDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.SecurityGroupRulesetDeployer.apply_rule_changes">
+<tt class="descname">apply_rule_changes</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupRulesetDeployer.apply_rule_changes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupRulesetDeployer.apply_rule_changes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes the security group rules match what is defined in the Bang
+config file.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.SecurityGroupRulesetDeployer.find_existing">
+<tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SecurityGroupRulesetDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SecurityGroupRulesetDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds existing rule in secgroup.</p>
+<p>Populates <tt class="docutils literal"><span class="pre">self.create_these_rules</span></tt> and <tt class="docutils literal"><span class="pre">self.delete_these_rules</span></tt>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.ServerDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">ServerDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#ServerDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.ServerDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.RegionedDeployer" title="bang.deployers.cloud.RegionedDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.RegionedDeployer</span></tt></a></p>
+<dl class="method">
+<dt id="bang.deployers.cloud.ServerDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#ServerDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.ServerDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.ServerDeployer.add_to_inventory">
+<tt class="descname">add_to_inventory</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#ServerDeployer.add_to_inventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.ServerDeployer.add_to_inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds host to stack inventory</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.ServerDeployer.create">
+<tt class="descname">create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#ServerDeployer.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.ServerDeployer.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Launches a new server instance.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.ServerDeployer.find_existing">
+<tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#ServerDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.ServerDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for existing server instances with matching tags.  To match,
+the existing instances must also be &#8220;running&#8221;.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.deployers.deployer">
+<span id="bang-deployers-deployer"></span><h2><a class="reference internal" href="#module-bang.deployers.deployer" title="bang.deployers.deployer"><tt class="xref py py-mod docutils literal"><span class="pre">bang.deployers.deployer</span></tt></a><a class="headerlink" href="#module-bang.deployers.deployer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.deployers.deployer.Deployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.deployer.</tt><tt class="descname">Deployer</tt><big>(</big><em>stack</em>, <em>config</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/deployer.html#Deployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.deployer.Deployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class for all deployers</p>
+<dl class="method">
+<dt id="bang.deployers.deployer.Deployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>stack</em>, <em>config</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/deployer.html#Deployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.deployer.Deployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.deployer.Deployer.deploy">
+<tt class="descname">deploy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/deployer.html#Deployer.deploy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.deployer.Deployer.deploy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.deployer.Deployer.inventory">
+<tt class="descname">inventory</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/deployer.html#Deployer.inventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.deployer.Deployer.inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gathers ansible inventory data.</p>
+<p>Looks for existing servers that are members of the stack.</p>
+<p>Does not attempt to <em>create</em> any resources.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.deployer.Deployer.run">
+<tt class="descname">run</tt><big>(</big><em>action</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/deployer.html#Deployer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.deployer.Deployer.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs through the phases defined by <tt class="xref py py-attr docutils literal"><span class="pre">action</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>action</strong> (<em>str</em>) &#8211; Either <tt class="docutils literal"><span class="pre">deploy</span></tt> or <tt class="docutils literal"><span class="pre">inventory</span></tt>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.inventory">
+<span id="bang-inventory"></span><h2><a class="reference internal" href="#module-bang.inventory" title="bang.inventory"><tt class="xref py py-mod docutils literal"><span class="pre">bang.inventory</span></tt></a><a class="headerlink" href="#module-bang.inventory" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.inventory.BangsibleInventory">
+<em class="property">class </em><tt class="descclassname">bang.inventory.</tt><tt class="descname">BangsibleInventory</tt><big>(</big><em>groups</em>, <em>hostvars</em><big>)</big><a class="reference internal" href="_modules/bang/inventory.html#BangsibleInventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.inventory.BangsibleInventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">ansible.inventory.Inventory</span></tt></p>
+<dl class="method">
+<dt id="bang.inventory.BangsibleInventory.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>groups</em>, <em>hostvars</em><big>)</big><a class="reference internal" href="_modules/bang/inventory.html#BangsibleInventory.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.inventory.BangsibleInventory.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.inventory.BangsibleInventory.is_file">
+<tt class="descname">is_file</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/inventory.html#BangsibleInventory.is_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.inventory.BangsibleInventory.is_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.inventory.get_ansible_groups">
+<tt class="descclassname">bang.inventory.</tt><tt class="descname">get_ansible_groups</tt><big>(</big><em>group_map</em><big>)</big><a class="reference internal" href="_modules/bang/inventory.html#get_ansible_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.inventory.get_ansible_groups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a list of <tt class="xref py py-class docutils literal"><span class="pre">ansible.inventory.group.Group</span></tt> objects from a
+map of lists of host strings.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers">
+<span id="bang-providers"></span><h2><a class="reference internal" href="#module-bang.providers" title="bang.providers"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers</span></tt></a><a class="headerlink" href="#module-bang.providers" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="bang.providers.get_provider">
+<tt class="descclassname">bang.providers.</tt><tt class="descname">get_provider</tt><big>(</big><em>name</em>, <em>creds</em><big>)</big><a class="reference internal" href="_modules/bang/providers.html#get_provider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.get_provider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates and memoizes a <tt class="xref py py-class docutils literal"><span class="pre">Provider</span></tt> object
+for the given name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) &#8211; The provider name, as given in the config stanza.  This
+token is used to find the
+appropriate <tt class="xref py py-class docutils literal"><span class="pre">Provider</span></tt>.</li>
+<li><strong>creds</strong> (<em>dict</em>) &#8211; The credentials dictionary that is appropriate for the
+desired provider.  Typically, a sub-dict from the main stack config.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">Provider</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers.bases">
+<span id="bang-providers-bases"></span><h2><a class="reference internal" href="#module-bang.providers.bases" title="bang.providers.bases"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.bases</span></tt></a><a class="headerlink" href="#module-bang.providers.bases" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.providers.bases.Consul">
+<em class="property">class </em><tt class="descclassname">bang.providers.bases.</tt><tt class="descname">Consul</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/bases.html#Consul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.bases.Consul" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>The base class for all service consuls.</p>
+<p>Not really the boss of anything, but conveys intent-from-above to foreign
+entities (e.g. OpenStack Nova/Swift, AWS EC2/S3/RDS, etc...).  Also
+communicates the state of the world back up to the boss.</p>
+<dl class="method">
+<dt id="bang.providers.bases.Consul.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/bases.html#Consul.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.bases.Consul.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.bases.Provider">
+<em class="property">class </em><tt class="descclassname">bang.providers.bases.</tt><tt class="descname">Provider</tt><big>(</big><em>creds</em><big>)</big><a class="reference internal" href="_modules/bang/providers/bases.html#Provider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.bases.Provider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>The base class for all providers.</p>
+<dl class="method">
+<dt id="bang.providers.bases.Provider.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>creds</em><big>)</big><a class="reference internal" href="_modules/bang/providers/bases.html#Provider.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.bases.Provider.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.bases.Provider.gen_component_name">
+<tt class="descname">gen_component_name</tt><big>(</big><em>basename</em>, <em>postfix_length=13</em><big>)</big><a class="reference internal" href="_modules/bang/providers/bases.html#Provider.gen_component_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.bases.Provider.gen_component_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a resource identifier with a random postfix.  This is an
+attempt to minimize name collisions in provider namespaces.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>basename</strong> (<em>str</em>) &#8211; The string that will be prefixed with the stack
+name, and postfixed with some random string.</li>
+<li><strong>postfix_length</strong> (<em>int</em>) &#8211; The length of the postfix to be appended.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.bases.Provider.get_consul">
+<tt class="descname">get_consul</tt><big>(</big><em>resource_type</em><big>)</big><a class="reference internal" href="_modules/bang/providers/bases.html#Provider.get_consul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.bases.Provider.get_consul" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an object that a <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">Deployer</span></tt></a>
+uses to control resources of <tt class="xref py py-attr docutils literal"><span class="pre">resource_type</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>service</strong> (<em>str</em>) &#8211; Any of the resources defined
+in <tt class="xref py py-mod docutils literal"><span class="pre">bang.resources</span></tt>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers.aws">
+<span id="bang-providers-aws"></span><h2><a class="reference internal" href="#module-bang.providers.aws" title="bang.providers.aws"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.aws</span></tt></a><a class="headerlink" href="#module-bang.providers.aws" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.providers.aws.AWS">
+<em class="property">class </em><tt class="descclassname">bang.providers.aws.</tt><tt class="descname">AWS</tt><big>(</big><em>creds</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#AWS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.AWS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Provider" title="bang.providers.bases.Provider"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Provider</span></tt></a></p>
+<dl class="attribute">
+<dt id="bang.providers.aws.AWS.CONSUL_MAP">
+<tt class="descname">CONSUL_MAP</tt><em class="property"> = {'databases': &lt;class 'bang.providers.aws.RDS'&gt;, 'buckets': &lt;class 'bang.providers.aws.S3'&gt;, 'server_security_groups': &lt;class 'bang.providers.aws.EC2'&gt;, 'server_security_group_rules': &lt;class 'bang.providers.aws.EC2'&gt;, 'servers': &lt;class 'bang.providers.aws.EC2'&gt;}</em><a class="headerlink" href="#bang.providers.aws.AWS.CONSUL_MAP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.aws.EC2">
+<em class="property">class </em><tt class="descclassname">bang.providers.aws.</tt><tt class="descname">EC2</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Consul" title="bang.providers.bases.Consul"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Consul</span></tt></a></p>
+<p>The consul for the compute service in AWS (EC2).</p>
+<dl class="method">
+<dt id="bang.providers.aws.EC2.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.aws.EC2.create_server">
+<tt class="descname">create_server</tt><big>(</big><em>basename</em>, <em>disk_image_id</em>, <em>instance_type</em>, <em>ssh_key_name</em>, <em>tags=None</em>, <em>availability_zone=None</em>, <em>timeout_s=120</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.create_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.create_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new server instance.  This call blocks until the server is
+created and available for normal use, or <tt class="xref py py-attr docutils literal"><span class="pre">timeout_s</span></tt> has elapsed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>basename</strong> (<em>str</em>) &#8211; An identifier for the server.  A random postfix
+will be appended to this basename to work around OpenStack Nova
+REST API limitations.</li>
+<li><strong>disk_image_id</strong> (<em>str</em>) &#8211; The identifier of the base disk image to use
+as the rootfs.</li>
+<li><strong>instance_type</strong> (<em>str</em>) &#8211; The name of an OpenStack instance type, or
+<em>flavor</em>.  This is specific to the OpenStack provider installation.</li>
+<li><strong>ssh_key_name</strong> (<em>str</em>) &#8211; The name of the ssh key to inject into the
+target server&#8217;s <tt class="docutils literal"><span class="pre">authorized_keys</span></tt> file.  The key must already
+have been registered with the OpenStack Nova provider.</li>
+<li><strong>tags</strong> (<tt class="xref py py-class docutils literal"><span class="pre">Mapping</span></tt>) &#8211; Up to 5 key-value pairs of arbitrary strings to use as
+<em>tags</em> for the server instance.</li>
+<li><strong>availability_zone</strong> (<em>str</em>) &#8211; The name of the availability zone in
+which to place the server.</li>
+<li><strong>timeout_s</strong> (<em>float</em>) &#8211; The number of seconds to poll for an active
+server before failing.  Defaults to <tt class="docutils literal"><span class="pre">0</span></tt> (i.e. Expect server to be
+active immediately).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.aws.EC2.find_servers">
+<tt class="descname">find_servers</tt><big>(</big><em>tags</em>, <em>running=True</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.find_servers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.find_servers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns any servers in the region that have tags that match the
+key-value pairs in <tt class="xref py py-attr docutils literal"><span class="pre">tags</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tags</strong> (<em>Mapping</em>) &#8211; A mapping object in which the keys are the tag
+names and the values are the tag values.</li>
+<li><strong>running</strong> (<em>bool</em>) &#8211; A flag to limit server list to instances that are
+actually <em>running</em>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> objects.  Each <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>
+describes a single server instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.aws.EC2.set_region">
+<tt class="descname">set_region</tt><big>(</big><em>region_name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.set_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.set_region" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.aws.RDS">
+<em class="property">class </em><tt class="descclassname">bang.providers.aws.</tt><tt class="descname">RDS</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#RDS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.RDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Consul" title="bang.providers.bases.Consul"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Consul</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.aws.S3">
+<em class="property">class </em><tt class="descclassname">bang.providers.aws.</tt><tt class="descname">S3</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#S3"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.S3" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Consul" title="bang.providers.bases.Consul"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Consul</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.providers.aws.server_to_dict">
+<tt class="descclassname">bang.providers.aws.</tt><tt class="descname">server_to_dict</tt><big>(</big><em>server</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#server_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.server_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> representation of a server object.</p>
+<p>The returned <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> is meant to be consumed by
+<a class="reference internal" href="#bang.deployers.cloud.ServerDeployer" title="bang.deployers.cloud.ServerDeployer"><tt class="xref py py-class docutils literal"><span class="pre">ServerDeployer</span></tt></a> objects.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers.hpcloud">
+<span id="bang-providers-hpcloud"></span><h2><a class="reference internal" href="#module-bang.providers.hpcloud" title="bang.providers.hpcloud"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.hpcloud</span></tt></a><a class="headerlink" href="#module-bang.providers.hpcloud" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.providers.hpcloud.HPCloud">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.</tt><tt class="descname">HPCloud</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPCloud"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPCloud" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.openstack.OpenStack" title="bang.providers.openstack.OpenStack"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.openstack.OpenStack</span></tt></a></p>
+<dl class="attribute">
+<dt id="bang.providers.hpcloud.HPCloud.REDDWARF_CLIENT_CLASS">
+<tt class="descname">REDDWARF_CLIENT_CLASS</tt><a class="headerlink" href="#bang.providers.hpcloud.HPCloud.REDDWARF_CLIENT_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">HPDbaas</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.hpcloud.HPCloud.REDDWARF_SERVICE_TYPE">
+<tt class="descname">REDDWARF_SERVICE_TYPE</tt><em class="property"> = 'hpext:dbaas'</em><a class="headerlink" href="#bang.providers.hpcloud.HPCloud.REDDWARF_SERVICE_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.HPCloud.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPCloud.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPCloud.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.HPCloud.authenticate">
+<tt class="descname">authenticate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPCloud.authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPCloud.authenticate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authenticate against the HP Cloud Identity Service.  This is the first
+step in any hpcloud.com session, although this method is automatically
+called when accessing higher-level methods/attributes.</p>
+<p><strong>Examples of Credentials Configuration</strong></p>
+<ul>
+<li><p class="first">Bare minimum for authentication using HP API keys:</p>
+<div class="highlight-python"><pre>deployer_credentials:
+  hpcloud:
+    auth_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/
+    tenant_name: farley.mowat-tenant1
+    access_key_id: MZOFIE9S83FOS248FIE3
+    secret_access_key: EU859vjksor73gkY378f9gkslbkrabcxwfyW2loo</pre>
+</div>
+</li>
+<li><p class="first">With multiple <em>compute</em> availability zones activated, the region must
+also be specified (due to current limitations in the OpenStack client
+libraries):</p>
+<div class="highlight-python"><pre>deployer_credentials:
+  hpcloud:
+    auth_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/
+    tenant_name: farley.mowat-tenant1
+    access_key_id: MZOFIE9S83FOS248FIE3
+    secret_access_key: EU859vjksor73gkY378f9gkslbkrabcxwfyW2loo
+    region_name: az-1.region-a.geo-1</pre>
+</div>
+</li>
+<li><p class="first">Using <tt class="docutils literal"><span class="pre">username</span></tt> and <tt class="docutils literal"><span class="pre">password</span></tt> is also allowed, but
+discouraged:</p>
+<div class="highlight-python"><pre>deployer_credentials:
+  hpcloud:
+    auth_url: https://region-a.geo-1.identity.hpcloudsvc.com:35357/v2.0/
+    tenant_name: farley.mowat-tenant1
+    username: farley.mowat
+    password: NeverCryW0lf</pre>
+</div>
+</li>
+</ul>
+<p>When both API keys and <tt class="docutils literal"><span class="pre">username+password</span></tt> are specified, the API
+keys are used.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.hpcloud.HPNova">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.</tt><tt class="descname">HPNova</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPNova"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPNova" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.openstack.Nova" title="bang.providers.openstack.Nova"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.openstack.Nova</span></tt></a></p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.HPNova.create_server">
+<tt class="descname">create_server</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPNova.create_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPNova.create_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps <a class="reference internal" href="#bang.providers.openstack.Nova.create_server" title="bang.providers.openstack.Nova.create_server"><tt class="xref py py-meth docutils literal"><span class="pre">bang.providers.openstack.Nova.create_server()</span></tt></a> to apply
+hpcloud specialization, namely pulling IP addresses from the hpcloud&#8217;s
+non-standard return values.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.HPNova.find_servers">
+<tt class="descname">find_servers</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPNova.find_servers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPNova.find_servers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps <a class="reference internal" href="#bang.providers.openstack.Nova.find_servers" title="bang.providers.openstack.Nova.find_servers"><tt class="xref py py-meth docutils literal"><span class="pre">bang.providers.openstack.Nova.find_servers()</span></tt></a> to apply
+hpcloud specialization, namely pulling IP addresses from the hpcloud&#8217;s
+non-standard return values.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.hpcloud.HPRedDwarf">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.</tt><tt class="descname">HPRedDwarf</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPRedDwarf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPRedDwarf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.openstack.RedDwarf" title="bang.providers.openstack.RedDwarf"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.openstack.RedDwarf</span></tt></a></p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.HPRedDwarf.create_db">
+<tt class="descname">create_db</tt><big>(</big><em>instance_name</em>, <em>instance_type</em>, <em>admin_username</em>, <em>admin_password</em>, <em>security_groups=None</em>, <em>db_name=None</em>, <em>storage_size_gb=20</em>, <em>timeout_s=120</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPRedDwarf.create_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPRedDwarf.create_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a database instance.</p>
+<p>This method blocks until the db instance is active, or until
+<tt class="xref py py-attr docutils literal"><span class="pre">timeout_s</span></tt> has elapsed.</p>
+<p>By default, hpcloud <em>assigns</em> an automatically-generated set of
+credentials for an admin user.  In addition to launching the db
+instance, this method uses the autogenerated credentials to login to
+the server and create the intended admin user based on the credentials
+supplied as method arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> (<em>str</em>) &#8211; A name to assign to the db instance.</li>
+<li><strong>instance_type</strong> (<em>str</em>) &#8211; The server instance type (e.g. <tt class="docutils literal"><span class="pre">medium</span></tt>).</li>
+<li><strong>admin_username</strong> (<em>str</em>) &#8211; The admin username.</li>
+<li><strong>admin_password</strong> (<em>str</em>) &#8211; The admin password.</li>
+<li><strong>security_groups</strong> &#8211; <em>Not used in hpcloud</em>.</li>
+<li><strong>db_name</strong> (<em>str</em>) &#8211; The database name.  If this is not specified, the
+database will be named the same as the <tt class="xref py py-attr docutils literal"><span class="pre">instance_name</span></tt>.</li>
+<li><strong>storage_size_gb</strong> (<em>int</em>) &#8211; The size of the storage volume in GB.</li>
+<li><strong>timeout_s</strong> (<em>float</em>) &#8211; The number of seconds to poll for an active
+database server before failing.  This value is also used when
+attempting to connect to the running mysql server.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.providers.hpcloud.fix_hp_addrs">
+<tt class="descclassname">bang.providers.hpcloud.</tt><tt class="descname">fix_hp_addrs</tt><big>(</big><em>server</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#fix_hp_addrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.fix_hp_addrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Works around hpcloud&#8217;s peculiar &#8220;all ip addresses are returned as private
+even though one is public&#8221; bug.  This is also what the official hpfog gem
+does in the <tt class="docutils literal"><span class="pre">Fog::Compute::HP::Server#public_ip_address</span></tt> method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>server</strong> (<em>dict</em>) &#8211; Contains the server ID, a list of public IP addresses,
+and a list of private IP addresses.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers.hpcloud.nova_ext">
+<span id="bang-providers-hpcloud-nova-ext"></span><h2><a class="reference internal" href="#module-bang.providers.hpcloud.nova_ext" title="bang.providers.hpcloud.nova_ext"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt></a><a class="headerlink" href="#module-bang.providers.hpcloud.nova_ext" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.nova_ext.</tt><tt class="descname">DiabloVolumeManager</tt><big>(</big><em>api</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">novaclient.v1_1.volumes.VolumeManager</span></tt></p>
+<p>The volumes extension deployed by HP Cloud uses an older endpoint,
+<tt class="docutils literal"><span class="pre">/os-volumes</span></tt>, from the OpenStack Diablo timeframe.  Unfortunately, the
+endpoint in <tt class="docutils literal"><span class="pre">python-novaclient</span></tt> is hardcoded.  This class overrides any
+methods that specify an endpoint of <tt class="docutils literal"><span class="pre">/volumes</span></tt>.</p>
+<p>Besides the use of the <tt class="docutils literal"><span class="pre">/os-volumes</span></tt> endpoint, the methods in this class
+were mostly pinched from its base,
+<tt class="xref py py-class docutils literal"><span class="pre">novaclient.v1_1.volumes.VolumeManager</span></tt>.</p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.create">
+<tt class="descname">create</tt><big>(</big><em>size</em>, <em>snapshot_id=None</em>, <em>display_name=None</em>, <em>display_description=None</em>, <em>volume_type=None</em>, <em>availability_zone=None</em>, <em>imageRef=None</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.delete">
+<tt class="descname">delete</tt><big>(</big><em>volume</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.get">
+<tt class="descname">get</tt><big>(</big><em>volume_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.get" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.list">
+<tt class="descname">list</tt><big>(</big><em>detailed=True</em>, <em>search_opts=None</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.list" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers.hpcloud.reddwarf">
+<span id="bang-providers-hpcloud-reddwarf"></span><h2><a class="reference internal" href="#module-bang.providers.hpcloud.reddwarf" title="bang.providers.hpcloud.reddwarf"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.hpcloud.reddwarf</span></tt></a><a class="headerlink" href="#module-bang.providers.hpcloud.reddwarf" title="Permalink to this headline">¶</a></h2>
+<p>Customizations and enhancements of the upstream python-reddwarfclient library
+to support hpcloud extensions.</p>
+<dl class="class">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroup">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.reddwarf.</tt><tt class="descname">DBSecurityGroup</tt><big>(</big><em>manager</em>, <em>info</em>, <em>loaded=False</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">reddwarfclient.base.Resource</span></tt></p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroup.grant">
+<tt class="descname">grant</tt><big>(</big><em>source_cidr</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroup.grant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroup.grant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allows connections from <tt class="xref py py-attr docutils literal"><span class="pre">source_cidr</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>source_cidr</strong> (<em>str</em>) &#8211; The source IP range from which to allow
+connections.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroupRule">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.reddwarf.</tt><tt class="descname">DBSecurityGroupRule</tt><big>(</big><em>manager</em>, <em>info</em>, <em>loaded=False</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroupRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">reddwarfclient.base.Resource</span></tt></p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroupRule.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroupRule.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRule.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes this rule</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroupRules">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.reddwarf.</tt><tt class="descname">DBSecurityGroupRules</tt><big>(</big><em>api</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroupRules"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRules" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">reddwarfclient.base.ManagerWithFind</span></tt></p>
+<p>Manages db security group rules</p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroupRules.create">
+<tt class="descname">create</tt><big>(</big><em>dbsecgroup_id</em>, <em>source_cidr</em>, <em>port=3306</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroupRules.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRules.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a security group rule.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dbsecgroup_id</strong> (<em>str</em>) &#8211; The ID of the security group in which this
+rule should be created.</li>
+<li><strong>source_cidr</strong> (<em>str</em>) &#8211; The source IP address range from which access
+should be allowed.</li>
+<li><strong>port</strong> (<em>int</em>) &#8211; The port number used by db clients to connect to the
+db server.  This would have been specified at db instance creation
+time.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRule" title="bang.providers.hpcloud.reddwarf.DBSecurityGroupRule"><tt class="xref py py-class docutils literal"><span class="pre">DBSecurityGroupRule</span></tt></a>.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroupRules.delete">
+<tt class="descname">delete</tt><big>(</big><em>rule_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroupRules.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRules.delete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes a rule from a security group.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>rule_id</strong> (<em>str</em>) &#8211; The rule ID.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroupRules.resource_class">
+<tt class="descname">resource_class</tt><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRules.resource_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroupRule" title="bang.providers.hpcloud.reddwarf.DBSecurityGroupRule"><tt class="xref py py-class docutils literal"><span class="pre">DBSecurityGroupRule</span></tt></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroups">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.reddwarf.</tt><tt class="descname">DBSecurityGroups</tt><big>(</big><em>api</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroups" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">reddwarfclient.base.ManagerWithFind</span></tt></p>
+<p>Manages db security groups</p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroups.list">
+<tt class="descname">list</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#DBSecurityGroups.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroups.list" title="Permalink to this definition">¶</a></dt>
+<dd><p>List all security groups.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroups.list" title="bang.providers.hpcloud.reddwarf.DBSecurityGroups.list"><tt class="xref py py-class docutils literal"><span class="pre">list</span></tt></a> of <a class="reference internal" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroup" title="bang.providers.hpcloud.reddwarf.DBSecurityGroup"><tt class="xref py py-class docutils literal"><span class="pre">DBSecurityGroup</span></tt></a>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.hpcloud.reddwarf.DBSecurityGroups.resource_class">
+<tt class="descname">resource_class</tt><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroups.resource_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#bang.providers.hpcloud.reddwarf.DBSecurityGroup" title="bang.providers.hpcloud.reddwarf.DBSecurityGroup"><tt class="xref py py-class docutils literal"><span class="pre">DBSecurityGroup</span></tt></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.hpcloud.reddwarf.HPDbaas">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.reddwarf.</tt><tt class="descname">HPDbaas</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#HPDbaas"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.HPDbaas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">reddwarfclient.client.Dbaas</span></tt></p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.reddwarf.HPDbaas.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/reddwarf.html#HPDbaas.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.reddwarf.HPDbaas.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers.openstack">
+<span id="bang-providers-openstack"></span><h2><a class="reference internal" href="#module-bang.providers.openstack" title="bang.providers.openstack"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.openstack</span></tt></a><a class="headerlink" href="#module-bang.providers.openstack" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.providers.openstack.Nova">
+<em class="property">class </em><tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">Nova</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Consul" title="bang.providers.bases.Consul"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Consul</span></tt></a></p>
+<p>The consul for the OpenStack compute service.</p>
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.create_secgroup">
+<tt class="descname">create_secgroup</tt><big>(</big><em>name</em>, <em>desc</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.create_secgroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.create_secgroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new server security group.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>str</em>) &#8211; The name of the security group to create.</li>
+<li><strong>desc</strong> (<em>str</em>) &#8211; A short description of the group.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.create_secgroup_rule">
+<tt class="descname">create_secgroup_rule</tt><big>(</big><em>protocol</em>, <em>from_port</em>, <em>to_port</em>, <em>source</em>, <em>target</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.create_secgroup_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.create_secgroup_rule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new server security group rule.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>protocol</strong> (<em>str</em>) &#8211; E.g. <tt class="docutils literal"><span class="pre">tcp</span></tt>, <tt class="docutils literal"><span class="pre">icmp</span></tt>, etc...</li>
+<li><strong>from_port</strong> (<em>int</em>) &#8211; E.g. <tt class="docutils literal"><span class="pre">1</span></tt></li>
+<li><strong>to_port</strong> (<em>int</em>) &#8211; E.g. <tt class="docutils literal"><span class="pre">65535</span></tt></li>
+<li><strong>source</strong> (<em>str</em>) &#8211; </li>
+<li><strong>target</strong> (<em>str</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.create_server">
+<tt class="descname">create_server</tt><big>(</big><em>basename</em>, <em>disk_image_id</em>, <em>instance_type</em>, <em>ssh_key_name</em>, <em>tags=None</em>, <em>availability_zone=None</em>, <em>timeout_s=120</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.create_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.create_server" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new server instance.  This call blocks until the server is
+created and available for normal use, or <tt class="xref py py-attr docutils literal"><span class="pre">timeout_s</span></tt> has elapsed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>basename</strong> (<em>str</em>) &#8211; An identifier for the server.  A random postfix
+will be appended to this basename to work around OpenStack Nova
+REST API limitations.</li>
+<li><strong>disk_image_id</strong> (<em>str</em>) &#8211; The identifier of the base disk image to use
+as the rootfs.</li>
+<li><strong>instance_type</strong> (<em>str</em>) &#8211; The name of an OpenStack instance type, or
+<em>flavor</em>.  This is specific to the OpenStack provider installation.</li>
+<li><strong>ssh_key_name</strong> (<em>str</em>) &#8211; The name of the ssh key to inject into the
+target server&#8217;s <tt class="docutils literal"><span class="pre">authorized_keys</span></tt> file.  The key must already
+have been registered with the OpenStack Nova provider.</li>
+<li><strong>tags</strong> (<tt class="xref py py-class docutils literal"><span class="pre">Mapping</span></tt>) &#8211; Up to 5 key-value pairs of arbitrary strings to use as
+<em>tags</em> for the server instance.</li>
+<li><strong>availability_zone</strong> (<em>str</em>) &#8211; The name of the availability zone in
+which to place the server.</li>
+<li><strong>timeout_s</strong> (<em>float</em>) &#8211; The number of seconds to poll for an active
+server before failing.  Defaults to <tt class="docutils literal"><span class="pre">0</span></tt> (i.e. Expect server to be
+active immediately).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.delete_secgroup_rule">
+<tt class="descname">delete_secgroup_rule</tt><big>(</big><em>rule_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.delete_secgroup_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.delete_secgroup_rule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes the security group rule identified by <tt class="xref py py-attr docutils literal"><span class="pre">rule_id</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.find_secgroup">
+<tt class="descname">find_secgroup</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.find_secgroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.find_secgroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for, and returns a
+<tt class="xref py py-class docutils literal"><span class="pre">novaclient.v1_1.security_groups.SecurityGroup</span></tt> named
+<tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.find_servers">
+<tt class="descname">find_servers</tt><big>(</big><em>tags</em>, <em>running=True</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.find_servers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.find_servers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns any servers in the region that have tags that match the
+key-value pairs in <tt class="xref py py-attr docutils literal"><span class="pre">tags</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>tags</strong> (<em>Mapping</em>) &#8211; A mapping object in which the keys are the tag
+names and the values are the tag values.</li>
+<li><strong>running</strong> (<em>bool</em>) &#8211; A flag to limit server list to instances that are
+actually <em>running</em>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> objects.  Each <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>
+describes a single server instance.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.set_region">
+<tt class="descname">set_region</tt><big>(</big><em>region_name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.set_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.set_region" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.openstack.OpenStack">
+<em class="property">class </em><tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">OpenStack</tt><big>(</big><em>creds</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Provider" title="bang.providers.bases.Provider"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Provider</span></tt></a></p>
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.CONSUL_MAP">
+<tt class="descname">CONSUL_MAP</tt><em class="property"> = {'databases': &lt;class 'bang.providers.openstack.RedDwarf'&gt;, 'buckets': &lt;class 'bang.providers.openstack.Swift'&gt;, 'server_security_groups': &lt;class 'bang.providers.openstack.Nova'&gt;, 'server_security_group_rules': &lt;class 'bang.providers.openstack.Nova'&gt;, 'servers': &lt;class 'bang.providers.openstack.Nova'&gt;}</em><a class="headerlink" href="#bang.providers.openstack.OpenStack.CONSUL_MAP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.REDDWARF_CLIENT_CLASS">
+<tt class="descname">REDDWARF_CLIENT_CLASS</tt><a class="headerlink" href="#bang.providers.openstack.OpenStack.REDDWARF_CLIENT_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <tt class="xref py py-class docutils literal"><span class="pre">Dbaas</span></tt></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.REDDWARF_SERVICE_TYPE">
+<tt class="descname">REDDWARF_SERVICE_TYPE</tt><em class="property"> = 'reddwarf'</em><a class="headerlink" href="#bang.providers.openstack.OpenStack.REDDWARF_SERVICE_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.OpenStack.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>creds</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.OpenStack.authenticate">
+<tt class="descname">authenticate</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.authenticate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.authenticate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.OpenStack.get_nova_client_args">
+<tt class="descname">get_nova_client_args</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.get_nova_client_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.get_nova_client_args" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.OpenStack.get_nova_client_kwargs">
+<tt class="descname">get_nova_client_kwargs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.get_nova_client_kwargs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.get_nova_client_kwargs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.nova_client">
+<tt class="descname">nova_client</tt><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.nova_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.nova_client" title="Permalink to this definition">¶</a></dt>
+<dd><p>Each of the OpenStack client libraries (i.e. the <tt class="docutils literal"><span class="pre">python-*client</span></tt>
+projects that live under <a class="reference external" href="https://github.com/openstack/">https://github.com/openstack/</a>) has its own way
+of connecting to the identity service (keystone).</p>
+<p>The object returned here is a <tt class="xref py py-class docutils literal"><span class="pre">novaclient.v1_1.client.Client</span></tt>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.os_auth_token">
+<tt class="descname">os_auth_token</tt><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.os_auth_token"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.os_auth_token" title="Permalink to this definition">¶</a></dt>
+<dd><p>Authentication token returned from Keystone.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.os_catalog">
+<tt class="descname">os_catalog</tt><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.os_catalog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.os_catalog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Service catalog returned from Keystone (Identity Service).</p>
+<p>This is specific to OpenStack providers.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.reddwarf_client">
+<tt class="descname">reddwarf_client</tt><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.reddwarf_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.reddwarf_client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="bang.providers.openstack.OpenStack.swift_client">
+<tt class="descname">swift_client</tt><a class="reference internal" href="_modules/bang/providers/openstack.html#OpenStack.swift_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.OpenStack.swift_client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.openstack.RedDwarf">
+<em class="property">class </em><tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">RedDwarf</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#RedDwarf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.RedDwarf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Consul" title="bang.providers.bases.Consul"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Consul</span></tt></a></p>
+<dl class="method">
+<dt id="bang.providers.openstack.RedDwarf.create_db">
+<tt class="descname">create_db</tt><big>(</big><em>instance_name</em>, <em>instance_type</em>, <em>admin_username</em>, <em>admin_password</em>, <em>security_groups=None</em>, <em>db_name=None</em>, <em>storage_size_gb=20</em>, <em>timeout_s=120</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#RedDwarf.create_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.RedDwarf.create_db" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a database instance.</p>
+<p>This method blocks until the db instance is active, or until
+<tt class="xref py py-attr docutils literal"><span class="pre">timeout_s</span></tt> has elapsed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>instance_name</strong> (<em>str</em>) &#8211; A name to assign to the db instance.</li>
+<li><strong>instance_type</strong> (<em>str</em>) &#8211; The server instance type (e.g. <tt class="docutils literal"><span class="pre">medium</span></tt>).</li>
+<li><strong>admin_username</strong> (<em>str</em>) &#8211; The admin username.</li>
+<li><strong>admin_password</strong> (<em>str</em>) &#8211; The admin password.</li>
+<li><strong>security_groups</strong> (<tt class="xref py py-class docutils literal"><span class="pre">Iterable</span></tt>) &#8211; A list of security groups in which to place
+the db instance.</li>
+<li><strong>db_name</strong> (<em>str</em>) &#8211; The database name.  If this is not specified, the
+database will be named the same as the <tt class="xref py py-attr docutils literal"><span class="pre">instance_name</span></tt>.</li>
+<li><strong>storage_size_gb</strong> (<em>int</em>) &#8211; The size of the storage volume in GB.</li>
+<li><strong>timeout_s</strong> (<em>float</em>) &#8211; The number of seconds to poll for an active
+database server before failing.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.RedDwarf.find_db_instance">
+<tt class="descname">find_db_instance</tt><big>(</big><em>name</em>, <em>running=True</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#RedDwarf.find_db_instance"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.RedDwarf.find_db_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for a db instance named <tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) &#8211; The name of the target db instance.</li>
+<li><strong>running</strong> (<em>bool</em>) &#8211; A flag to only look for instances that are
+actually <em>running</em>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.providers.openstack.Swift">
+<em class="property">class </em><tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">Swift</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Swift"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Swift" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Consul" title="bang.providers.bases.Consul"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Consul</span></tt></a></p>
+<dl class="method">
+<dt id="bang.providers.openstack.Swift.create_bucket">
+<tt class="descname">create_bucket</tt><big>(</big><em>name</em>, <em>headers=None</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Swift.create_bucket"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Swift.create_bucket" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a bucket named <tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>headers</strong> (<em>dict</em>) &#8211; Any headers to use when performing the HTTP PUT.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Swift.find_buckets">
+<tt class="descname">find_buckets</tt><big>(</big><em>prefix</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Swift.find_buckets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Swift.find_buckets" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.providers.openstack.authenticated">
+<tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">authenticated</tt><big>(</big><em>f</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#authenticated"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.authenticated" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that authenticates to Keystone automatically.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.providers.openstack.db_to_dict">
+<tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">db_to_dict</tt><big>(</big><em>db</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#db_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.db_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> representation of a database object.</p>
+<p>The returned <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> is meant to be consumed by
+<a class="reference internal" href="#bang.deployers.cloud.ServerDeployer" title="bang.deployers.cloud.ServerDeployer"><tt class="xref py py-class docutils literal"><span class="pre">ServerDeployer</span></tt></a> objects.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.providers.openstack.server_to_dict">
+<tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">server_to_dict</tt><big>(</big><em>server</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#server_to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.server_to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> representation of a server object.</p>
+<p>The returned <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> is meant to be consumed by
+<a class="reference internal" href="#bang.deployers.cloud.ServerDeployer" title="bang.deployers.cloud.ServerDeployer"><tt class="xref py py-class docutils literal"><span class="pre">ServerDeployer</span></tt></a> objects.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.stack">
+<span id="bang-stack"></span><h2><a class="reference internal" href="#module-bang.stack" title="bang.stack"><tt class="xref py py-mod docutils literal"><span class="pre">bang.stack</span></tt></a><a class="headerlink" href="#module-bang.stack" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.stack.Stack">
+<em class="property">class </em><tt class="descclassname">bang.stack.</tt><tt class="descname">Stack</tt><big>(</big><em>config</em><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Deploys infrastructure/platform resources, then configures any deployed
+servers using ansible playbooks.</p>
+<dl class="method">
+<dt id="bang.stack.Stack.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>config</em><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>config</strong> (<a class="reference internal" href="#bang.config.Config" title="bang.config.Config"><tt class="xref py py-class docutils literal"><span class="pre">bang.config.Config</span></tt></a>) &#8211; A mapping object with configuration keys and values.
+May be arbitrarily nested.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.add_host">
+<tt class="descname">add_host</tt><big>(</big><em>host</em>, <em>group_names=None</em>, <em>host_vars=None</em><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.add_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.add_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by deployers to add hosts to the inventory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>host</strong> (<em>str</em>) &#8211; The host identifier (e.g. hostname, IP address) to
+use in the inventory.</li>
+<li><strong>group_names</strong> (<em>list</em>) &#8211; A list of group names to which the host
+belongs.  <strong>Note:  This list will be sorted in-place.</strong></li>
+<li><strong>host_vars</strong> (<em>dict</em>) &#8211; A mapping object of host <em>variables</em>.  This can
+be a nested structure, and is used as the source of all the
+variables provided to the ansible playbooks.  <strong>Note:  Additional
+key-value pairs (e.g. dynamic ansible values like
+``inventory_hostname``) will be inserted into this mapping
+object.</strong></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.configure">
+<tt class="descname">configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.configure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes the ansible playbooks that configure the servers in the stack.</p>
+<p>Assumes that the root playbook directory is <tt class="docutils literal"><span class="pre">./playbooks/</span></tt> relative
+to the stack configuration file.  Also sets the ansible <em>module_path</em>
+to be <tt class="docutils literal"><span class="pre">./common_modules/</span></tt> relative to the stack configuration file.</p>
+<p>E.g.  If the stack configuration file is:</p>
+<div class="highlight-python"><pre>$HOME/bang-stacks/my_web_service.yml</pre>
+</div>
+<p>then the root playbook directory is:</p>
+<div class="highlight-python"><pre>$HOME/bang-stacks/playbooks/</pre>
+</div>
+<p>and the ansible module path is:</p>
+<div class="highlight-python"><pre>$HOME/bang-stacks/common_modules/</pre>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.deploy">
+<tt class="descname">deploy</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.deploy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.deploy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates through the deployers returned by <tt class="docutils literal"><span class="pre">self.get_deployers()</span></tt>.</p>
+<p>Deployers in the same stage are run concurrently.  The runner only
+proceeds to the next stage once all of the deployers in the same
+stage have completed successfully.</p>
+<p>Any failures in a stage cause the run to terminate before proceeding to
+the next stage.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.describe">
+<tt class="descname">describe</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.describe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.describe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iterates through the deployers but doesn&#8217;t run anything</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.find_first">
+<tt class="descname">find_first</tt><big>(</big><em>attr_name</em>, <em>resources</em>, <em>extra_prefix=''</em><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.find_first"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.find_first" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the boto object for the first resource in <tt class="docutils literal"><span class="pre">resources</span></tt> that
+belongs to this stack.  Uses the attribute specified by <tt class="docutils literal"><span class="pre">attr_name</span></tt>
+to match the stack name.</p>
+<p>E.g.  An RDS instance for a stack named <tt class="docutils literal"><span class="pre">foo</span></tt> might be named
+<tt class="docutils literal"><span class="pre">foo-mydb-fis8932ifs</span></tt>.  This call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">find_first</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_all_dbinstances</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>would return the boto.rds.dbinstance.DBInstance object whose <tt class="docutils literal"><span class="pre">id</span></tt> is
+<tt class="docutils literal"><span class="pre">foo-mydb-fis8932ifs</span></tt>.</p>
+<p>Returns None if a matching resource is not found.</p>
+<p>If specified, <tt class="docutils literal"><span class="pre">extra_prefix</span></tt> is appended to the stack name prefix
+before matching.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.get_deployers">
+<tt class="descname">get_deployers</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.get_deployers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.get_deployers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <em>stages</em>, where each <em>stage</em> is a
+<tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">Deployer</span></tt></a> objects.
+It defines the execution order of the various deployers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.get_namespace">
+<tt class="descname">get_namespace</tt><big>(</big><em>key</em><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.get_namespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.get_namespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#bang.util.SharedNamespace" title="bang.util.SharedNamespace"><tt class="xref py py-class docutils literal"><span class="pre">SharedNamespace</span></tt></a> for the given
+<tt class="xref py py-attr docutils literal"><span class="pre">key</span></tt>.  These are used by
+<a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">Deployer</span></tt></a> objects of the same
+<tt class="docutils literal"><span class="pre">deployer_class</span></tt> to coordinate control over multiple deployed
+instances of like resources.  E.g. With 5 clones of an application
+server, 5 <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">Deployer</span></tt></a> objects in
+separate, concurrent processes will use the same shared namespace to
+ensure that each object/process controls a distinct server.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>key</strong> (<em>str</em>) &#8211; Unique ID for the
+namespace.  <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">Deployer</span></tt></a> objects that
+call <a class="reference internal" href="#bang.stack.Stack.get_namespace" title="bang.stack.Stack.get_namespace"><tt class="xref py py-meth docutils literal"><span class="pre">get_namespace()</span></tt></a> with the same <tt class="xref py py-attr docutils literal"><span class="pre">key</span></tt> will receive
+the same <a class="reference internal" href="#bang.util.SharedNamespace" title="bang.util.SharedNamespace"><tt class="xref py py-class docutils literal"><span class="pre">SharedNamespace</span></tt></a> object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="bang.stack.Stack.groups_and_vars">
+<tt class="descname">groups_and_vars</tt><em class="property"> = None</em><a class="headerlink" href="#bang.stack.Stack.groups_and_vars" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deployers stash inventory data for any newly-created servers in this
+mapping object.  Note: uses SharedMap because this must be
+multiprocess-safe.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.show_host">
+<tt class="descname">show_host</tt><big>(</big><em>host</em><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.show_host"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.show_host" title="Permalink to this definition">¶</a></dt>
+<dd><p>Satisfies the <tt class="docutils literal"><span class="pre">--host</span></tt> portion of ansible&#8217;s external inventory API.</p>
+<p>Allows <tt class="docutils literal"><span class="pre">bang</span></tt> to be used as an external inventory script, for example
+when running ad-hoc ops tasks.  For more details, see:
+<a class="reference external" href="http://ansible.cc/docs/api.html#external-inventory-scripts">http://ansible.cc/docs/api.html#external-inventory-scripts</a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.stack.Stack.show_inventory">
+<tt class="descname">show_inventory</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.show_inventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.show_inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Satisfies the <tt class="docutils literal"><span class="pre">--list</span></tt> portion of ansible&#8217;s external inventory API.</p>
+<p>Allows <tt class="docutils literal"><span class="pre">bang</span></tt> to be used as an external inventory script, for example
+when running ad-hoc ops tasks.  For more details, see:
+<a class="reference external" href="http://ansible.cc/docs/api.html#external-inventory-scripts">http://ansible.cc/docs/api.html#external-inventory-scripts</a></p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.util">
+<span id="bang-util"></span><h2><a class="reference internal" href="#module-bang.util" title="bang.util"><tt class="xref py py-mod docutils literal"><span class="pre">bang.util</span></tt></a><a class="headerlink" href="#module-bang.util" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.util.ColoredConsoleFormatter">
+<em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">ColoredConsoleFormatter</tt><big>(</big><em>fmt=None</em>, <em>datefmt=None</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#ColoredConsoleFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.ColoredConsoleFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">logging.Formatter</span></tt></p>
+<dl class="method">
+<dt id="bang.util.ColoredConsoleFormatter.format">
+<tt class="descname">format</tt><big>(</big><em>record</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#ColoredConsoleFormatter.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.ColoredConsoleFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.util.JSONFormatter">
+<em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">JSONFormatter</tt><big>(</big><em>config</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#JSONFormatter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.JSONFormatter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">logging.Formatter</span></tt></p>
+<dl class="method">
+<dt id="bang.util.JSONFormatter.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>config</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#JSONFormatter.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.JSONFormatter.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.util.JSONFormatter.format">
+<tt class="descname">format</tt><big>(</big><em>record</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#JSONFormatter.format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.JSONFormatter.format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.util.S3Handler">
+<em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">S3Handler</tt><big>(</big><em>bucket</em>, <em>prefix=''</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#S3Handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.S3Handler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">logging.handlers.BufferingHandler</span></tt></p>
+<p>Buffers all logging events, then uploads them all at once &#8220;atexit&#8221; to a
+single file in S3.</p>
+<dl class="method">
+<dt id="bang.util.S3Handler.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>bucket</em>, <em>prefix=''</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#S3Handler.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.S3Handler.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.util.S3Handler.flush">
+<tt class="descname">flush</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/util.html#S3Handler.flush"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.S3Handler.flush" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.util.S3Handler.shouldFlush">
+<tt class="descname">shouldFlush</tt><big>(</big><em>record</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#S3Handler.shouldFlush"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.S3Handler.shouldFlush" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.util.SharedMap">
+<em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">SharedMap</tt><big>(</big><em>manager</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#SharedMap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.SharedMap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A multiprocess-safe <tt class="xref py py-class docutils literal"><span class="pre">Mapping</span></tt> object that can be used to return
+values from child processes.</p>
+<dl class="method">
+<dt id="bang.util.SharedMap.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>manager</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#SharedMap.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.SharedMap.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.util.SharedMap.append">
+<tt class="descname">append</tt><big>(</big><em>list_name</em>, <em>value</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#SharedMap.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.SharedMap.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Appends <tt class="xref py py-attr docutils literal"><span class="pre">value</span></tt> to the list named <tt class="xref py py-attr docutils literal"><span class="pre">list_name</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.util.SharedMap.merge">
+<tt class="descname">merge</tt><big>(</big><em>dict_name</em>, <em>values</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#SharedMap.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.SharedMap.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs deep-merge of <tt class="xref py py-attr docutils literal"><span class="pre">values</span></tt> onto the <tt class="xref py py-class docutils literal"><span class="pre">Mapping</span></tt> object
+named <tt class="xref py py-attr docutils literal"><span class="pre">dict_name</span></tt>.</p>
+<p>If <tt class="xref py py-attr docutils literal"><span class="pre">dict_name</span></tt> does not yet exist, then a deep copy of
+<tt class="xref py py-attr docutils literal"><span class="pre">values</span></tt> is assigned as the initial mapping object for the given
+name.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>dict_name</strong> (<em>str</em>) &#8211; The name of the dict onto which the values
+should be merged.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.util.SharedNamespace">
+<em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">SharedNamespace</tt><big>(</big><em>manager</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#SharedNamespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.SharedNamespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A multiprocess-safe namespace that can be used to coordinate naming similar
+resources uniquely.  E.g. when searching for existing nodes in a cassandra
+cluster, you can use this SharedNamespace to make sure other processes
+aren&#8217;t looking at the same node.</p>
+<dl class="method">
+<dt id="bang.util.SharedNamespace.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>manager</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#SharedNamespace.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.SharedNamespace.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.util.SharedNamespace.add_if_unique">
+<tt class="descname">add_if_unique</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#SharedNamespace.add_if_unique"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.SharedNamespace.add_if_unique" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <tt class="docutils literal"><span class="pre">True</span></tt> on success.</p>
+<p>Returns <tt class="docutils literal"><span class="pre">False</span></tt> if the name already exists in the namespace.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.util.StrictAttrBag">
+<em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">StrictAttrBag</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#StrictAttrBag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.StrictAttrBag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Generic attribute container that makes constructor arguments available as
+object attributes.</p>
+<p>Checks <a class="reference internal" href="#bang.util.StrictAttrBag.__init__" title="bang.util.StrictAttrBag.__init__"><tt class="xref py py-meth docutils literal"><span class="pre">__init__()</span></tt></a> argument names against lists of <em>required</em> and
+<em>optional</em> attributes.</p>
+<dl class="method">
+<dt id="bang.util.StrictAttrBag.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#StrictAttrBag.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.StrictAttrBag.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.bump_version_tail">
+<tt class="descclassname">bang.util.</tt><tt class="descname">bump_version_tail</tt><big>(</big><em>oldver</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#bump_version_tail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.bump_version_tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes any dot-separated version string and increments the rightmost field
+(which it expects to be an integer).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.count_by_tag">
+<tt class="descclassname">bang.util.</tt><tt class="descname">count_by_tag</tt><big>(</big><em>stack</em>, <em>descriptor</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#count_by_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.count_by_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the count of currently running or pending instances
+that match the given stack and deployer combo</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.count_to_deploy">
+<tt class="descclassname">bang.util.</tt><tt class="descname">count_to_deploy</tt><big>(</big><em>stack</em>, <em>descriptor</em>, <em>config_count</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#count_to_deploy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.count_to_deploy" title="Permalink to this definition">¶</a></dt>
+<dd><p>takes the max of config_count and number of instances running
+with this stack/descriptor combo</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.deep_merge_dicts">
+<tt class="descclassname">bang.util.</tt><tt class="descname">deep_merge_dicts</tt><big>(</big><em>base</em>, <em>incoming</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#deep_merge_dicts"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.deep_merge_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs an <em>in-place</em> deep-merge of key-values from <tt class="xref py py-attr docutils literal"><span class="pre">incoming</span></tt>
+into <tt class="xref py py-attr docutils literal"><span class="pre">base</span></tt>.  No attempt is made to preserve the original state of
+the objects passed in as arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>base</strong> (Any <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>-like object) &#8211; The target container for the merged values.  This will
+be modified <em>in-place</em>.</li>
+<li><strong>incoming</strong> (Any <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt>-like object) &#8211; The container from which incoming values will be
+copied.  Nested dicts in this will be modified.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.fork_exec">
+<tt class="descclassname">bang.util.</tt><tt class="descname">fork_exec</tt><big>(</big><em>cmd_list</em>, <em>input_data=None</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#fork_exec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.fork_exec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like the subprocess.check_*() helper functions, but tailored to bang.</p>
+<p><tt class="docutils literal"><span class="pre">cmd_list</span></tt> is the command to run, and its arguments as a list of strings.</p>
+<p><tt class="docutils literal"><span class="pre">input_data</span></tt> is the optional data to pass to the command&#8217;s stdin.</p>
+<p>On success, returns the output (i.e. stdout) of the remote command.</p>
+<p>On failure, raises BangError with the command&#8217;s stderr.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.initialize_logging">
+<tt class="descclassname">bang.util.</tt><tt class="descname">initialize_logging</tt><big>(</big><em>config</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#initialize_logging"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.initialize_logging" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="bang.util.parse_args">
+<tt class="descclassname">bang.util.</tt><tt class="descname">parse_args</tt><big>(</big><em>arg_config</em>, <em>alt_args=None</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#parse_args"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.parse_args" title="Permalink to this definition">¶</a></dt>
+<dd><p><tt class="docutils literal"><span class="pre">alt_args</span></tt> is an optional list of strings to use <em>instead</em> of sys.argv.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.poll_with_timeout">
+<tt class="descclassname">bang.util.</tt><tt class="descname">poll_with_timeout</tt><big>(</big><em>timeout_s</em>, <em>break_func</em>, <em>wake_every_s=60</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#poll_with_timeout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.poll_with_timeout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls <tt class="xref py py-attr docutils literal"><span class="pre">break_func</span></tt> every <tt class="xref py py-attr docutils literal"><span class="pre">wake_every_s</span></tt> seconds for a total
+duration of <tt class="xref py py-attr docutils literal"><span class="pre">timeout_s</span></tt> seconds, or until <tt class="xref py py-attr docutils literal"><span class="pre">break_func</span></tt> returns
+something other than <tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+<p>If <tt class="xref py py-attr docutils literal"><span class="pre">break_func</span></tt> returns anything other than <tt class="docutils literal"><span class="pre">None</span></tt>, that value is
+returned immediately.</p>
+<p>Otherwise, continues polling until the timeout is reached, then returns
+<tt class="docutils literal"><span class="pre">None</span></tt>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.redact_secrets">
+<tt class="descclassname">bang.util.</tt><tt class="descname">redact_secrets</tt><big>(</big><em>line</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#redact_secrets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.redact_secrets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a sanitized string for any <tt class="docutils literal"><span class="pre">line</span></tt> that looks like it contains a
+secret (i.e. matches SECRET_PATTERN).</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.util.state_filter">
+<tt class="descclassname">bang.util.</tt><tt class="descname">state_filter</tt><big>(</big><em>instance</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#state_filter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.state_filter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function for count_by_tag</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">API</a><ul>
+<li><a class="reference internal" href="#module-bang"><tt class="docutils literal"><span class="pre">bang</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.config"><tt class="docutils literal"><span class="pre">bang.config</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.deployers"><tt class="docutils literal"><span class="pre">bang.deployers</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.deployers.cloud"><tt class="docutils literal"><span class="pre">bang.deployers.cloud</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.deployers.deployer"><tt class="docutils literal"><span class="pre">bang.deployers.deployer</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.inventory"><tt class="docutils literal"><span class="pre">bang.inventory</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers"><tt class="docutils literal"><span class="pre">bang.providers</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers.bases"><tt class="docutils literal"><span class="pre">bang.providers.bases</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers.aws"><tt class="docutils literal"><span class="pre">bang.providers.aws</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers.hpcloud"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers.hpcloud.nova_ext"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers.hpcloud.reddwarf"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.reddwarf</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers.openstack"><tt class="docutils literal"><span class="pre">bang.providers.openstack</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.stack"><tt class="docutils literal"><span class="pre">bang.stack</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.util"><tt class="docutils literal"><span class="pre">bang.util</span></tt></a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="design.html"
+                        title="previous chapter">Design</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/api.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="Design"
+             >previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

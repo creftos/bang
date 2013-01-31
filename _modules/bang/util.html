@@ -1,0 +1,497 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bang.util &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="../../index.html" />
+    <link rel="up" title="bang" href="../bang.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bang.util</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2012 - John Calixto</span>
+<span class="c">#</span>
+<span class="c"># This file is part of bang.</span>
+<span class="c">#</span>
+<span class="c"># bang is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># bang is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">bang</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">textwrap</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">logging.handlers</span> <span class="kn">import</span> <span class="n">BufferingHandler</span>
+
+<span class="kn">import</span> <span class="nn">boto</span>
+<span class="kn">from</span> <span class="nn">boto.s3.key</span> <span class="kn">import</span> <span class="n">Key</span>
+<span class="kn">from</span> <span class="nn">logutils.queue</span> <span class="kn">import</span> <span class="n">QueueHandler</span><span class="p">,</span> <span class="n">QueueListener</span>
+
+
+<span class="n">CONSOLE_LOGGING_FORMAT</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> </span><span class="si">%(levelname)8s</span><span class="s"> </span><span class="si">%(processName)s</span><span class="s"> - </span><span class="si">%(message)s</span><span class="s">&#39;</span>
+
+<span class="c"># use the multiprocessing logger so when we start parallelizing the</span>
+<span class="c"># deploys, we have a seamless transition.</span>
+<span class="n">_mlog</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">_mlog</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="s">&#39;bang&#39;</span><span class="p">)</span>
+
+<span class="c"># give this logger at least one handler to avoid pesky warnings for bang</span>
+<span class="c"># commands that don&#39;t actually care about logging</span>
+<span class="n">_mlog</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+<span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+<span class="k">del</span> <span class="n">_mlog</span>
+
+
+<div class="viewcode-block" id="StrictAttrBag"><a class="viewcode-back" href="../../api.html#bang.util.StrictAttrBag">[docs]</a><span class="k">class</span> <span class="nc">StrictAttrBag</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic attribute container that makes constructor arguments available as</span>
+<span class="sd">    object attributes.</span>
+
+<span class="sd">    Checks :meth:`__init__` argument names against lists of *required* and</span>
+<span class="sd">    *optional* attributes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="StrictAttrBag.__init__"><a class="viewcode-back" href="../../api.html#bang.util.StrictAttrBag.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">reqk</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_ATTRS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">reqk</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Missing required argument, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">reqk</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reqk</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">reqk</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">OPTIONAL_ATTRS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&quot;Unknown argument, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">k</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="SharedMap"><a class="viewcode-back" href="../../api.html#bang.util.SharedMap">[docs]</a><span class="k">class</span> <span class="nc">SharedMap</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A multiprocess-safe :class:`Mapping` object that can be used to return</span>
+<span class="sd">    values from child processes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SharedMap.__init__"><a class="viewcode-back" href="../../api.html#bang.util.SharedMap.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manager</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lists</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dicts</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="SharedMap.append"><a class="viewcode-back" href="../../api.html#bang.util.SharedMap.append">[docs]</a>    <span class="k">def</span> <span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_name</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Appends :attr:`value` to the list named :attr:`list_name`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lists</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">list_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">l</span><span class="p">:</span>
+                <span class="n">l</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">l</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lists</span><span class="p">[</span><span class="n">list_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">l</span>
+</div>
+<div class="viewcode-block" id="SharedMap.merge"><a class="viewcode-back" href="../../api.html#bang.util.SharedMap.merge">[docs]</a>    <span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dict_name</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs deep-merge of :attr:`values` onto the :class:`Mapping` object</span>
+<span class="sd">        named :attr:`dict_name`.</span>
+
+<span class="sd">        If :attr:`dict_name` does not yet exist, then a deep copy of</span>
+<span class="sd">        :attr:`values` is assigned as the initial mapping object for the given</span>
+<span class="sd">        name.</span>
+
+<span class="sd">        :param str dict_name:  The name of the dict onto which the values</span>
+<span class="sd">            should be merged.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dicts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">dict_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">d</span><span class="p">:</span>
+                <span class="n">deep_merge_dicts</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dicts</span><span class="p">[</span><span class="n">dict_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
+
+</div></div>
+<div class="viewcode-block" id="SharedNamespace"><a class="viewcode-back" href="../../api.html#bang.util.SharedNamespace">[docs]</a><span class="k">class</span> <span class="nc">SharedNamespace</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A multiprocess-safe namespace that can be used to coordinate naming similar</span>
+<span class="sd">    resources uniquely.  E.g. when searching for existing nodes in a cassandra</span>
+<span class="sd">    cluster, you can use this SharedNamespace to make sure other processes</span>
+<span class="sd">    aren&#39;t looking at the same node.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SharedNamespace.__init__"><a class="viewcode-back" href="../../api.html#bang.util.SharedNamespace.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">manager</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="n">manager</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="SharedNamespace.add_if_unique"><a class="viewcode-back" href="../../api.html#bang.util.SharedNamespace.add_if_unique">[docs]</a>    <span class="k">def</span> <span class="nf">add_if_unique</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns ``True`` on success.</span>
+
+<span class="sd">        Returns ``False`` if the name already exists in the namespace.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">True</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div></div>
+<div class="viewcode-block" id="JSONFormatter"><a class="viewcode-back" href="../../api.html#bang.util.JSONFormatter">[docs]</a><span class="k">class</span> <span class="nc">JSONFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+<div class="viewcode-block" id="JSONFormatter.__init__"><a class="viewcode-back" href="../../api.html#bang.util.JSONFormatter.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;stack&#39;</span><span class="p">,</span> <span class="s">&#39;anonymous&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="JSONFormatter.format"><a class="viewcode-back" href="../../api.html#bang.util.JSONFormatter.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">created</span><span class="p">)</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s">&#39;level&#39;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">levelname</span><span class="p">,</span>
+                <span class="s">&#39;message&#39;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">message</span><span class="p">,</span>
+                <span class="s">&#39;timestamp&#39;</span><span class="p">:</span> <span class="n">timestamp</span><span class="p">,</span>
+                <span class="s">&#39;stack&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">,</span>
+                <span class="s">&#39;pid&#39;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">process</span><span class="p">,</span>
+                <span class="s">&#39;process_name&#39;</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="n">processName</span><span class="p">,</span>
+                <span class="p">}</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="ColoredConsoleFormatter"><a class="viewcode-back" href="../../api.html#bang.util.ColoredConsoleFormatter">[docs]</a><span class="k">class</span> <span class="nc">ColoredConsoleFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+<div class="viewcode-block" id="ColoredConsoleFormatter.format"><a class="viewcode-back" href="../../api.html#bang.util.ColoredConsoleFormatter.format">[docs]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="n">pre</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;</span><span class="se">\033</span><span class="s">[38;5;</span><span class="si">%d</span><span class="s">m</span><span class="si">%s</span><span class="se">\033</span><span class="s">[0;37m&#39;</span> <span class="o">%</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">process</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span> <span class="o">%</span> <span class="mi">210</span> <span class="o">+</span> <span class="mi">20</span><span class="p">,</span>
+                <span class="n">pre</span><span class="p">,</span>
+                <span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="S3Handler"><a class="viewcode-back" href="../../api.html#bang.util.S3Handler">[docs]</a><span class="k">class</span> <span class="nc">S3Handler</span><span class="p">(</span><span class="n">BufferingHandler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Buffers all logging events, then uploads them all at once &quot;atexit&quot; to a</span>
+<span class="sd">    single file in S3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="S3Handler.__init__"><a class="viewcode-back" href="../../api.html#bang.util.S3Handler.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bucket</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="n">BufferingHandler</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bucket</span> <span class="o">=</span> <span class="n">bucket</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span>
+</div>
+<div class="viewcode-block" id="S3Handler.shouldFlush"><a class="viewcode-back" href="../../api.html#bang.util.S3Handler.shouldFlush">[docs]</a>    <span class="k">def</span> <span class="nf">shouldFlush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="S3Handler.flush"><a class="viewcode-back" href="../../api.html#bang.util.S3Handler.flush">[docs]</a>    <span class="k">def</span> <span class="nf">flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">payload</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">level</span><span class="p">:</span>
+                <span class="n">payload</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">payload</span><span class="p">:</span>
+            <span class="n">conn</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">connect_s3</span><span class="p">()</span>
+            <span class="n">bucket</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">get_bucket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bucket</span><span class="p">)</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">Key</span><span class="p">(</span><span class="n">bucket</span><span class="p">)</span>
+            <span class="n">key</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="s">&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span> <span class="s">&#39;bang-</span><span class="si">%f</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()))</span>
+            <span class="n">key</span><span class="o">.</span><span class="n">content_type</span> <span class="o">=</span> <span class="s">&#39;application/json&#39;</span>
+            <span class="n">key</span><span class="o">.</span><span class="n">set_contents_from_string</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="initialize_logging"><a class="viewcode-back" href="../../api.html#bang.util.initialize_logging">[docs]</a><span class="k">def</span> <span class="nf">initialize_logging</span><span class="p">(</span><span class="n">config</span><span class="p">):</span>
+    <span class="n">multiprocessing</span><span class="o">.</span><span class="n">current_process</span><span class="p">()</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s">&#39;Stack&#39;</span>
+    <span class="n">cfg</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;logging&#39;</span><span class="p">,</span> <span class="p">{})</span>
+    <span class="n">console_level</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;console_level&#39;</span><span class="p">,</span> <span class="s">&#39;INFO&#39;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">console_level</span><span class="p">)</span>
+
+    <span class="c"># log to s3 if there&#39;s a destination specified in the config</span>
+    <span class="n">bucket</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;s3_bucket&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">bucket</span><span class="p">:</span>
+        <span class="n">json_formatter</span> <span class="o">=</span> <span class="n">JSONFormatter</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="n">s3_handler</span> <span class="o">=</span> <span class="n">S3Handler</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;s3_prefix&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+        <span class="n">s3_handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">json_formatter</span><span class="p">)</span>
+        <span class="n">s3_handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+        <span class="c"># The parent process is the only one that actually buffers the log</span>
+        <span class="c"># records in memory and writes them out to s3.  The child processes</span>
+        <span class="c"># send all of their log records to the parent&#39;s queue.</span>
+        <span class="c">#</span>
+        <span class="c"># Using the QueueHandler and QueueListener classes from logutils-0.3.2</span>
+        <span class="c"># here since they&#39;re the implementations in future versions of stdlib</span>
+        <span class="c"># logging anyway (logutils is the &quot;backports from Py3k logging&quot;</span>
+        <span class="c"># library).</span>
+        <span class="n">queue</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+        <span class="n">ql</span> <span class="o">=</span> <span class="n">QueueListener</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span> <span class="n">s3_handler</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">cleanup</span><span class="p">():</span>
+            <span class="n">ql</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="n">s3_handler</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">cleanup</span><span class="p">)</span>
+        <span class="n">ql</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="n">qh</span> <span class="o">=</span> <span class="n">QueueHandler</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">qh</span><span class="p">)</span>
+
+    <span class="c"># also log to stderr</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">isatty</span><span class="p">():</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">ColoredConsoleFormatter</span><span class="p">(</span><span class="n">CONSOLE_LOGGING_FORMAT</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="n">CONSOLE_LOGGING_FORMAT</span><span class="p">)</span>
+    <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>  <span class="c"># default stream is stderr</span>
+    <span class="n">handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+    <span class="n">handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&#39;Logging initialized.&#39;</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="poll_with_timeout"><a class="viewcode-back" href="../../api.html#bang.util.poll_with_timeout">[docs]</a><span class="k">def</span> <span class="nf">poll_with_timeout</span><span class="p">(</span><span class="n">timeout_s</span><span class="p">,</span> <span class="n">break_func</span><span class="p">,</span> <span class="n">wake_every_s</span><span class="o">=</span><span class="mi">60</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calls :attr:`break_func` every :attr:`wake_every_s` seconds for a total</span>
+<span class="sd">    duration of :attr:`timeout_s` seconds, or until :attr:`break_func` returns</span>
+<span class="sd">    something other than ``None``.</span>
+
+<span class="sd">    If :attr:`break_func` returns anything other than ``None``, that value is</span>
+<span class="sd">    returned immediately.</span>
+
+<span class="sd">    Otherwise, continues polling until the timeout is reached, then returns</span>
+<span class="sd">    ``None``.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time_slept</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">wake_every_s</span> <span class="o">&gt;</span> <span class="mi">60</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;... sleeping for </span><span class="si">%0.2f</span><span class="s"> minutes&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">wake_every_s</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;... sleeping for </span><span class="si">%d</span><span class="s"> seconds&#39;</span> <span class="o">%</span> <span class="n">wake_every_s</span>
+    <span class="n">res</span> <span class="o">=</span> <span class="n">break_func</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">res</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">time_slept</span> <span class="o">&lt;</span> <span class="n">timeout_s</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">wake_every_s</span><span class="p">)</span>
+        <span class="n">time_slept</span> <span class="o">+=</span> <span class="n">wake_every_s</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">break_func</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">res</span>
+
+</div>
+<div class="viewcode-block" id="parse_args"><a class="viewcode-back" href="../../api.html#bang.util.parse_args">[docs]</a><span class="k">def</span> <span class="nf">parse_args</span><span class="p">(</span><span class="n">arg_config</span><span class="p">,</span> <span class="n">alt_args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    ``alt_args`` is an optional list of strings to use *instead* of sys.argv.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
+            <span class="n">prog</span><span class="o">=</span><span class="n">arg_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;prog&#39;</span><span class="p">),</span>
+            <span class="n">description</span><span class="o">=</span><span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="n">arg_config</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]),</span>
+            <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawTextHelpFormatter</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">for</span> <span class="n">ac</span> <span class="ow">in</span> <span class="n">arg_config</span><span class="p">[</span><span class="s">&#39;arguments&#39;</span><span class="p">]:</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">ac</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">ac</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">alt_args</span><span class="p">)</span>
+
+</div>
+<span class="n">SECRET_PATTERN</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&#39;(\s*(\S*(password|pwd|key|secret|god)\S*)\s*:\s*)\S+&#39;</span><span class="p">)</span>
+<span class="n">SECRET_WHITELIST</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;ssh_key&#39;</span><span class="p">,</span> <span class="s">&#39;key_pair&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="redact_secrets"><a class="viewcode-back" href="../../api.html#bang.util.redact_secrets">[docs]</a><span class="k">def</span> <span class="nf">redact_secrets</span><span class="p">(</span><span class="n">line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a sanitized string for any ``line`` that looks like it contains a</span>
+<span class="sd">    secret (i.e. matches SECRET_PATTERN).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">redact</span><span class="p">(</span><span class="n">match</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SECRET_WHITELIST</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;TOO_TOO_SEXY&#39;</span>
+    <span class="k">return</span> <span class="n">SECRET_PATTERN</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="n">redact</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="bump_version_tail"><a class="viewcode-back" href="../../api.html#bang.util.bump_version_tail">[docs]</a><span class="k">def</span> <span class="nf">bump_version_tail</span><span class="p">(</span><span class="n">oldver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Takes any dot-separated version string and increments the rightmost field</span>
+<span class="sd">    (which it expects to be an integer).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">head</span><span class="p">,</span> <span class="n">tail</span> <span class="o">=</span> <span class="n">oldver</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.</span><span class="si">%d</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">tail</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="count_to_deploy"><a class="viewcode-back" href="../../api.html#bang.util.count_to_deploy">[docs]</a><span class="k">def</span> <span class="nf">count_to_deploy</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">,</span> <span class="n">config_count</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    takes the max of config_count and number of instances running</span>
+<span class="sd">    with this stack/descriptor combo</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">live_count</span> <span class="o">=</span> <span class="n">count_by_tag</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">config_count</span> <span class="o">&gt;</span> <span class="n">live_count</span><span class="p">:</span>
+        <span class="n">live_count</span> <span class="o">=</span> <span class="n">config_count</span>
+
+    <span class="k">return</span> <span class="n">live_count</span>
+
+</div>
+<div class="viewcode-block" id="count_by_tag"><a class="viewcode-back" href="../../api.html#bang.util.count_by_tag">[docs]</a><span class="k">def</span> <span class="nf">count_by_tag</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">descriptor</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the count of currently running or pending instances</span>
+<span class="sd">    that match the given stack and deployer combo</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ec2_conn</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">ec2</span><span class="o">.</span><span class="n">connection</span><span class="o">.</span><span class="n">EC2Connection</span><span class="p">()</span>
+    <span class="n">resses</span> <span class="o">=</span> <span class="n">ec2_conn</span><span class="o">.</span><span class="n">get_all_instances</span><span class="p">(</span>
+                    <span class="n">filters</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s">&#39;tag:stack&#39;</span><span class="p">:</span> <span class="n">stack</span><span class="p">,</span>
+                        <span class="s">&#39;tag:descriptor&#39;</span><span class="p">:</span> <span class="n">descriptor</span>
+                    <span class="p">})</span>
+    <span class="n">instance_list_raw</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="p">[[</span><span class="n">instance_list_raw</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">res</span><span class="o">.</span><span class="n">instances</span><span class="p">]</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">resses</span><span class="p">]</span>
+    <span class="n">instance_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">instance_list_raw</span> <span class="k">if</span> <span class="n">state_filter</span><span class="p">(</span><span class="n">x</span><span class="p">)]</span>
+    <span class="n">instances</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">instance_list</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">instances</span>
+
+</div>
+<div class="viewcode-block" id="state_filter"><a class="viewcode-back" href="../../api.html#bang.util.state_filter">[docs]</a><span class="k">def</span> <span class="nf">state_filter</span><span class="p">(</span><span class="n">instance</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function for count_by_tag</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">instance</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;running&#39;</span> <span class="ow">or</span> <span class="n">instance</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="s">&#39;pending&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+</div>
+<div class="viewcode-block" id="deep_merge_dicts"><a class="viewcode-back" href="../../api.html#bang.util.deep_merge_dicts">[docs]</a><span class="k">def</span> <span class="nf">deep_merge_dicts</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">incoming</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs an *in-place* deep-merge of key-values from :attr:`incoming`</span>
+<span class="sd">    into :attr:`base`.  No attempt is made to preserve the original state of</span>
+<span class="sd">    the objects passed in as arguments.</span>
+
+<span class="sd">    :param dict base:  The target container for the merged values.  This will</span>
+<span class="sd">        be modified *in-place*.</span>
+<span class="sd">    :type base:  Any :class:`dict`-like object</span>
+
+<span class="sd">    :param dict incoming:  The container from which incoming values will be</span>
+<span class="sd">        copied.  Nested dicts in this will be modified.</span>
+<span class="sd">    :type incoming:  Any :class:`dict`-like object</span>
+
+<span class="sd">    :rtype:  None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">ki</span><span class="p">,</span> <span class="n">vi</span> <span class="ow">in</span> <span class="n">incoming</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ki</span> <span class="ow">in</span> <span class="n">base</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vi</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">MutableMapping</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">ki</span><span class="p">],</span> <span class="n">collections</span><span class="o">.</span><span class="n">MutableMapping</span><span class="p">)</span>
+                <span class="p">):</span>
+            <span class="n">deep_merge_dicts</span><span class="p">(</span><span class="n">base</span><span class="p">[</span><span class="n">ki</span><span class="p">],</span> <span class="n">vi</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base</span><span class="p">[</span><span class="n">ki</span><span class="p">]</span> <span class="o">=</span> <span class="n">vi</span>
+
+</div>
+<div class="viewcode-block" id="fork_exec"><a class="viewcode-back" href="../../api.html#bang.util.fork_exec">[docs]</a><span class="k">def</span> <span class="nf">fork_exec</span><span class="p">(</span><span class="n">cmd_list</span><span class="p">,</span> <span class="n">input_data</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Like the subprocess.check_*() helper functions, but tailored to bang.</span>
+
+<span class="sd">    ``cmd_list`` is the command to run, and its arguments as a list of strings.</span>
+
+<span class="sd">    ``input_data`` is the optional data to pass to the command&#39;s stdin.</span>
+
+<span class="sd">    On success, returns the output (i.e. stdout) of the remote command.</span>
+
+<span class="sd">    On failure, raises BangError with the command&#39;s stderr.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># log.debug(&#39;fork_exec: cmd_list = %s, input_data = ^%s^&#39; %</span>
+    <span class="c">#         (cmd_list, input_data))</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+            <span class="n">cmd_list</span><span class="p">,</span>
+            <span class="n">stdin</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">bang</span><span class="o">.</span><span class="n">BangError</span><span class="p">(</span><span class="s">&#39;ret: </span><span class="si">%d</span><span class="s">, stdout: ^</span><span class="si">%s</span><span class="s">^, stderr: ^</span><span class="si">%s</span><span class="s">^&#39;</span> <span class="o">%</span>
+                <span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">returncode</span><span class="p">,</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">out</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">out</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" >bang</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

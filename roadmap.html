@@ -1,0 +1,205 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Road Map &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="index.html" />
+    <link rel="next" title="Design" href="design.html" />
+    <link rel="prev" title="Release Summary" href="releases.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="Design"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="releases.html" title="Release Summary"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="road-map">
+<h1>Road Map<a class="headerlink" href="#road-map" title="Permalink to this headline">¶</a></h1>
+<p>Some of the feature ideas below will be implemented in bang.  Some
+may be better suited for a <em>bang-utils</em> project.  They&#8217;re listed here
+so they won&#8217;t be forgotten along the way.</p>
+<div class="section" id="general-features">
+<h2>General Features<a class="headerlink" href="#general-features" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Add extension/plugin mechanism.  At the moment, the mercurial-style
+(i.e. using an rc-file for registering extensions) is the most
+palatable because it does <em>not</em> demand using setuptools, and
+because it allows the user to manage files how they please.</p>
+<blockquote>
+<div><ul class="simple">
+<li>The corollary is that the setuptools-style (i.e. entry points
+defined in setup.py) mechanism is <em>not</em> desirable.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Implement <tt class="docutils literal"><span class="pre">--dry-run</span></tt>.</p>
+</li>
+<li><p class="first">Validate stack configuration.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Check for any build artifacts in the deployment S3 bucket/other
+central storage location.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Create ssh keypairs if specified by the user in their ~/.bangrc.</p>
+</li>
+<li><p class="first">Allow absolute paths to playbooks, or a customizable playbook
+search path.</p>
+</li>
+<li><p class="first">Add playbook parallelization.  Allow running multiple playbooks at
+once.  Leave it up to the deployers to sort out inter-playbook
+dependencies.</p>
+</li>
+<li><p class="first">Consider replacing python-reddwarf.  It would be nice to get rid of
+the lxml dependency because it&#8217;s such a chore to install especially
+in virtualenvs.  Ideally, we would not require
+compilers/<tt class="docutils literal"><span class="pre">build-essential</span></tt> on the installation host.</p>
+</li>
+<li><p class="first">Integrate with revision control system.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Autoincrement <em>stack version</em> in config file.</li>
+<li>Tag any config scope that defines a <tt class="docutils literal"><span class="pre">source_code</span></tt> attribute.</li>
+<li>Generate release notes between tags.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Autoscale servers.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="providers">
+<h2>Providers<a class="headerlink" href="#providers" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Add AWS provider.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Add any deployers that don&#8217;t really apply to less featureful
+public cloud providers.  E.g. SQS, ELB, SNS, etc...</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Rackspace</p>
+</li>
+<li><p class="first">HP Cloud</p>
+<blockquote>
+<div><ul class="simple">
+<li>DB Security Groups</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Bare-metal</p>
+</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Road Map</a><ul>
+<li><a class="reference internal" href="#general-features">General Features</a></li>
+<li><a class="reference internal" href="#providers">Providers</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="releases.html"
+                        title="previous chapter">Release Summary</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="design.html"
+                        title="next chapter">Design</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/roadmap.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="design.html" title="Design"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="releases.html" title="Release Summary"
+             >previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

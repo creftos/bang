@@ -1,0 +1,451 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bang.config &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="../../index.html" />
+    <link rel="up" title="bang" href="../bang.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bang.config</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2012 - John Calixto</span>
+<span class="c">#</span>
+<span class="c"># This file is part of bang.</span>
+<span class="c">#</span>
+<span class="c"># bang is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># bang is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span><span class="p">,</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">bump_version_tail</span><span class="p">,</span> <span class="n">deep_merge_dicts</span>
+
+
+<span class="n">DEFAULT_CONFIG_DIR</span> <span class="o">=</span> <span class="s">&#39;bang-stacks&#39;</span>
+<span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">RC_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;deployer_credentials&#39;</span><span class="p">,</span> <span class="s">&#39;config_dir&#39;</span><span class="p">]</span>
+<span class="n">ALL_RESERVED_KEYS</span> <span class="o">=</span> <span class="n">RC_KEYS</span> <span class="o">+</span> <span class="n">R</span><span class="o">.</span><span class="n">DYNAMIC_RESOURCE_KEYS</span>
+
+
+<div class="viewcode-block" id="find_component_tarball"><a class="viewcode-back" href="../../api.html#bang.config.find_component_tarball">[docs]</a><span class="k">def</span> <span class="nf">find_component_tarball</span><span class="p">(</span><span class="n">bucket</span><span class="p">,</span> <span class="n">comp_name</span><span class="p">,</span> <span class="n">comp_config</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns True if the component tarball is found in the bucket.</span>
+
+<span class="sd">    Otherwise, returns False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">comp_name</span><span class="p">,</span>
+            <span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="n">comp_config</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">],</span>
+            <span class="s">&#39;platform&#39;</span><span class="p">:</span> <span class="n">comp_config</span><span class="p">[</span><span class="s">&#39;platform&#39;</span><span class="p">],</span>
+            <span class="p">}</span>
+    <span class="n">template</span> <span class="o">=</span> <span class="n">comp_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;archive_template&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">template</span><span class="p">:</span>
+        <span class="n">key_name</span> <span class="o">=</span> <span class="n">template</span> <span class="o">%</span> <span class="n">values</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">key_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%(name)s</span><span class="s">/</span><span class="si">%(name)s</span><span class="s">-</span><span class="si">%(version)s</span><span class="s">.tar.gz&#39;</span> <span class="o">%</span> <span class="n">values</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">bucket</span><span class="o">.</span><span class="n">get_key</span><span class="p">(</span><span class="n">key_name</span><span class="p">):</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> not found&#39;</span> <span class="o">%</span> <span class="n">key_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span>
+
+</div>
+<div class="viewcode-block" id="parse_bangrc"><a class="viewcode-back" href="../../api.html#bang.config.parse_bangrc">[docs]</a><span class="k">def</span> <span class="nf">parse_bangrc</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parses ``$HOME/.bangrc`` for global settings and deployer credentials.  The</span>
+<span class="sd">    ``.bangrc`` file is expected to be a YAML file whose outermost structure is</span>
+<span class="sd">    a key-value map.</span>
+
+<span class="sd">    Note that even though ``.bangrc`` is just a YAML file in which a user could</span>
+<span class="sd">    store any top-level keys, it is not expected to be used as a holder of</span>
+<span class="sd">    default values for stack-specific configuration attributes - if present,</span>
+<span class="sd">    they will be ignored.</span>
+
+<span class="sd">    Returns {} if ``$HOME/.bangrc`` does not exist.</span>
+
+<span class="sd">    :rtype:  :class:`dict`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">bangrc_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s">&#39;HOME&#39;</span><span class="p">],</span> <span class="s">&#39;.bangrc&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">bangrc_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">raw</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">raw</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">raw</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">RC_KEYS</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">return</span> <span class="p">{}</span>
+
+</div>
+<div class="viewcode-block" id="resolve_config_spec"><a class="viewcode-back" href="../../api.html#bang.config.resolve_config_spec">[docs]</a><span class="k">def</span> <span class="nf">resolve_config_spec</span><span class="p">(</span><span class="n">config_spec</span><span class="p">,</span> <span class="n">config_dir</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resolves :attr:`config_spec` to a path to a config file.</span>
+
+<span class="sd">    :param str config_spec:  Valid config specs:</span>
+
+<span class="sd">        - The basename of a YAML config file *without* the ``.yml`` extension.</span>
+<span class="sd">          The full path to the config file is resolved by appending ``.yml`` to</span>
+<span class="sd">          the basename, then by searching for the result in the</span>
+<span class="sd">          :attr:`config_dir`.</span>
+
+<span class="sd">        - The path to a YAML config file.  The path may be absolute or may be</span>
+<span class="sd">          relative to the current working directory.  If :attr:`config_spec`</span>
+<span class="sd">          contains a ``/`` (forward slash), or if it ends in ``.yml``, it is</span>
+<span class="sd">          treated as a path.</span>
+
+<span class="sd">    :param str config_dir:  The directory in which to search for stack</span>
+<span class="sd">        configuration files.</span>
+
+<span class="sd">    :rtype:  :class:`str`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">config_spec</span> <span class="ow">or</span> <span class="n">config_spec</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.yml&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">config_spec</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">config_dir</span><span class="p">,</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">.yml&#39;</span> <span class="o">%</span> <span class="n">config_spec</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../api.html#bang.config.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dict-alike that provides a convenient constructor, stashes the path</span>
+<span class="sd">    to the config file as an instance attribute, and performs some validation</span>
+<span class="sd">    of the values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Config.__init__"><a class="viewcode-back" href="../../api.html#bang.config.Config.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        :param str path_to_yaml:  Path to a yaml file to use as the data source</span>
+<span class="sd">            for the returned instance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Config</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Config.from_config_specs"><a class="viewcode-back" href="../../api.html#bang.config.Config.from_config_specs">[docs]</a>    <span class="k">def</span> <span class="nf">from_config_specs</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">config_specs</span><span class="p">,</span> <span class="n">prepare</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Alternate constructor that merges config attributes from</span>
+<span class="sd">        ``$HOME/.bangrc`` and :attr:`config_specs` into a single</span>
+<span class="sd">        :class:`Config` object.</span>
+
+<span class="sd">        The first (and potentially *only* spec) in :attr:`config_specs` should</span>
+<span class="sd">        be main configuration file for the stack to be deployed.  The returned</span>
+<span class="sd">        object&#39;s :attr:`filepath` will be set to the absolute path of the first</span>
+<span class="sd">        config file.</span>
+
+<span class="sd">        If multiple config specs are supplied, their values are merged together</span>
+<span class="sd">        in the order specified in :attr:`config_specs` - That is, later values</span>
+<span class="sd">        override earlier values.</span>
+
+<span class="sd">        :param config_specs:  List of config specs.</span>
+<span class="sd">        :type config_specs:  :class:`list` of :class:`str`</span>
+
+<span class="sd">        :param bool prepare:  Flag to control whether or not :meth:`prepare` is</span>
+<span class="sd">            called automatically before returning the object.</span>
+
+<span class="sd">        :rtype:  :class:`Config`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bangrc</span> <span class="o">=</span> <span class="n">parse_bangrc</span><span class="p">()</span>
+        <span class="n">config_dir</span> <span class="o">=</span> <span class="n">bangrc</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;config_dir&#39;</span><span class="p">,</span> <span class="n">DEFAULT_CONFIG_DIR</span><span class="p">)</span>
+        <span class="n">config_paths</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">resolve_config_spec</span><span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="n">config_dir</span><span class="p">)</span> <span class="k">for</span> <span class="n">cs</span> <span class="ow">in</span> <span class="n">config_specs</span>
+                <span class="p">]</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">cls</span><span class="p">()</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">bangrc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">config_paths</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">config_paths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">config_paths</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">deep_merge_dicts</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">prepare</span><span class="p">:</span>
+            <span class="n">config</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">config</span>
+</div>
+    <span class="k">def</span> <span class="nf">_prepare_dbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">dbcreds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">DATABASE_CREDS</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">for</span> <span class="n">db</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">db</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span>
+
+            <span class="c"># default db name is the deployer instance name</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">DB_NAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">db</span><span class="p">:</span>
+                <span class="n">db</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">DB_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">db</span><span class="p">:</span>
+                <span class="n">db</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span>
+
+            <span class="c"># make global db creds available to db deployer instance</span>
+            <span class="n">creds</span> <span class="o">=</span> <span class="n">dbcreds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">creds</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">db</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">ADMIN_USER</span><span class="p">]</span> <span class="o">=</span> <span class="n">creds</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">ADMIN_USER</span><span class="p">]</span>
+            <span class="n">db</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">ADMIN_PASS</span><span class="p">]</span> <span class="o">=</span> <span class="n">creds</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">ADMIN_PASS</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_secgroups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span>
+
+        <span class="n">sg_rule_sets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">sg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">provider</span> <span class="o">=</span> <span class="n">sg</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">PROVIDER</span><span class="p">]</span>
+            <span class="n">region</span> <span class="o">=</span> <span class="n">sg</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">REGION</span><span class="p">]</span>
+            <span class="c"># dress up the stack secgroup names</span>
+            <span class="n">dressy_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">sg</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">NAME</span><span class="p">])</span>
+            <span class="n">sg</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">dressy_name</span>
+            <span class="n">rules</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">sg</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">RULES</span><span class="p">]:</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+                <span class="c"># generate dressy source if necessary</span>
+                <span class="k">if</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">SOURCE_SELF</span><span class="p">):</span>
+                    <span class="n">r</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="n">dressy_name</span>
+
+                <span class="n">r</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">TARGET</span><span class="p">]</span> <span class="o">=</span> <span class="n">dressy_name</span>
+                <span class="n">rules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="n">sg_rule_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="n">dressy_name</span><span class="p">,</span>
+                        <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">PROVIDER</span><span class="p">:</span> <span class="n">provider</span><span class="p">,</span>
+                        <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">REGION</span><span class="p">:</span> <span class="n">region</span><span class="p">,</span>
+                        <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">RULES</span><span class="p">:</span> <span class="n">rules</span><span class="p">,</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+        <span class="bp">self</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUP_RULES</span><span class="p">]</span> <span class="o">=</span> <span class="n">sg_rule_sets</span>
+
+        <span class="c"># make sure server configs use the dressed-up secgroup names</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">groups</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="s">&#39;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">gname</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">gname</span> <span class="ow">in</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">STACK_SECGROUPS</span><span class="p">,</span> <span class="p">[])</span>
+                    <span class="p">]</span>
+            <span class="n">groups</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">EXTRA_SECGROUPS</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="n">s</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">SECGROUPS</span><span class="p">]</span> <span class="o">=</span> <span class="n">groups</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_tags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># add ``stack`` and ``role`` tags</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">TAGS</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">tags</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">STACK</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span>
+            <span class="n">tags</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">ROLE</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span>
+            <span class="n">s</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">TAGS</span><span class="p">]</span> <span class="o">=</span> <span class="n">tags</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_servers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare the variables that are exposed to the servers.</span>
+
+<span class="sd">        Most attributes in the server config are used directly.  However, due</span>
+<span class="sd">        to variations in how cloud providers treat regions and availability</span>
+<span class="sd">        zones, this method allows either the ``availability_zone`` or the</span>
+<span class="sd">        ``region_name`` to be used as the target availability zone for a</span>
+<span class="sd">        server.  If both are specified, then ``availability_zone`` is used.  If</span>
+<span class="sd">        ``availability_zone`` is not specified in the server config, then the</span>
+<span class="sd">        ``region_name`` value is used as the target availability zone.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">],</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">VERSION</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">VERSION</span><span class="p">],</span>
+                <span class="p">}</span>
+        <span class="k">for</span> <span class="n">server</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="c"># default values</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
+                <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">POST_DELAY</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
+                <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">POST_DELAY</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">AZ</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
+                <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">AZ</span><span class="p">]</span> <span class="o">=</span> <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">REGION</span><span class="p">]</span>
+
+            <span class="c"># distribute the config scope attributes</span>
+            <span class="n">svars</span> <span class="o">=</span> <span class="p">{</span><span class="n">A</span><span class="o">.</span><span class="n">STACK</span><span class="p">:</span> <span class="n">stack</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">scope</span> <span class="ow">in</span> <span class="n">server</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">SCOPES</span><span class="p">,</span> <span class="p">[]):</span>
+                <span class="c"># allow scopes to be defined inline</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+                    <span class="n">svars</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">scope</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">svars</span><span class="p">[</span><span class="n">scope</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">scope</span><span class="p">]</span>
+            <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">VARS</span><span class="p">]</span> <span class="o">=</span> <span class="n">svars</span>
+
+<div class="viewcode-block" id="Config.prepare"><a class="viewcode-back" href="../../api.html#bang.config.Config.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reorganizes the data such that the deployment logic can find it all</span>
+<span class="sd">        where it expects to be.</span>
+
+<span class="sd">        The raw configuration file is intended to be as human-friendly as</span>
+<span class="sd">        possible partly through the following mechanisms:</span>
+
+<span class="sd">            - In order to minimize repetition, any attributes that are common</span>
+<span class="sd">              to all server configurations can be specified in the</span>
+<span class="sd">              ``server_common_attributes`` stanza even though the stanza itself</span>
+<span class="sd">              does not map directly to a deployable resource.</span>
+<span class="sd">            - For reference locality, each security group stanza contains its</span>
+<span class="sd">              list of rules even though rules are actually created in a</span>
+<span class="sd">              separate stage from the groups themselves.</span>
+
+<span class="sd">        In order to make the :class:`Config` object more useful to the program</span>
+<span class="sd">        logic, this method performs the following transformations:</span>
+
+<span class="sd">            - Distributes the ``server_common_attributes`` among all the</span>
+<span class="sd">              members of the ``servers`` stanza.</span>
+<span class="sd">            - Extracts security group rules to a top-level key, and</span>
+<span class="sd">              interpolates all source and target values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># TODO: take server_common_attributes and disperse it among the various</span>
+        <span class="c"># server stanzas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_secgroups</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_tags</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_dbs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_servers</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="Config.validate"><a class="viewcode-back" href="../../api.html#bang.config.Config.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs all validation checks on this config.</span>
+
+<span class="sd">        Raises :class:`ValueError` for invalid configs.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># TODO: validate providers in each of the resource stanzas</span>
+</div>
+<div class="viewcode-block" id="Config.autoinc"><a class="viewcode-back" href="../../api.html#bang.config.Config.autoinc">[docs]</a>    <span class="k">def</span> <span class="nf">autoinc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Conditionally updates the stack version in the file associated with</span>
+<span class="sd">        this config.</span>
+
+<span class="sd">        This  handles both official releases (i.e. QA configs), and release</span>
+<span class="sd">        candidates.  Assumptions about version:</span>
+
+<span class="sd">            - Official release versions are MAJOR.minor, where MAJOR and minor</span>
+<span class="sd">              are both non-negative integers.  E.g.</span>
+
+<span class="sd">                2.9</span>
+<span class="sd">                2.10</span>
+<span class="sd">                2.11</span>
+<span class="sd">                3.0</span>
+<span class="sd">                3.1</span>
+<span class="sd">                3.2</span>
+<span class="sd">                etc...</span>
+
+<span class="sd">            - Release candidate versions are MAJOR.minor-rc.N, where MAJOR,</span>
+<span class="sd">              minor, and N are all non-negative integers.</span>
+
+<span class="sd">                3.5-rc.1</span>
+<span class="sd">                3.5-rc.2</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;autoinc_version&#39;</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="n">oldver</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="s">&#39;version&#39;</span><span class="p">]</span>
+        <span class="n">newver</span> <span class="o">=</span> <span class="n">bump_version_tail</span><span class="p">(</span><span class="n">oldver</span><span class="p">)</span>
+
+        <span class="n">config_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span>
+        <span class="n">temp_fd</span><span class="p">,</span> <span class="n">temp_name</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span>
+                <span class="nb">dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">config_path</span><span class="p">),</span>
+                <span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">old</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">fdopen</span><span class="p">(</span><span class="n">temp_fd</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">new</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">oldline</span> <span class="ow">in</span> <span class="n">old</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">oldline</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;version:&#39;</span><span class="p">):</span>
+                    <span class="n">new</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;version: &#39;</span><span class="si">%s</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">newver</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="n">new</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oldline</span><span class="p">)</span>
+
+        <span class="c"># no need to backup the old file, it&#39;s under version control anyway -</span>
+        <span class="c"># right???</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Incrementing stack version </span><span class="si">%s</span><span class="s"> -&gt; </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">oldver</span><span class="p">,</span> <span class="n">newver</span><span class="p">))</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">temp_name</span><span class="p">,</span> <span class="n">config_path</span><span class="p">)</span>
+        <span class="c"># TODO: commit_bang_config()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" >bang</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

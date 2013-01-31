@@ -1,0 +1,397 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bang.stack &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="../../index.html" />
+    <link rel="up" title="bang" href="../bang.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bang.stack</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2012 - John Calixto</span>
+<span class="c">#</span>
+<span class="c"># This file is part of bang.</span>
+<span class="c">#</span>
+<span class="c"># bang is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># bang is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+
+<span class="kn">from</span> <span class="nn">ansible.callbacks</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">AggregateStats</span><span class="p">,</span>
+        <span class="n">PlaybookCallbacks</span><span class="p">,</span>
+        <span class="n">PlaybookRunnerCallbacks</span><span class="p">,</span>
+        <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">ansible.playbook</span> <span class="kn">import</span> <span class="n">PlayBook</span>
+<span class="kn">from</span> <span class="nn">.deployers</span> <span class="kn">import</span> <span class="n">get_stage_deployers</span>
+<span class="kn">from</span> <span class="nn">.inventory</span> <span class="kn">import</span> <span class="n">BangsibleInventory</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">SharedNamespace</span><span class="p">,</span> <span class="n">SharedMap</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">BangError</span><span class="p">,</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span><span class="p">,</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
+
+
+<div class="viewcode-block" id="Stack"><a class="viewcode-back" href="../../api.html#bang.stack.Stack">[docs]</a><span class="k">class</span> <span class="nc">Stack</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Deploys infrastructure/platform resources, then configures any deployed</span>
+<span class="sd">    servers using ansible playbooks.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Stack.__init__"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param config:  A mapping object with configuration keys and values.</span>
+<span class="sd">            May be arbitrarily nested.</span>
+<span class="sd">        :type config:  :class:`bang.config.Config`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">VERSION</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Manager</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared_namespaces</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span> <span class="o">=</span> <span class="n">SharedMap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">)</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deployers stash inventory data for any newly-created servers in this</span>
+<span class="sd">        mapping object.  Note: uses SharedMap because this must be</span>
+<span class="sd">        multiprocess-safe.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c"># TODO: suss out autoscaling. see count_to_deploy()</span>
+</div>
+<div class="viewcode-block" id="Stack.get_deployers"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.get_deployers">[docs]</a>    <span class="k">def</span> <span class="nf">get_deployers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a :class:`list` of *stages*, where each *stage* is a</span>
+<span class="sd">        :class:`list` of :class:`~bang.deployers.deployer.Deployer` objects.</span>
+<span class="sd">        It defines the execution order of the various deployers.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">enumerate</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">get_stage_deployers</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span> <span class="k">for</span> <span class="n">keys</span> <span class="ow">in</span> <span class="n">R</span><span class="o">.</span><span class="n">STAGES</span><span class="p">]</span>
+                <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Stack.get_namespace"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.get_namespace">[docs]</a>    <span class="k">def</span> <span class="nf">get_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a :class:`~bang.util.SharedNamespace` for the given</span>
+<span class="sd">        :attr:`key`.  These are used by</span>
+<span class="sd">        :class:`~bang.deployers.deployer.Deployer` objects of the same</span>
+<span class="sd">        ``deployer_class`` to coordinate control over multiple deployed</span>
+<span class="sd">        instances of like resources.  E.g. With 5 clones of an application</span>
+<span class="sd">        server, 5 :class:`~bang.deployers.deployer.Deployer` objects in</span>
+<span class="sd">        separate, concurrent processes will use the same shared namespace to</span>
+<span class="sd">        ensure that each object/process controls a distinct server.</span>
+
+<span class="sd">        :param str key:  Unique ID for the</span>
+<span class="sd">            namespace.  :class:`~bang.deployers.deployer.Deployer` objects that</span>
+<span class="sd">            call :meth:`get_namespace` with the same :attr:`key` will receive</span>
+<span class="sd">            the same :class:`~bang.util.SharedNamespace` object.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">namespace</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shared_namespaces</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">namespace</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">namespace</span>
+        <span class="n">ns</span> <span class="o">=</span> <span class="n">SharedNamespace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shared_namespaces</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">ns</span>
+        <span class="k">return</span> <span class="n">ns</span>
+</div>
+<div class="viewcode-block" id="Stack.find_first"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.find_first">[docs]</a>    <span class="k">def</span> <span class="nf">find_first</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">resources</span><span class="p">,</span> <span class="n">extra_prefix</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the boto object for the first resource in ``resources`` that</span>
+<span class="sd">        belongs to this stack.  Uses the attribute specified by ``attr_name``</span>
+<span class="sd">        to match the stack name.</span>
+
+<span class="sd">        E.g.  An RDS instance for a stack named ``foo`` might be named</span>
+<span class="sd">        ``foo-mydb-fis8932ifs``.  This call::</span>
+
+<span class="sd">            find_first(&#39;id&#39;, conn.get_all_dbinstances())</span>
+
+<span class="sd">        would return the boto.rds.dbinstance.DBInstance object whose ``id`` is</span>
+<span class="sd">        ``foo-mydb-fis8932ifs``.</span>
+
+<span class="sd">        Returns None if a matching resource is not found.</span>
+
+<span class="sd">        If specified, ``extra_prefix`` is appended to the stack name prefix</span>
+<span class="sd">        before matching.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s">&#39;-&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="n">extra_prefix</span> <span class="o">+</span> <span class="s">&#39;-&#39;</span> <span class="k">if</span> <span class="n">extra_prefix</span> <span class="k">else</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">resources</span><span class="p">:</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="Stack.add_host"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.add_host">[docs]</a>    <span class="k">def</span> <span class="nf">add_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">group_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">host_vars</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Used by deployers to add hosts to the inventory.</span>
+
+<span class="sd">        :param str host:  The host identifier (e.g. hostname, IP address) to</span>
+<span class="sd">            use in the inventory.</span>
+
+<span class="sd">        :param list group_names:  A list of group names to which the host</span>
+<span class="sd">            belongs.  **Note:  This list will be sorted in-place.**</span>
+
+<span class="sd">        :param dict host_vars:  A mapping object of host *variables*.  This can</span>
+<span class="sd">            be a nested structure, and is used as the source of all the</span>
+<span class="sd">            variables provided to the ansible playbooks.  **Note:  Additional</span>
+<span class="sd">            key-value pairs (e.g. dynamic ansible values like</span>
+<span class="sd">            ``inventory_hostname``) will be inserted into this mapping</span>
+<span class="sd">            object.**</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gnames</span> <span class="o">=</span> <span class="n">group_names</span> <span class="k">if</span> <span class="n">group_names</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">hvars</span> <span class="o">=</span> <span class="n">host_vars</span> <span class="k">if</span> <span class="n">host_vars</span> <span class="k">else</span> <span class="p">{}</span>
+
+        <span class="c"># Add in ansible&#39;s magic variables.  Assign them here because this is</span>
+        <span class="c"># just about the earliest point we can calculate them before anything</span>
+        <span class="c"># ansible-related (e.g. Stack.configure(), ``bang --host``) executes.</span>
+        <span class="n">gnames</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">hvars</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">GROUP_NAMES</span><span class="p">]</span> <span class="o">=</span> <span class="n">gnames</span>
+        <span class="n">hvars</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">INV_NAME</span><span class="p">]</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="n">hvars</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">INV_NAME_SHORT</span><span class="p">]</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">hvars</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">gname</span> <span class="ow">in</span> <span class="n">group_names</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gname</span><span class="p">,</span> <span class="n">host</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Stack.describe"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.describe">[docs]</a>    <span class="k">def</span> <span class="nf">describe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iterates through the deployers but doesn&#39;t run anything&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">stage</span><span class="p">,</span> <span class="n">corunners</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_deployers</span><span class="p">():</span>
+            <span class="k">print</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&quot;STAGE &quot;</span><span class="p">,</span> <span class="n">stage</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">corunners</span><span class="p">:</span>
+                <span class="k">print</span> <span class="n">d</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="s">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">__name__</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">phases</span><span class="p">]</span>
+                        <span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">stage</span><span class="p">,</span> <span class="n">corunners</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_deployers</span><span class="p">():</span>
+            <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">errors</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">corunners</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>
+                        <span class="n">target</span><span class="o">=</span><span class="n">d</span><span class="o">.</span><span class="n">run</span><span class="p">,</span>
+                        <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">action</span><span class="p">,</span> <span class="p">),</span>
+                        <span class="p">)</span>
+                <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
+                <span class="n">child</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">exitcode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">errors</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">if</span> <span class="n">errors</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Stage </span><span class="si">%d</span><span class="s"> had </span><span class="si">%d</span><span class="s"> errors.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">stage</span><span class="p">,</span> <span class="n">errors</span><span class="p">)</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">BangError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Stack.deploy"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.deploy">[docs]</a>    <span class="k">def</span> <span class="nf">deploy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterates through the deployers returned by ``self.get_deployers()``.</span>
+
+<span class="sd">        Deployers in the same stage are run concurrently.  The runner only</span>
+<span class="sd">        proceeds to the next stage once all of the deployers in the same</span>
+<span class="sd">        stage have completed successfully.</span>
+
+<span class="sd">        Any failures in a stage cause the run to terminate before proceeding to</span>
+<span class="sd">        the next stage.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="s">&#39;deploy&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Stack.configure"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.configure">[docs]</a>    <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Executes the ansible playbooks that configure the servers in the stack.</span>
+
+<span class="sd">        Assumes that the root playbook directory is ``./playbooks/`` relative</span>
+<span class="sd">        to the stack configuration file.  Also sets the ansible *module_path*</span>
+<span class="sd">        to be ``./common_modules/`` relative to the stack configuration file.</span>
+
+<span class="sd">        E.g.  If the stack configuration file is::</span>
+
+<span class="sd">            $HOME/bang-stacks/my_web_service.yml</span>
+
+<span class="sd">        then the root playbook directory is::</span>
+
+<span class="sd">            $HOME/bang-stacks/playbooks/</span>
+
+<span class="sd">        and the ansible module path is::</span>
+
+<span class="sd">            $HOME/bang-stacks/common_modules/</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">bang_config_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+                <span class="p">)</span>
+        <span class="n">ansible_module_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bang_config_dir</span><span class="p">,</span> <span class="s">&#39;common_modules&#39;</span><span class="p">)</span>
+        <span class="n">playbook_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bang_config_dir</span><span class="p">,</span> <span class="s">&#39;playbooks&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">playbook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">PLAYBOOKS</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">playbook_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">playbook_dir</span><span class="p">,</span> <span class="n">playbook</span><span class="p">)</span>
+
+            <span class="c"># gratuitously stolen from main() in ``ansible-playbook``</span>
+            <span class="n">stats</span> <span class="o">=</span> <span class="n">AggregateStats</span><span class="p">()</span>
+            <span class="n">playbook_cb</span> <span class="o">=</span> <span class="n">PlaybookCallbacks</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">runner_cb</span> <span class="o">=</span> <span class="n">PlaybookRunnerCallbacks</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="n">pb</span> <span class="o">=</span> <span class="n">PlayBook</span><span class="p">(</span>
+                <span class="n">playbook</span><span class="o">=</span><span class="n">playbook_path</span><span class="p">,</span>
+                <span class="n">module_path</span><span class="o">=</span><span class="n">ansible_module_dir</span><span class="p">,</span>
+
+                <span class="c"># ``host_list`` is used to generate the inventory, but don&#39;t</span>
+                <span class="c"># worry, we override the inventory later</span>
+                <span class="n">host_list</span><span class="o">=</span><span class="p">[],</span>
+
+                <span class="c"># TODO: determine forks</span>
+                <span class="c"># forks=options.forks,</span>
+
+                <span class="n">callbacks</span><span class="o">=</span><span class="n">playbook_cb</span><span class="p">,</span>
+                <span class="n">runner_callbacks</span><span class="o">=</span><span class="n">runner_cb</span><span class="p">,</span>
+                <span class="n">stats</span><span class="o">=</span><span class="n">stats</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">pb</span><span class="o">.</span><span class="n">inventory</span> <span class="o">=</span> <span class="n">BangsibleInventory</span><span class="p">(</span>
+                    <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">lists</span><span class="p">),</span>
+                    <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">dicts</span><span class="p">),</span>
+                    <span class="p">)</span>
+
+            <span class="n">pb</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+            <span class="n">hosts</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">processed</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="n">failed</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">hosts</span><span class="p">:</span>
+                <span class="n">hsum</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">stats</span><span class="o">.</span><span class="n">summarize</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">hsum</span><span class="p">[</span><span class="s">&#39;failures&#39;</span><span class="p">]</span> <span class="ow">or</span> <span class="n">hsum</span><span class="p">[</span><span class="s">&#39;unreachable&#39;</span><span class="p">]:</span>
+                    <span class="n">failed</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">print</span> <span class="s">&quot;</span><span class="si">%-30s</span><span class="s"> : </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">hsum</span><span class="p">)</span>
+                <span class="c"># TODO: sort this out</span>
+                <span class="c"># print &quot;%-30s : %s %s %s %s &quot; % (</span>
+                <span class="c">#     hostcolor(h, hsum),</span>
+                <span class="c">#     colorize(&#39;ok&#39;, hsum[&#39;ok&#39;], &#39;green&#39;),</span>
+                <span class="c">#     colorize(&#39;changed&#39;, hsum[&#39;changed&#39;], &#39;yellow&#39;),</span>
+                <span class="c">#     colorize(&#39;unreachable&#39;, hsum[&#39;unreachable&#39;], &#39;red&#39;),</span>
+                <span class="c">#     colorize(&#39;failed&#39;, hsum[&#39;failures&#39;], &#39;red&#39;))</span>
+
+            <span class="k">if</span> <span class="n">failed</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">BangError</span><span class="p">(</span><span class="s">&quot;Server configuration failed!&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Stack.show_inventory"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.show_inventory">[docs]</a>    <span class="k">def</span> <span class="nf">show_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Satisfies the ``--list`` portion of ansible&#39;s external inventory API.</span>
+
+<span class="sd">        Allows ``bang`` to be used as an external inventory script, for example</span>
+<span class="sd">        when running ad-hoc ops tasks.  For more details, see:</span>
+<span class="sd">        http://ansible.cc/docs/api.html#external-inventory-scripts</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="s">&#39;inventory&#39;</span><span class="p">)</span>
+        <span class="k">print</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">lists</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Stack.show_host"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.show_host">[docs]</a>    <span class="k">def</span> <span class="nf">show_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Satisfies the ``--host`` portion of ansible&#39;s external inventory API.</span>
+
+<span class="sd">        Allows ``bang`` to be used as an external inventory script, for example</span>
+<span class="sd">        when running ad-hoc ops tasks.  For more details, see:</span>
+<span class="sd">        http://ansible.cc/docs/api.html#external-inventory-scripts</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_run</span><span class="p">(</span><span class="s">&#39;inventory&#39;</span><span class="p">)</span>
+        <span class="c"># use a deepcopy to make sure data doesn&#39;t move around on us in</span>
+        <span class="c"># multiprocess-land:</span>
+        <span class="n">all_hvars</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">dicts</span><span class="p">)</span>
+        <span class="n">hostvars</span> <span class="o">=</span> <span class="n">all_hvars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="k">print</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">hostvars</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" >bang</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

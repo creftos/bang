@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bang.deployers &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="../../index.html" />
+    <link rel="up" title="bang" href="../bang.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bang.deployers</h1><div class="highlight"><pre>
+<span class="c"># Copyright 2012 - John Calixto</span>
+<span class="c">#</span>
+<span class="c"># This file is part of bang.</span>
+<span class="c">#</span>
+<span class="c"># bang is free software: you can redistribute it and/or modify</span>
+<span class="c"># it under the terms of the GNU General Public License as published by</span>
+<span class="c"># the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c"># (at your option) any later version.</span>
+<span class="c">#</span>
+<span class="c"># bang is distributed in the hope that it will be useful,</span>
+<span class="c"># but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c"># MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c"># GNU General Public License for more details.</span>
+<span class="c">#</span>
+<span class="c"># You should have received a copy of the GNU General Public License</span>
+<span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Base classes and definitions for bang deployers (deployable components)</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cloud</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span>
+<span class="kn">from</span> <span class="nn">..providers</span> <span class="kn">import</span> <span class="n">get_provider</span>
+<span class="kn">from</span> <span class="nn">..util</span> <span class="kn">import</span> <span class="n">log</span>
+
+
+<span class="n">DEPLOYER_MAP</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">ServerDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">SecurityGroupDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUP_RULES</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">SecurityGroupRulesetDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">BUCKETS</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">BucketDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">DatabaseDeployer</span><span class="p">,</span>
+        <span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_stage_deployers"><a class="viewcode-back" href="../../api.html#bang.deployers.get_stage_deployers">[docs]</a><span class="k">def</span> <span class="nf">get_stage_deployers</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">stack</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of deployer objects that *create* cloud resources.  Each</span>
+<span class="sd">    member of the list is responsible for provisioning a single stack resource</span>
+<span class="sd">    (e.g. a virtual server, a security group, a bucket, etc...).</span>
+
+<span class="sd">    :param keys:  A list of top-level configuration keys for which to create</span>
+<span class="sd">        deployers.</span>
+<span class="sd">    :type keys:  :class:`~collections.Iterable`</span>
+
+<span class="sd">    :param config:  A stack object.</span>
+<span class="sd">    :type config:  :class:`~bang.stack.Stack`</span>
+
+<span class="sd">    :rtype:  :class:`list` of :class:`~bang.deployers.deployer.Deployer`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">config</span>
+    <span class="n">creds</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s">&#39;deployer_credentials&#39;</span><span class="p">]</span>
+    <span class="n">deployers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">res_type</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">res_configs</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">res_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">res_configs</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Found config for resource type, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">res_type</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">res_config</span> <span class="ow">in</span> <span class="n">res_configs</span><span class="p">:</span>
+            <span class="n">pname</span> <span class="o">=</span> <span class="n">res_config</span><span class="p">[</span><span class="s">&#39;provider&#39;</span><span class="p">]</span>
+            <span class="n">provider</span> <span class="o">=</span> <span class="n">get_provider</span><span class="p">(</span><span class="n">pname</span><span class="p">,</span> <span class="n">creds</span><span class="p">[</span><span class="n">pname</span><span class="p">])</span>
+            <span class="n">consul</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_consul</span><span class="p">(</span><span class="n">res_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">consul</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> does not provide </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pname</span><span class="p">,</span> <span class="n">res_type</span><span class="p">))</span>
+                <span class="k">continue</span>
+            <span class="n">deployer</span> <span class="o">=</span> <span class="n">DEPLOYER_MAP</span><span class="p">[</span><span class="n">res_type</span><span class="p">]</span>
+            <span class="n">count</span> <span class="o">=</span> <span class="n">res_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;instance_count&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">ds</span> <span class="o">=</span> <span class="p">[</span><span class="n">deployer</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">res_config</span><span class="p">,</span> <span class="n">consul</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span>
+            <span class="n">deployers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">deployers</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">bang 0.2 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../bang.html" >bang</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

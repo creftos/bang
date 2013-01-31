@@ -1,0 +1,237 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Stack Configurations &mdash; bang 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="bang 0.2 documentation" href="index.html" />
+    <link rel="next" title="Writing Ansible Playbooks" href="playbooks.html" />
+    <link rel="prev" title="Running Bang" href="running.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="playbooks.html" title="Writing Ansible Playbooks"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="Running Bang"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="stack-configurations">
+<h1>Stack Configurations<a class="headerlink" href="#stack-configurations" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="config-file-structure">
+<h2>Config File Structure<a class="headerlink" href="#config-file-structure" title="Permalink to this headline">¶</a></h2>
+<p>The configuration file is a <a class="reference external" href="http://www.yaml.org">YAML</a> document.
+Like an Ansible playbook, the outermost data structure is a <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2798057">YAML
+mapping</a>.</p>
+<p>Like Python, blocks/sections/stanzas in a Bang config file are
+visually defined by indentation level.  Each top-level section name
+is a key in the outermost mapping structure.</p>
+<p>There are some reserved <a class="reference internal" href="#top-level-keys">Top-Level Keys</a> that have special meaning
+in Bang and there is an implicit, broader grouping of these top-level
+keys/sections.  The broader groups are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#general-stack-properties">General Stack Properties</a></li>
+<li><a class="reference internal" href="#dynamic-stack-resources">Dynamic Stack Resources</a></li>
+<li><a class="reference internal" href="#configuration-scopes">Configuration Scopes</a></li>
+</ul>
+</div></blockquote>
+<p>Any string that is a valid YAML identifier and is <strong>not</strong> a reserved
+top-level key is available for use as a <em>custom configuration scope</em>.
+It is up to the user to avoid name collisions between keys,
+especially between reserved keys and custom configuration scope keys.</p>
+</div>
+<div class="section" id="top-level-keys">
+<h2>Top-Level Keys<a class="headerlink" href="#top-level-keys" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="general-stack-properties">
+<h3>General Stack Properties<a class="headerlink" href="#general-stack-properties" title="Permalink to this headline">¶</a></h3>
+<p>The attributes in this section apply to the entire stack.</p>
+<p>The following top-level section names are reserved:</p>
+<dl class="docutils">
+<dt>name</dt>
+<dd>This is the unique stack name.  E.g. <tt class="docutils literal"><span class="pre">myblog-prod</span></tt>,
+<tt class="docutils literal"><span class="pre">myblog-staging</span></tt>, <tt class="docutils literal"><span class="pre">monitoring</span></tt>, etc...</dd>
+<dt>version</dt>
+<dd>The overall stack version.  A stack may be made up of many
+components each with their own release cycle and versioning
+scheme.  This version could be used as the umbrella version for
+an entire product/project release.</dd>
+<dt>logging</dt>
+<dd>Contains configuration values for Bang&#8217;s logging.</dd>
+<dt>deployer_credentials</dt>
+<dd>See <a class="reference internal" href="api.html#bang.providers.hpcloud.HPCloud.authenticate" title="bang.providers.hpcloud.HPCloud.authenticate"><tt class="xref py py-meth docutils literal"><span class="pre">bang.providers.hpcloud.HPCloud.authenticate()</span></tt></a></dd>
+<dt>playbooks</dt>
+<dd>A list of playbook filenames to execute.</dd>
+</dl>
+</div>
+<div class="section" id="dynamic-stack-resources">
+<h3>Dynamic Stack Resources<a class="headerlink" href="#dynamic-stack-resources" title="Permalink to this headline">¶</a></h3>
+<p>These configuration stanzas describe <em>Infrastructure as a Service
+(IaaS)</em> and <em>Platform as a Service (PaaS)</em> resources that should be
+created for the stack.</p>
+<p>The following top-level section names, or keys, are reserved:</p>
+<blockquote>
+<div><ul class="simple">
+<li><a class="reference internal" href="#queues">queues</a></li>
+<li><a class="reference internal" href="#buckets">buckets</a></li>
+<li><a class="reference internal" href="#databases">databases</a></li>
+<li><a class="reference internal" href="#server-security-groups">server_security_groups</a></li>
+<li><a class="reference internal" href="#servers">servers</a></li>
+</ul>
+</div></blockquote>
+<p>Every dynamic stack resource key maps to a <em>list of definitions</em> for
+that particular resource type.  Each definition in the list is a
+key-value map of attributes.  Most attributes are specific to the
+type of resource being deployed.  However, every resource definition
+must contain a <tt class="docutils literal"><span class="pre">provider</span></tt> key whose value is the name of a
+bang-supported IaaS or PaaS provider.</p>
+<div class="section" id="queues">
+<h4><tt class="docutils literal"><span class="pre">queues</span></tt><a class="headerlink" href="#queues" title="Permalink to this headline">¶</a></h4>
+<p>E.g. SQS</p>
+</div>
+<div class="section" id="buckets">
+<h4><tt class="docutils literal"><span class="pre">buckets</span></tt><a class="headerlink" href="#buckets" title="Permalink to this headline">¶</a></h4>
+<p>E.g. S3, OpenStack Swift</p>
+</div>
+<div class="section" id="databases">
+<h4><tt class="docutils literal"><span class="pre">databases</span></tt><a class="headerlink" href="#databases" title="Permalink to this headline">¶</a></h4>
+<p>E.g. RDS, OpenStack RedDwarf</p>
+</div>
+<div class="section" id="server-security-groups">
+<h4><tt class="docutils literal"><span class="pre">server_security_groups</span></tt><a class="headerlink" href="#server-security-groups" title="Permalink to this headline">¶</a></h4>
+<p>E.g. EC2 and OpenStack Nova security groups</p>
+</div>
+<div class="section" id="servers">
+<h4><tt class="docutils literal"><span class="pre">servers</span></tt><a class="headerlink" href="#servers" title="Permalink to this headline">¶</a></h4>
+<p>E.g. EC2, OpenStack Nova, VPS virtual machines.</p>
+</div>
+</div>
+<div class="section" id="configuration-scopes">
+<h3>Configuration Scopes<a class="headerlink" href="#configuration-scopes" title="Permalink to this headline">¶</a></h3>
+<p>Any top-level section name that is not specified above as a reserved
+key in <a class="reference internal" href="#general-stack-properties">General Stack Properties</a> or in <a class="reference internal" href="#dynamic-stack-resources">Dynamic Stack Resources</a>,
+is parsed and categorized as a custom configuration scope.</p>
+<p>Any configuration scope names that are added to a server&#8217;s
+<tt class="docutils literal"><span class="pre">config_scopes</span></tt> list, make those values available to Ansible
+playbooks as vars.</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Stack Configurations</a><ul>
+<li><a class="reference internal" href="#config-file-structure">Config File Structure</a></li>
+<li><a class="reference internal" href="#top-level-keys">Top-Level Keys</a><ul>
+<li><a class="reference internal" href="#general-stack-properties">General Stack Properties</a></li>
+<li><a class="reference internal" href="#dynamic-stack-resources">Dynamic Stack Resources</a><ul>
+<li><a class="reference internal" href="#queues"><tt class="docutils literal"><span class="pre">queues</span></tt></a></li>
+<li><a class="reference internal" href="#buckets"><tt class="docutils literal"><span class="pre">buckets</span></tt></a></li>
+<li><a class="reference internal" href="#databases"><tt class="docutils literal"><span class="pre">databases</span></tt></a></li>
+<li><a class="reference internal" href="#server-security-groups"><tt class="docutils literal"><span class="pre">server_security_groups</span></tt></a></li>
+<li><a class="reference internal" href="#servers"><tt class="docutils literal"><span class="pre">servers</span></tt></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration-scopes">Configuration Scopes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="running.html"
+                        title="previous chapter">Running Bang</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="playbooks.html"
+                        title="next chapter">Writing Ansible Playbooks</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/stack_configs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="playbooks.html" title="Writing Ansible Playbooks"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="running.html" title="Running Bang"
+             >previous</a> |</li>
+        <li><a href="index.html">bang 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
