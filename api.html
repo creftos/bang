@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API &mdash; bang 0.3 documentation</title>
+    <title>API &mdash; bang 0.4 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.3',
+        VERSION:     '0.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.3 documentation" href="index.html" />
+    <link rel="top" title="bang 0.4 documentation" href="index.html" />
     <link rel="prev" title="Design" href="design.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="design.html" title="Design"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.3 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.4 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -357,6 +357,31 @@ existing instance must also be &#8220;running&#8221;.</p>
 <dt id="bang.deployers.cloud.RegionedDeployer.consul">
 <tt class="descname">consul</tt><a class="reference internal" href="_modules/bang/deployers/cloud.html#RegionedDeployer.consul"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.RegionedDeployer.consul" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.SSHKeyDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">SSHKeyDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SSHKeyDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SSHKeyDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.RegionedDeployer" title="bang.deployers.cloud.RegionedDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.RegionedDeployer</span></tt></a></p>
+<p>Registers SSH keys with cloud providers so they can be used at
+server-launch time.</p>
+<dl class="method">
+<dt id="bang.deployers.cloud.SSHKeyDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SSHKeyDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SSHKeyDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.SSHKeyDeployer.find_existing">
+<tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SSHKeyDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SSHKeyDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for an existing SSH key matching the name.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.SSHKeyDeployer.register">
+<tt class="descname">register</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#SSHKeyDeployer.register"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.SSHKeyDeployer.register" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers SSH key with provider.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -1119,6 +1144,14 @@ active immediately).</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="bang.providers.openstack.Nova.create_ssh_pub_key">
+<tt class="descname">create_ssh_pub_key</tt><big>(</big><em>name</em>, <em>key</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.create_ssh_pub_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.create_ssh_pub_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Installs the public SSH key under the name <tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt>.</p>
+<p>Once installed, the key can be referenced when creating new server
+instances.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="bang.providers.openstack.Nova.delete_secgroup_rule">
 <tt class="descname">delete_secgroup_rule</tt><big>(</big><em>rule_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.delete_secgroup_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.delete_secgroup_rule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes the security group rule identified by <tt class="xref py py-attr docutils literal"><span class="pre">rule_id</span></tt></p>
@@ -1158,6 +1191,21 @@ describes a single server instance.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="bang.providers.openstack.Nova.find_ssh_pub_key">
+<tt class="descname">find_ssh_pub_key</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.find_ssh_pub_key"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.find_ssh_pub_key" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns <tt class="docutils literal"><span class="pre">True</span></tt> if an SSH key named <tt class="xref py py-attr docutils literal"><span class="pre">name</span></tt> is found.</p>
+<p>Otherwise returns <tt class="docutils literal"><span class="pre">False</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">bool</span></tt></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="bang.providers.openstack.Nova.set_region">
 <tt class="descname">set_region</tt><big>(</big><em>region_name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.set_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.set_region" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1170,7 +1218,7 @@ describes a single server instance.</p>
 <dd><p>Bases: <a class="reference internal" href="#bang.providers.bases.Provider" title="bang.providers.bases.Provider"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.bases.Provider</span></tt></a></p>
 <dl class="attribute">
 <dt id="bang.providers.openstack.OpenStack.CONSUL_MAP">
-<tt class="descname">CONSUL_MAP</tt><em class="property"> = {'databases': &lt;class 'bang.providers.openstack.RedDwarf'&gt;, 'buckets': &lt;class 'bang.providers.openstack.Swift'&gt;, 'server_security_groups': &lt;class 'bang.providers.openstack.Nova'&gt;, 'server_security_group_rules': &lt;class 'bang.providers.openstack.Nova'&gt;, 'servers': &lt;class 'bang.providers.openstack.Nova'&gt;}</em><a class="headerlink" href="#bang.providers.openstack.OpenStack.CONSUL_MAP" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">CONSUL_MAP</tt><em class="property"> = {'buckets': &lt;class 'bang.providers.openstack.Swift'&gt;, 'server_security_group_rules': &lt;class 'bang.providers.openstack.Nova'&gt;, 'servers': &lt;class 'bang.providers.openstack.Nova'&gt;, 'server_security_groups': &lt;class 'bang.providers.openstack.Nova'&gt;, 'databases': &lt;class 'bang.providers.openstack.RedDwarf'&gt;, 'ssh_pub_keys': &lt;class 'bang.providers.openstack.Nova'&gt;}</em><a class="headerlink" href="#bang.providers.openstack.OpenStack.CONSUL_MAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1795,7 +1843,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
         <li class="right" >
           <a href="design.html" title="Design"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.3 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.4 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

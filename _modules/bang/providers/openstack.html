@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.providers.openstack &mdash; bang 0.3 documentation</title>
+    <title>bang.providers.openstack &mdash; bang 0.4 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.3',
+        VERSION:     '0.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.3 documentation" href="../../../index.html" />
+    <link rel="top" title="bang 0.4 documentation" href="../../../index.html" />
     <link rel="up" title="bang.providers" href="../providers.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.3 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.4 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" accesskey="U">bang.providers</a> &raquo;</li> 
@@ -127,6 +127,27 @@
                 <span class="n">service_type</span><span class="o">=</span><span class="n">client</span><span class="o">.</span><span class="n">service_type</span><span class="p">,</span>
                 <span class="p">)</span>
         <span class="n">client</span><span class="o">.</span><span class="n">set_management_url</span><span class="p">(</span><span class="n">management_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Nova.find_ssh_pub_key"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.find_ssh_pub_key">[docs]</a>    <span class="k">def</span> <span class="nf">find_ssh_pub_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns ``True`` if an SSH key named :attr:`name` is found.</span>
+
+<span class="sd">        Otherwise returns ``False``.</span>
+
+<span class="sd">        :rtype:  :class:`bool`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">keypairs</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="Nova.create_ssh_pub_key"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.create_ssh_pub_key">[docs]</a>    <span class="k">def</span> <span class="nf">create_ssh_pub_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Installs the public SSH key under the name :attr:`name`.</span>
+
+<span class="sd">        Once installed, the key can be referenced when creating new server</span>
+<span class="sd">        instances.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">keypairs</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Nova.find_servers"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.find_servers">[docs]</a>    <span class="k">def</span> <span class="nf">find_servers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">running</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -410,6 +431,7 @@
 
     <span class="n">CONSUL_MAP</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">:</span> <span class="n">Nova</span><span class="p">,</span>
+            <span class="n">R</span><span class="o">.</span><span class="n">SSH_KEYS</span><span class="p">:</span> <span class="n">Nova</span><span class="p">,</span>
             <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">:</span> <span class="n">Nova</span><span class="p">,</span>
             <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUP_RULES</span><span class="p">:</span> <span class="n">Nova</span><span class="p">,</span>
             <span class="n">R</span><span class="o">.</span><span class="n">BUCKETS</span><span class="p">:</span> <span class="n">Swift</span><span class="p">,</span>
@@ -549,7 +571,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.3 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.4 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" >bang.providers</a> &raquo;</li> 

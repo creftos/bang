@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.deployers.cloud &mdash; bang 0.3 documentation</title>
+    <title>bang.deployers.cloud &mdash; bang 0.4 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.3',
+        VERSION:     '0.4',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.3 documentation" href="../../../index.html" />
+    <link rel="top" title="bang 0.4 documentation" href="../../../index.html" />
     <link rel="up" title="bang.deployers" href="../deployers.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.3 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.4 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../deployers.html" accesskey="U">bang.deployers</a> &raquo;</li> 
@@ -90,6 +90,30 @@
 <div class="viewcode-block" id="RegionedDeployer.consul"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.RegionedDeployer.consul">[docs]</a>    <span class="k">def</span> <span class="nf">consul</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_consul</span><span class="o">.</span><span class="n">set_region</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">region_name</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_consul</span>
+
+</div></div>
+<div class="viewcode-block" id="SSHKeyDeployer"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.SSHKeyDeployer">[docs]</a><span class="k">class</span> <span class="nc">SSHKeyDeployer</span><span class="p">(</span><span class="n">RegionedDeployer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers SSH keys with cloud providers so they can be used at</span>
+<span class="sd">    server-launch time.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="SSHKeyDeployer.__init__"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.SSHKeyDeployer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SSHKeyDeployer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phases</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_existing</span><span class="p">),</span>
+                <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">found</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">),</span>
+                <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="SSHKeyDeployer.find_existing"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.SSHKeyDeployer.find_existing">[docs]</a>    <span class="k">def</span> <span class="nf">find_existing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Searches for an existing SSH key matching the name.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">found</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">find_ssh_pub_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SSHKeyDeployer.register"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.SSHKeyDeployer.register">[docs]</a>    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Registers SSH key with provider.&quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Installing ssh key, </span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">create_ssh_pub_key</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
 
 </div></div>
 <div class="viewcode-block" id="ServerDeployer"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.ServerDeployer">[docs]</a><span class="k">class</span> <span class="nc">ServerDeployer</span><span class="p">(</span><span class="n">RegionedDeployer</span><span class="p">):</span>
@@ -144,6 +168,8 @@
 </div>
 <div class="viewcode-block" id="ServerDeployer.add_to_inventory"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.ServerDeployer.add_to_inventory">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Adds host to stack inventory&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_attrs</span><span class="p">:</span>
+            <span class="k">return</span>
         <span class="k">for</span> <span class="n">addy</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">server_attrs</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PUBLIC_IPS</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">add_host</span><span class="p">(</span><span class="n">addy</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hostvars</span><span class="p">)</span>
 
@@ -325,7 +351,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.3 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.4 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../deployers.html" >bang.deployers</a> &raquo;</li> 
