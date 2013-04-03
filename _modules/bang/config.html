@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.config &mdash; bang 0.5 documentation</title>
+    <title>bang.config &mdash; bang 0.6 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.5 documentation" href="../../index.html" />
+    <link rel="top" title="bang 0.6 documentation" href="../../index.html" />
     <link rel="up" title="bang" href="../bang.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
       </ul>
@@ -235,8 +235,29 @@
 
     <span class="k">def</span> <span class="nf">_prepare_secgroups</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">stack</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span>
+        <span class="c"># Special magic groups for lb</span>
+        <span class="n">load_balancer_groups</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">lb</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">LOAD_BALANCERS</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">for_servers</span> <span class="o">=</span> <span class="n">lb</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">SERVER_NAMES</span><span class="p">]</span>
+            <span class="n">for_server</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span> <span class="o">==</span> <span class="n">for_servers</span><span class="p">,</span> 
+                    <span class="bp">self</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">secgroup_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">-secgroup&#39;</span> <span class="o">%</span> <span class="n">lb</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">NAME</span><span class="p">]</span>
+            <span class="n">sec_group</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="n">secgroup_name</span><span class="p">,</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">PROVIDER</span><span class="p">:</span> <span class="n">for_server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PROVIDER</span><span class="p">],</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">REGION</span><span class="p">:</span> <span class="n">for_server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">REGION</span><span class="p">],</span>
+                <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&quot;Secgroup for </span><span class="si">%s</span><span class="s"> load balancer&quot;</span> <span class="o">%</span> <span class="n">lb</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">NAME</span><span class="p">],</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">RULES</span><span class="p">:</span> <span class="p">[],</span>
+                <span class="s">&#39;load_balancer&#39;</span><span class="p">:</span> <span class="n">lb</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">NAME</span><span class="p">],</span>
+            <span class="p">}</span>
+
+            <span class="n">load_balancer_groups</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sec_group</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">DYNAMIC_LB_SEC_GROUPS</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sec_group</span><span class="p">)</span>
+            <span class="n">for_server</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">STACK_SECGROUPS</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">secgroup_name</span><span class="p">)</span>
 
         <span class="n">sg_rule_sets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">load_balancer_groups</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">sg</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="n">provider</span> <span class="o">=</span> <span class="n">sg</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">PROVIDER</span><span class="p">]</span>
             <span class="n">region</span> <span class="o">=</span> <span class="n">sg</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">REGION</span><span class="p">]</span>
@@ -253,7 +274,11 @@
 
                 <span class="n">r</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">TARGET</span><span class="p">]</span> <span class="o">=</span> <span class="n">dressy_name</span>
                 <span class="n">rules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-            <span class="n">sg_rule_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+
+            <span class="c"># For load balancer SGs, don&#39;t add rule sets now; </span>
+            <span class="c"># it&#39;ll get done later</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">sg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;load_balancer&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+                <span class="n">sg_rule_sets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="p">{</span>
                         <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="n">dressy_name</span><span class="p">,</span>
                         <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">PROVIDER</span><span class="p">:</span> <span class="n">provider</span><span class="p">,</span>
@@ -321,16 +346,20 @@
                 <span class="n">A</span><span class="o">.</span><span class="n">VERSION</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">VERSION</span><span class="p">],</span>
                 <span class="p">}</span>
         <span class="k">for</span> <span class="n">server</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">,</span> <span class="p">[]):</span>
-            <span class="c"># default values</span>
-            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
-                <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span>
-            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">POST_DELAY</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
-                <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">POST_DELAY</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span>
-            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">AZ</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
-                <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">AZ</span><span class="p">]</span> <span class="o">=</span> <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">REGION</span><span class="p">]</span>
+            <span class="c"># default cloud values</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">PROVIDER</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
+                    <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">LAUNCH_TIMEOUT</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span>
+                <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">POST_DELAY</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
+                    <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">POST_DELAY</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_LAUNCH_TIMEOUT_S</span>
+                <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">AZ</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">server</span><span class="p">:</span>
+                    <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">AZ</span><span class="p">]</span> <span class="o">=</span> <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">REGION</span><span class="p">]</span>
 
             <span class="c"># distribute the config scope attributes</span>
-            <span class="n">svars</span> <span class="o">=</span> <span class="p">{</span><span class="n">A</span><span class="o">.</span><span class="n">STACK</span><span class="p">:</span> <span class="n">stack</span><span class="p">}</span>
+            <span class="n">svars</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">A</span><span class="o">.</span><span class="n">STACK</span><span class="p">:</span> <span class="n">stack</span><span class="p">,</span>
+                    <span class="n">A</span><span class="o">.</span><span class="n">SERVER_CLASS</span><span class="p">:</span> <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">],</span>
+                    <span class="p">}</span>
             <span class="k">for</span> <span class="n">scope</span> <span class="ow">in</span> <span class="n">server</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">SCOPES</span><span class="p">,</span> <span class="p">[]):</span>
                 <span class="c"># allow scopes to be defined inline</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scope</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
@@ -338,6 +367,19 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">svars</span><span class="p">[</span><span class="n">scope</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="p">[</span><span class="n">scope</span><span class="p">]</span>
             <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">VARS</span><span class="p">]</span> <span class="o">=</span> <span class="n">svars</span>
+
+    <span class="k">def</span> <span class="nf">_prepare_load_balancers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare load balancer variables</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">stack</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">],</span>
+                <span class="n">A</span><span class="o">.</span><span class="n">VERSION</span><span class="p">:</span> <span class="bp">self</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">VERSION</span><span class="p">],</span>
+                <span class="p">}</span>
+
+        <span class="k">for</span> <span class="n">load_balancer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">LOAD_BALANCERS</span><span class="p">,</span> <span class="p">[]):</span>
+            <span class="n">svars</span> <span class="o">=</span> <span class="p">{</span><span class="n">A</span><span class="o">.</span><span class="n">STACK</span><span class="p">:</span> <span class="n">stack</span><span class="p">}</span>
+            <span class="n">load_balancer</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">VARS</span><span class="p">]</span> <span class="o">=</span> <span class="n">svars</span>
 
 <div class="viewcode-block" id="Config.prepare"><a class="viewcode-back" href="../../api.html#bang.config.Config.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -371,6 +413,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_tags</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_dbs</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_servers</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_load_balancers</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="Config.validate"><a class="viewcode-back" href="../../api.html#bang.config.Config.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -462,7 +505,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" >bang</a> &raquo;</li> 
       </ul>

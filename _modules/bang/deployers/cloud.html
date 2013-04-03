@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.deployers.cloud &mdash; bang 0.5 documentation</title>
+    <title>bang.deployers.cloud &mdash; bang 0.6 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.5 documentation" href="../../../index.html" />
+    <link rel="top" title="bang 0.6 documentation" href="../../../index.html" />
     <link rel="up" title="bang.deployers" href="../deployers.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../deployers.html" accesskey="U">bang.deployers</a> &raquo;</li> 
@@ -68,8 +68,10 @@
 <span class="c"># You should have received a copy of the GNU General Public License</span>
 <span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 <span class="kn">import</span> <span class="nn">time</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span><span class="p">,</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
+<span class="kn">from</span> <span class="nn">..providers</span> <span class="kn">import</span> <span class="n">get_provider</span>
 <span class="kn">from</span> <span class="nn">..util</span> <span class="kn">import</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">BangError</span>
 <span class="kn">from</span> <span class="nn">.deployer</span> <span class="kn">import</span> <span class="n">Deployer</span>
 
 
@@ -213,7 +215,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">sg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">find_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">current</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">sg</span><span class="o">.</span><span class="n">rules</span><span class="p">:</span>
+
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sg</span><span class="p">,</span> <span class="s">&#39;rules&#39;</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="n">src_group</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span>
             <span class="c"># TODO: allow for groups with different tenant ids.</span>
             <span class="k">if</span> <span class="n">src_group</span><span class="p">:</span>
@@ -241,6 +244,7 @@
                 <span class="k">del</span> <span class="n">current</span><span class="p">[</span><span class="n">exp</span><span class="p">]</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">create_these_rules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">exp</span><span class="p">)</span>
+
 
         <span class="bp">self</span><span class="o">.</span><span class="n">delete_these_rules</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">itervalues</span><span class="p">())</span>
 
@@ -317,7 +321,150 @@
                 <span class="n">host</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">db_attrs</span>
-                <span class="p">)</span></div></div>
+                <span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="LoadBalancerDeployer"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerDeployer">[docs]</a><span class="k">class</span> <span class="nc">LoadBalancerDeployer</span><span class="p">(</span><span class="n">BaseDeployer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Cloud-managed load balancer deployer. Assumes a consul able</span>
+<span class="sd">    to create and discover LB instances, as well as match existing</span>
+<span class="sd">    backend &#39;nodes&#39; to a list it&#39;s given. It is assumed only a single</span>
+<span class="sd">    &#39;instance&#39; per distinct load balancer needs to be created (i.e.</span>
+<span class="sd">    that any elasticity is handled by the cloud service)</span>
+<span class="sd">    E.g config:</span>
+<span class="sd">      load_balancers:</span>
+<span class="sd">      - name: test-balancer</span>
+<span class="sd">        balance_server_name: server_defined_in_servers_section</span>
+<span class="sd">        provider: hpcloud</span>
+<span class="sd">        backend_port: &#39;8080&#39;</span>
+<span class="sd">        protocol: tcp</span>
+<span class="sd">        port: &#39;443&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LoadBalancerDeployer.__init__"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerDeployer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LoadBalancerDeployer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instance_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">-</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delete_these_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_these_nodes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">phases</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_existing</span><span class="p">),</span>
+                <span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">create</span><span class="p">),</span>
+                <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_to_inventory</span><span class="p">),</span>
+                <span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure_nodes</span><span class="p">),</span>
+                <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inventory_phases</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">find_existing</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">add_to_inventory</span><span class="p">,</span>
+                <span class="p">]</span>
+</div>
+<div class="viewcode-block" id="LoadBalancerDeployer.find_existing"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerDeployer.find_existing">[docs]</a>    <span class="k">def</span> <span class="nf">find_existing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Searches for existing load balancer instance with matching name.</span>
+<span class="sd">        Doesn&#39;t populate &#39;details&#39; including the nodes and virtual IPs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">find_lb_by_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">instance_name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoadBalancerDeployer.create"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerDeployer.create">[docs]</a>    <span class="k">def</span> <span class="nf">create</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new load balancer&quot;&quot;&quot;</span>
+        <span class="n">required_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_required_nodes</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">create_lb</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">instance_name</span><span class="p">,</span>
+                <span class="n">protocol</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">,</span>
+                <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span>
+                <span class="n">nodes</span><span class="o">=</span><span class="n">required_nodes</span><span class="p">,</span>
+                <span class="n">node_port</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">backend_port</span><span class="p">),</span>
+                <span class="n">algorithm</span><span class="o">=</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;algorithm&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+                <span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LoadBalancerDeployer.configure_nodes"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerDeployer.configure_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">configure_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure that the LB&#39;s nodes matches the stack&quot;&quot;&quot;</span>
+        <span class="c"># Since load balancing runs after server provisioning,</span>
+        <span class="c"># the servers should already be created regardless of </span>
+        <span class="c"># whether this was a preexisting load balancer or not.</span>
+        <span class="c"># We also have the existing nodes, because add_to_inventory</span>
+        <span class="c"># has been called already</span>
+        <span class="n">required_nodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_required_nodes</span><span class="p">()</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Matching existing lb nodes to required </span><span class="si">%s</span><span class="s"> (port </span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span>
+               <span class="p">(</span><span class="s">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">required_nodes</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_port</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">match_lb_nodes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">ID</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">NODES_KEY</span><span class="p">],</span>
+            <span class="n">required_nodes</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">backend_port</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">lb_details</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">ID</span><span class="p">])</span> 
+</div>
+    <span class="k">def</span> <span class="nf">_get_required_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">required_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">host</span><span class="p">,</span> <span class="n">attrs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">dicts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">SERVER_CLASS</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">balance_server_name</span><span class="p">:</span>
+                <span class="n">required_nodes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">required_nodes</span>
+
+
+<div class="viewcode-block" id="LoadBalancerDeployer.add_to_inventory"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerDeployer.add_to_inventory">[docs]</a>    <span class="k">def</span> <span class="nf">add_to_inventory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Adds lb IPs to stack inventory&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">consul</span><span class="o">.</span><span class="n">lb_details</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">ID</span><span class="p">])</span>
+            <span class="n">host</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span><span class="p">[</span><span class="s">&#39;virtualIps&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;address&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">add_lb_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="p">[</span><span class="n">host</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">backend_port</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">add_host</span><span class="p">(</span>
+                    <span class="n">host</span><span class="p">,</span>
+                    <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">lb_attrs</span>
+                    <span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="LoadBalancerSecurityGroupsDeployer"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer">[docs]</a><span class="k">class</span> <span class="nc">LoadBalancerSecurityGroupsDeployer</span><span class="p">(</span><span class="n">SecurityGroupRulesetDeployer</span><span class="p">):</span>
+<div class="viewcode-block" id="LoadBalancerSecurityGroupsDeployer.__init__"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">LoadBalancerSecurityGroupsDeployer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+</div>
+<div class="viewcode-block" id="LoadBalancerSecurityGroupsDeployer.find_existing"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer.find_existing">[docs]</a>    <span class="k">def</span> <span class="nf">find_existing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Prepopulate rules from the LB stack variables</span>
+        <span class="n">lb_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="o">.</span><span class="n">lb_sec_groups</span><span class="o">.</span><span class="n">dicts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">load_balancer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">lb_entry</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">,</span> \
+                <span class="s">&quot;No load balancer host found in stack for &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_balancer</span>
+        <span class="k">for</span> <span class="n">host</span> <span class="ow">in</span> <span class="n">lb_entry</span><span class="p">[</span><span class="s">&#39;hosts&#39;</span><span class="p">]:</span>
+            <span class="c"># Create a rule for this LB. Need a mask or nova interprets it </span>
+            <span class="c"># as a group rule rather than IP rule</span>
+            <span class="n">host</span> <span class="o">=</span> <span class="n">host</span> <span class="o">+</span> <span class="s">&quot;/32&quot;</span>
+            <span class="n">rule</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">PROTOCOL</span><span class="p">:</span> <span class="s">&#39;tcp&#39;</span><span class="p">,</span>
+                    <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">FROM</span><span class="p">:</span> <span class="n">lb_entry</span><span class="p">[</span><span class="s">&#39;port&#39;</span><span class="p">],</span>
+                    <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">TO</span><span class="p">:</span> <span class="n">lb_entry</span><span class="p">[</span><span class="s">&#39;port&#39;</span><span class="p">],</span>
+                    <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">SOURCE</span><span class="p">:</span> <span class="n">host</span><span class="p">,</span>
+                   <span class="p">}</span>       
+            <span class="bp">self</span><span class="o">.</span><span class="n">rules</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rule</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">LoadBalancerSecurityGroupsDeployer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">find_existing</span><span class="p">()</span>
+</div></div>
+<span class="n">DEPLOYER_MAP</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">SSH_KEYS</span><span class="p">:</span> <span class="n">SSHKeyDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">:</span> <span class="n">ServerDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">:</span> <span class="n">SecurityGroupDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUP_RULES</span><span class="p">:</span> <span class="n">SecurityGroupRulesetDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">BUCKETS</span><span class="p">:</span> <span class="n">BucketDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">:</span> <span class="n">DatabaseDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">LOAD_BALANCERS</span><span class="p">:</span> <span class="n">LoadBalancerDeployer</span><span class="p">,</span>
+        <span class="n">R</span><span class="o">.</span><span class="n">DYNAMIC_LB_SEC_GROUPS</span><span class="p">:</span> <span class="n">LoadBalancerSecurityGroupsDeployer</span><span class="p">,</span>
+        <span class="p">}</span>
+
+
+<div class="viewcode-block" id="get_deployers"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.get_deployers">[docs]</a><span class="k">def</span> <span class="nf">get_deployers</span><span class="p">(</span><span class="n">res_config</span><span class="p">,</span> <span class="n">res_type</span><span class="p">,</span> <span class="n">stack</span><span class="p">,</span> <span class="n">creds</span><span class="p">):</span>
+    <span class="n">pname</span> <span class="o">=</span> <span class="n">res_config</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">PROVIDER</span><span class="p">]</span>
+    <span class="n">provider</span> <span class="o">=</span> <span class="n">get_provider</span><span class="p">(</span><span class="n">pname</span><span class="p">,</span> <span class="n">creds</span><span class="p">[</span><span class="n">pname</span><span class="p">])</span>
+    <span class="n">consul</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_consul</span><span class="p">(</span><span class="n">res_type</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">consul</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> does not provide </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pname</span><span class="p">,</span> <span class="n">res_type</span><span class="p">))</span>
+        <span class="k">return</span>
+    <span class="n">deployer</span> <span class="o">=</span> <span class="n">DEPLOYER_MAP</span><span class="p">[</span><span class="n">res_type</span><span class="p">]</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">res_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;instance_count&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">deployer</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">res_config</span><span class="p">,</span> <span class="n">consul</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span></div>
 </pre></div>
 
           </div>
@@ -351,7 +498,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../deployers.html" >bang.deployers</a> &raquo;</li> 

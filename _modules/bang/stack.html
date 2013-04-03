@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.stack &mdash; bang 0.5 documentation</title>
+    <title>bang.stack &mdash; bang 0.6 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.5 documentation" href="../../index.html" />
+    <link rel="top" title="bang 0.6 documentation" href="../../index.html" />
     <link rel="up" title="bang" href="../bang.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
       </ul>
@@ -103,6 +103,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">shared_namespaces</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span> <span class="o">=</span> <span class="n">SharedMap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_sec_groups</span> <span class="o">=</span> <span class="n">SharedMap</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">)</span>
+
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Deployers stash inventory data for any newly-created servers in this</span>
 <span class="sd">        mapping object.  Note: uses SharedMap because this must be</span>
@@ -171,6 +173,22 @@
             <span class="n">attr</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">attr</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">prefix</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">res</span>
+</div>
+<div class="viewcode-block" id="Stack.add_lb_secgroup"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.add_lb_secgroup">[docs]</a>    <span class="k">def</span> <span class="nf">add_lb_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_name</span><span class="p">,</span> <span class="n">hosts</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Used by the load balancer deployer to register a hostname</span>
+<span class="sd">        for a load balancer, in order that security group rules can be</span>
+<span class="sd">        applied later. This is multiprocess-safe, but since keys are</span>
+<span class="sd">        accessed only be a single load balancer deployer there should be</span>
+<span class="sd">        no conflicts.</span>
+
+<span class="sd">        :param str lb_name: The load balancer name (as per the config file)</span>
+
+<span class="sd">        :param :class:`list` hosts:  The load balancer host[s], once known</span>
+
+<span class="sd">        :param port:  The backend port that the LB will connect on</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lb_sec_groups</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">lb_name</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;hosts&#39;</span><span class="p">:</span> <span class="n">hosts</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">:</span> <span class="n">port</span><span class="p">})</span>
 </div>
 <div class="viewcode-block" id="Stack.add_host"><a class="viewcode-back" href="../../api.html#bang.stack.Stack.add_host">[docs]</a>    <span class="k">def</span> <span class="nf">add_host</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">group_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">host_vars</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -271,12 +289,27 @@
 <span class="sd">            $HOME/bang-stacks/common_modules/</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cfg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
         <span class="n">bang_config_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
-                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">filepath</span><span class="p">)</span>
                 <span class="p">)</span>
-        <span class="n">ansible_module_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bang_config_dir</span><span class="p">,</span> <span class="s">&#39;common_modules&#39;</span><span class="p">)</span>
         <span class="n">playbook_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bang_config_dir</span><span class="p">,</span> <span class="s">&#39;playbooks&#39;</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">playbook</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">PLAYBOOKS</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">creds</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">DEPLOYER_CREDS</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">pb_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="c"># this allows connection reuse using &quot;ControlPersist&quot;:</span>
+                <span class="s">&#39;transport&#39;</span><span class="p">:</span> <span class="s">&#39;ssh&#39;</span><span class="p">,</span>
+                <span class="s">&#39;module_path&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bang_config_dir</span><span class="p">,</span> <span class="s">&#39;common_modules&#39;</span><span class="p">),</span>
+                <span class="s">&#39;remote_pass&#39;</span><span class="p">:</span> <span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">creds</span><span class="o">.</span><span class="n">SSH_PASS</span><span class="p">),</span>
+                <span class="c"># TODO: determine forks</span>
+                <span class="c"># &#39;forks&#39;: options.forks,</span>
+                <span class="p">}</span>
+        <span class="c"># only add the &#39;remote_user&#39; kwarg if it&#39;s in the config, otherwise use</span>
+        <span class="c"># ansible&#39;s default behaviour.</span>
+        <span class="n">ssh_user</span> <span class="o">=</span> <span class="n">creds</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">creds</span><span class="o">.</span><span class="n">SSH_USER</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ssh_user</span><span class="p">:</span>
+            <span class="n">pb_kwargs</span><span class="p">[</span><span class="s">&#39;remote_user&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ssh_user</span>
+
+        <span class="k">for</span> <span class="n">playbook</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">PLAYBOOKS</span><span class="p">,</span> <span class="p">[]):</span>
             <span class="n">playbook_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">playbook_dir</span><span class="p">,</span> <span class="n">playbook</span><span class="p">)</span>
 
             <span class="c"># gratuitously stolen from main() in ``ansible-playbook``</span>
@@ -284,21 +317,21 @@
             <span class="n">playbook_cb</span> <span class="o">=</span> <span class="n">PlaybookCallbacks</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">runner_cb</span> <span class="o">=</span> <span class="n">PlaybookRunnerCallbacks</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
-            <span class="n">pb</span> <span class="o">=</span> <span class="n">PlayBook</span><span class="p">(</span>
-                <span class="n">playbook</span><span class="o">=</span><span class="n">playbook_path</span><span class="p">,</span>
-                <span class="n">module_path</span><span class="o">=</span><span class="n">ansible_module_dir</span><span class="p">,</span>
+            <span class="n">extra_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;playbook&#39;</span><span class="p">:</span> <span class="n">playbook_path</span><span class="p">,</span>
 
-                <span class="c"># ``host_list`` is used to generate the inventory, but don&#39;t</span>
-                <span class="c"># worry, we override the inventory later</span>
-                <span class="n">host_list</span><span class="o">=</span><span class="p">[],</span>
+                    <span class="c"># TODO: do we really need new instances of the following</span>
+                    <span class="c"># for each playbook?</span>
+                    <span class="s">&#39;callbacks&#39;</span><span class="p">:</span> <span class="n">playbook_cb</span><span class="p">,</span>
+                    <span class="s">&#39;runner_callbacks&#39;</span><span class="p">:</span> <span class="n">runner_cb</span><span class="p">,</span>
+                    <span class="s">&#39;stats&#39;</span><span class="p">:</span> <span class="n">stats</span><span class="p">,</span>
 
-                <span class="c"># TODO: determine forks</span>
-                <span class="c"># forks=options.forks,</span>
-
-                <span class="n">callbacks</span><span class="o">=</span><span class="n">playbook_cb</span><span class="p">,</span>
-                <span class="n">runner_callbacks</span><span class="o">=</span><span class="n">runner_cb</span><span class="p">,</span>
-                <span class="n">stats</span><span class="o">=</span><span class="n">stats</span><span class="p">,</span>
-            <span class="p">)</span>
+                    <span class="c"># ``host_list`` is used to generate the inventory, but</span>
+                    <span class="c"># don&#39;t worry, we override the inventory later</span>
+                    <span class="s">&#39;host_list&#39;</span><span class="p">:</span> <span class="p">[],</span>
+                    <span class="p">}</span>
+            <span class="n">pb_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">extra_kwargs</span><span class="p">)</span>
+            <span class="n">pb</span> <span class="o">=</span> <span class="n">PlayBook</span><span class="p">(</span><span class="o">**</span><span class="n">pb_kwargs</span><span class="p">)</span>
             <span class="n">pb</span><span class="o">.</span><span class="n">inventory</span> <span class="o">=</span> <span class="n">BangsibleInventory</span><span class="p">(</span>
                     <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">lists</span><span class="p">),</span>
                     <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">groups_and_vars</span><span class="o">.</span><span class="n">dicts</span><span class="p">),</span>
@@ -384,7 +417,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" >bang</a> &raquo;</li> 
       </ul>

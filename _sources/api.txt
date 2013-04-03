@@ -37,6 +37,15 @@ API
     :show-inheritance:
 
 
+:mod:`bang.deployers.default`
+-----------------------------
+
+.. automodule:: bang.deployers.default
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 :mod:`bang.deployers.deployer`
 ------------------------------
 
@@ -86,6 +95,15 @@ API
 -----------------------------
 
 .. automodule:: bang.providers.hpcloud
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+:mod:`bang.providers.hpcloud.load_balancer`
+-------------------------------------------
+
+.. automodule:: bang.providers.hpcloud.load_balancer
     :members:
     :undoc-members:
     :show-inheritance:

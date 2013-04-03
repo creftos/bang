@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Stack Configurations &mdash; bang 0.5 documentation</title>
+    <title>Stack Configurations &mdash; bang 0.6 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.5 documentation" href="index.html" />
+    <link rel="top" title="bang 0.6 documentation" href="index.html" />
     <link rel="next" title="Writing Ansible Playbooks" href="playbooks.html" />
     <link rel="prev" title="Running Bang" href="running.html" /> 
   </head>
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="running.html" title="Running Bang"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -59,8 +59,8 @@
 <div class="section" id="config-file-structure">
 <h2>Config File Structure<a class="headerlink" href="#config-file-structure" title="Permalink to this headline">¶</a></h2>
 <p>The configuration file is a <a class="reference external" href="http://www.yaml.org">YAML</a> document.
-Like an Ansible playbook, the outermost data structure is a <a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2798057">YAML
-mapping</a>.</p>
+Like a play in an Ansible playbook, the outermost data structure is a
+<a class="reference external" href="http://www.yaml.org/spec/1.2/spec.html#id2798057">YAML mapping</a>.</p>
 <p>Like Python, blocks/sections/stanzas in a Bang config file are
 visually defined by indentation level.  Each top-level section name
 is a key in the outermost mapping structure.</p>
@@ -70,7 +70,7 @@ keys/sections.  The broader groups are:</p>
 <blockquote>
 <div><ul class="simple">
 <li><a class="reference internal" href="#general-stack-properties">General Stack Properties</a></li>
-<li><a class="reference internal" href="#dynamic-stack-resources">Dynamic Stack Resources</a></li>
+<li><a class="reference internal" href="#stack-resource-definitions">Stack Resource Definitions</a></li>
 <li><a class="reference internal" href="#configuration-scopes">Configuration Scopes</a></li>
 </ul>
 </div></blockquote>
@@ -102,56 +102,101 @@ an entire product/project release.</dd>
 <dd>A list of playbook filenames to execute.</dd>
 </dl>
 </div>
-<div class="section" id="dynamic-stack-resources">
-<h3>Dynamic Stack Resources<a class="headerlink" href="#dynamic-stack-resources" title="Permalink to this headline">¶</a></h3>
-<p>These configuration stanzas describe <em>Infrastructure as a Service
-(IaaS)</em> and <em>Platform as a Service (PaaS)</em> resources that should be
-created for the stack.</p>
-<p>The following top-level section names, or keys, are reserved:</p>
+<div class="section" id="stack-resource-definitions">
+<h3>Stack Resource Definitions<a class="headerlink" href="#stack-resource-definitions" title="Permalink to this headline">¶</a></h3>
+<p>These configuration stanzas describe the building blocks for a
+project.  Examples of stack resources include:</p>
+<blockquote>
+<div><ul>
+<li><p class="first">Cloud resources</p>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#queues">queues</a></li>
-<li><a class="reference internal" href="#buckets">buckets</a></li>
-<li><a class="reference internal" href="#databases">databases</a></li>
-<li><a class="reference internal" href="#server-security-groups">server_security_groups</a></li>
-<li><a class="reference internal" href="#servers">servers</a></li>
+<li>Virtual servers</li>
+<li>Load balancers</li>
+<li>Firewalls and/or security groups</li>
+<li>Object storage</li>
+<li>Block storage</li>
+<li>Message queues</li>
+<li>Managed databases</li>
 </ul>
 </div></blockquote>
-<p>Every dynamic stack resource key maps to a <em>list of definitions</em> for
-that particular resource type.  Each definition in the list is a
-key-value map of attributes.  Most attributes are specific to the
-type of resource being deployed.  However, every resource definition
-must contain a <tt class="docutils literal"><span class="pre">provider</span></tt> key whose value is the name of a
-bang-supported IaaS or PaaS provider.</p>
-<div class="section" id="queues">
-<h4><tt class="docutils literal"><span class="pre">queues</span></tt><a class="headerlink" href="#queues" title="Permalink to this headline">¶</a></h4>
-<p>E.g. SQS</p>
-</div>
-<div class="section" id="buckets">
-<h4><tt class="docutils literal"><span class="pre">buckets</span></tt><a class="headerlink" href="#buckets" title="Permalink to this headline">¶</a></h4>
-<p>E.g. S3, OpenStack Swift</p>
-</div>
-<div class="section" id="databases">
-<h4><tt class="docutils literal"><span class="pre">databases</span></tt><a class="headerlink" href="#databases" title="Permalink to this headline">¶</a></h4>
-<p>E.g. RDS, OpenStack RedDwarf</p>
-</div>
-<div class="section" id="server-security-groups">
-<h4><tt class="docutils literal"><span class="pre">server_security_groups</span></tt><a class="headerlink" href="#server-security-groups" title="Permalink to this headline">¶</a></h4>
-<p>E.g. EC2 and OpenStack Nova security groups</p>
-</div>
-<div class="section" id="servers">
-<h4><tt class="docutils literal"><span class="pre">servers</span></tt><a class="headerlink" href="#servers" title="Permalink to this headline">¶</a></h4>
-<p>E.g. EC2, OpenStack Nova, VPS virtual machines.</p>
-</div>
+</li>
+<li><p class="first">Traditional server room/data center resources</p>
+<blockquote>
+<div><ul class="simple">
+<li>Physical or virtual servers</li>
+<li>Load balancers</li>
+<li>Firewalls</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+<p>Users can use Bang to manage stacks that span across traditional and
+cloud boundaries.  For example, a single stack might comprise:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Legacy database servers in a datacenter</li>
+<li>Web application servers in an OpenStack public cloud</li>
+<li>Message queues and object storage from AWS (i.e. SQS)</li>
+</ul>
+</div></blockquote>
+<p>Every stack resource key maps to a <em>list of definitions</em> for that
+particular resource type.  Each definition in the list is a key-value
+map of attributes.  Most attributes are specific to the type of
+resource being deployed.</p>
+<p>Every cloud resource definition must contain a <tt class="docutils literal"><span class="pre">provider</span></tt> key whose
+value is the name of a Bang-supported cloud provider.</p>
+<p>Server definitions that do not contain a <tt class="docutils literal"><span class="pre">provider</span></tt> key are assumed
+to be <em>already provisioned</em>.  Instead of a set of cloud server
+attributes, these definitions merely contain <tt class="docutils literal"><span class="pre">hostname</span></tt> values and
+the appropriate configuration scopes.</p>
+<p>The reserved stack resource keys are described below:</p>
+<dl class="docutils">
+<dt>queues</dt>
+<dd>E.g. SQS</dd>
+<dt>buckets</dt>
+<dd>E.g. S3, OpenStack Swift</dd>
+<dt>databases</dt>
+<dd>E.g. RDS, OpenStack RedDwarf</dd>
+<dt>server_security_groups</dt>
+<dd>E.g. EC2 and OpenStack Nova security groups</dd>
+<dt>servers</dt>
+<dd>E.g. EC2, OpenStack Nova, VPS virtual machines.</dd>
+</dl>
 </div>
 <div class="section" id="configuration-scopes">
 <h3>Configuration Scopes<a class="headerlink" href="#configuration-scopes" title="Permalink to this headline">¶</a></h3>
 <p>Any top-level section name that is not specified above as a reserved
-key in <a class="reference internal" href="#general-stack-properties">General Stack Properties</a> or in <a class="reference internal" href="#dynamic-stack-resources">Dynamic Stack Resources</a>,
-is parsed and categorized as a custom configuration scope.</p>
+key in <a class="reference internal" href="#general-stack-properties">General Stack Properties</a> or in <a href="#id1"><span class="problematic" id="id2">`Stack Resources
+Definitions`_</span></a>, is parsed and categorized as a custom configuration
+scope.</p>
 <p>Any configuration scope names that are added to a server&#8217;s
 <tt class="docutils literal"><span class="pre">config_scopes</span></tt> list, make those values available to Ansible
 playbooks as vars.</p>
+<p>Configuration scopes typically define attributes for applications and
+middleware in the stack.  For example, a media transcoding web
+service might have the following config scopes:</p>
+<div class="highlight-yaml"><div class="highlight"><pre><span class="l-Scalar-Plain">apache</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">preforks</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">4</span>
+  <span class="l-Scalar-Plain">modules</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">rewrite</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">wsgi</span>
+
+<span class="l-Scalar-Plain">my_web_frontend</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">version</span><span class="p-Indicator">:</span> <span class="s">&#39;1.2.0&#39;</span>
+  <span class="l-Scalar-Plain">log_level</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">WARN</span>
+
+<span class="l-Scalar-Plain">my_transcoder_app</span><span class="p-Indicator">:</span>
+  <span class="l-Scalar-Plain">version</span><span class="p-Indicator">:</span> <span class="s">&#39;1.1.5&#39;</span>
+  <span class="l-Scalar-Plain">log_level</span><span class="p-Indicator">:</span> <span class="l-Scalar-Plain">INFO</span>
+  <span class="l-Scalar-Plain">src_types</span><span class="p-Indicator">:</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">h.264+aac</span>
+  <span class="p-Indicator">-</span> <span class="l-Scalar-Plain">theora+vorbis</span>
+</pre></div>
+</div>
+<p>The key names and the values are arbitrary and defined solely by the
+user.</p>
 </div>
 </div>
 </div>
@@ -168,14 +213,7 @@ playbooks as vars.</p>
 <li><a class="reference internal" href="#config-file-structure">Config File Structure</a></li>
 <li><a class="reference internal" href="#top-level-keys">Top-Level Keys</a><ul>
 <li><a class="reference internal" href="#general-stack-properties">General Stack Properties</a></li>
-<li><a class="reference internal" href="#dynamic-stack-resources">Dynamic Stack Resources</a><ul>
-<li><a class="reference internal" href="#queues"><tt class="docutils literal"><span class="pre">queues</span></tt></a></li>
-<li><a class="reference internal" href="#buckets"><tt class="docutils literal"><span class="pre">buckets</span></tt></a></li>
-<li><a class="reference internal" href="#databases"><tt class="docutils literal"><span class="pre">databases</span></tt></a></li>
-<li><a class="reference internal" href="#server-security-groups"><tt class="docutils literal"><span class="pre">server_security_groups</span></tt></a></li>
-<li><a class="reference internal" href="#servers"><tt class="docutils literal"><span class="pre">servers</span></tt></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#stack-resource-definitions">Stack Resource Definitions</a></li>
 <li><a class="reference internal" href="#configuration-scopes">Configuration Scopes</a></li>
 </ul>
 </li>
@@ -226,7 +264,7 @@ playbooks as vars.</p>
         <li class="right" >
           <a href="running.html" title="Running Bang"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

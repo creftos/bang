@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API &mdash; bang 0.5 documentation</title>
+    <title>API &mdash; bang 0.6 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.5 documentation" href="index.html" />
+    <link rel="top" title="bang 0.6 documentation" href="index.html" />
     <link rel="prev" title="Design" href="design.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="design.html" title="Design"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -349,6 +349,74 @@ existing instance must also be &#8220;running&#8221;.</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="bang.deployers.cloud.LoadBalancerDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">LoadBalancerDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.BaseDeployer" title="bang.deployers.cloud.BaseDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.BaseDeployer</span></tt></a></p>
+<p>Cloud-managed load balancer deployer. Assumes a consul able
+to create and discover LB instances, as well as match existing
+backend &#8216;nodes&#8217; to a list it&#8217;s given. It is assumed only a single
+&#8216;instance&#8217; per distinct load balancer needs to be created (i.e.
+that any elasticity is handled by the cloud service)
+E.g config:</p>
+<blockquote>
+<div><p>load_balancers:
+- name: test-balancer</p>
+<blockquote>
+<div>balance_server_name: server_defined_in_servers_section
+provider: hpcloud
+backend_port: &#8216;8080&#8217;
+protocol: tcp
+port: &#8216;443&#8217;</div></blockquote>
+</div></blockquote>
+<dl class="method">
+<dt id="bang.deployers.cloud.LoadBalancerDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.LoadBalancerDeployer.add_to_inventory">
+<tt class="descname">add_to_inventory</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer.add_to_inventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer.add_to_inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds lb IPs to stack inventory</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.LoadBalancerDeployer.configure_nodes">
+<tt class="descname">configure_nodes</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer.configure_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer.configure_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that the LB&#8217;s nodes matches the stack</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.LoadBalancerDeployer.create">
+<tt class="descname">create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer.create" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new load balancer</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.LoadBalancerDeployer.find_existing">
+<tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Searches for existing load balancer instance with matching name.
+Doesn&#8217;t populate &#8216;details&#8217; including the nodes and virtual IPs</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">LoadBalancerSecurityGroupsDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerSecurityGroupsDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.SecurityGroupRulesetDeployer" title="bang.deployers.cloud.SecurityGroupRulesetDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.SecurityGroupRulesetDeployer</span></tt></a></p>
+<dl class="method">
+<dt id="bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerSecurityGroupsDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer.find_existing">
+<tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerSecurityGroupsDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="bang.deployers.cloud.RegionedDeployer">
 <em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">RegionedDeployer</tt><big>(</big><em>stack</em>, <em>config</em>, <em>consul</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#RegionedDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.RegionedDeployer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.BaseDeployer" title="bang.deployers.cloud.BaseDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.BaseDeployer</span></tt></a></p>
@@ -459,6 +527,44 @@ config file.</p>
 <tt class="descname">find_existing</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#ServerDeployer.find_existing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.ServerDeployer.find_existing" title="Permalink to this definition">¶</a></dt>
 <dd><p>Searches for existing server instances with matching tags.  To match,
 the existing instances must also be &#8220;running&#8221;.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.deployers.cloud.get_deployers">
+<tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">get_deployers</tt><big>(</big><em>res_config</em>, <em>res_type</em>, <em>stack</em>, <em>creds</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#get_deployers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.get_deployers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-bang.deployers.default">
+<span id="bang-deployers-default"></span><h2><a class="reference internal" href="#module-bang.deployers.default" title="bang.deployers.default"><tt class="xref py py-mod docutils literal"><span class="pre">bang.deployers.default</span></tt></a><a class="headerlink" href="#module-bang.deployers.default" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.deployers.default.ServerDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.default.</tt><tt class="descname">ServerDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/default.html#ServerDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.default.ServerDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.deployer.Deployer</span></tt></a></p>
+<p>Default deployer that can be used for any servers that are already deployed
+and do not need special deployment logic (e.g. traditional server rooms,
+manually deployed cloud servers).</p>
+<p>Example of a minimal configuration for such a server:</p>
+<div class="highlight-python"><pre>- name: my_server_class
+  hostname: my_hostname_or_ip_address
+  groups:
+  - ansible_inventory_group_1
+  - ansible_inventory_group_n
+  config_scopes:
+  - config_scope_1
+  - config_scope_n</pre>
+</div>
+<dl class="method">
+<dt id="bang.deployers.default.ServerDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/default.html#ServerDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.default.ServerDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.default.ServerDeployer.add_to_inventory">
+<tt class="descname">add_to_inventory</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/default.html#ServerDeployer.add_to_inventory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.default.ServerDeployer.add_to_inventory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds this server and its hostvars to the ansible inventory.</p>
 </dd></dl>
 
 </dd></dl>
@@ -805,6 +911,11 @@ discouraged:</p>
 keys are used.</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="bang.providers.hpcloud.HPCloud.load_balancer_client">
+<tt class="descname">load_balancer_client</tt><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPCloud.load_balancer_client"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPCloud.load_balancer_client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -887,6 +998,188 @@ and a list of private IP addresses.</td>
 </tr>
 </tbody>
 </table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.providers.hpcloud.load_balancer">
+<span id="bang-providers-hpcloud-load-balancer"></span><h2><a class="reference internal" href="#module-bang.providers.hpcloud.load_balancer" title="bang.providers.hpcloud.load_balancer"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.hpcloud.load_balancer</span></tt></a><a class="headerlink" href="#module-bang.providers.hpcloud.load_balancer" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer">
+<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.load_balancer.</tt><tt class="descname">HPLoadBalancer</tt><big>(</big><em>hpcloud</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience functions to manage HP cloud LBaaS instances. 
+LBaaS uses its own AZ-independent public URL for management,
+but accepts the common auth token. Rather than integrating with
+openstack, this is HP-cloud specific for now, since there is still
+disagreement about the direction openstack&#8217;s load balancing effort
+will take.</p>
+<p>TODO: The beta api doesn&#8217;t seem to support tags, which we use elsewhere
+for filtering a stack. Instead this&#8217;ll use &#8216;name&#8217;</p>
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>hpcloud</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Provide a management URL (from the openstack service catalog)
+and auth token (which can be pinched from novaclient)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.add_lb_nodes">
+<tt class="descname">add_lb_nodes</tt><big>(</big><em>lb_id</em>, <em>nodes</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.add_lb_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.add_lb_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds nodes to an existing LBaaS instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lb_id</strong> (<em>string</em>) &#8211; Balancer id</li>
+<li><strong>nodes</strong> (<em>list</em>) &#8211; Nodes to add. {address, port, [condition]}</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>:rtype <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.create_lb">
+<tt class="descname">create_lb</tt><big>(</big><em>name</em>, <em>protocol='HTTP'</em>, <em>port=80</em>, <em>algorithm=None</em>, <em>virtual_ips=</em><span class="optional">[</span><span class="optional">]</span>, <em>nodes=</em><span class="optional">[</span><span class="optional">]</span>, <em>node_port=None</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.create_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.create_lb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new LBaaS instance. A name is required. If no nodes
+are required, the instance <tt class="docutils literal"><span class="pre">status</span></tt> (after it&#8217;s built) will be
+<tt class="docutils literal"><span class="pre">ERROR</span></tt> until nodes are added. The return dict contains the id
+and <tt class="docutils literal"><span class="pre">virtualIps</span></tt> (the external IP).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>string</em>) &#8211; The LBaaS name - should be unique</li>
+<li><strong>protocol</strong> (<em>string</em>) &#8211; Supported: HTTP, TCP</li>
+<li><strong>port</strong> (<em>int</em>) &#8211; The external port. Supported: 80, 443, seemingly</li>
+<li><strong>virtual_ips</strong> (<em>list</em>) &#8211; Use an existing IP (allows multiple
+ports per IP)</li>
+<li><strong>nodes</strong> (<em>list</em>) &#8211; Nodes addresses to add</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.delete_lb">
+<tt class="descname">delete_lb</tt><big>(</big><em>lb_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.delete_lb"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.delete_lb" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete an instance</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lb_id</strong> (<em>string</em>) &#8211; Delete this LBaaS id</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.find_lb_by_name">
+<tt class="descname">find_lb_by_name</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.find_lb_by_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.find_lb_by_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Look up a LBaaS instance by name (rather than id)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">Attr string name:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The LBaaS name assigned at creation time</td>
+</tr>
+</tbody>
+</table>
+<p>:rtype <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.lb_details">
+<tt class="descname">lb_details</tt><big>(</big><em>lb_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.lb_details"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.lb_details" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get details (including all nodes and external IPs)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lb_id</strong> (<em>string</em>) &#8211; Load balancer id</td>
+</tr>
+</tbody>
+</table>
+<p>:rtype <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.list_lbs">
+<tt class="descname">list_lbs</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.list_lbs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.list_lbs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lists all LBaaS instances. To get details (nodes, external IPs)
+use the <tt class="docutils literal"><span class="pre">lb_details</span></tt> call.</p>
+<p>:rtype <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.match_lb_nodes">
+<tt class="descname">match_lb_nodes</tt><big>(</big><em>lb_id</em>, <em>existing_nodes</em>, <em>host_addresses</em>, <em>host_port</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.match_lb_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.match_lb_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add and remove nodes to match the host addresses
+and port given, based on existing_nodes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lb_id</strong> (<em>string</em>) &#8211; Load balancer id</td>
+</tr>
+</tbody>
+</table>
+<p>:param <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt> existing_nodes: Existing nodes</p>
+<p>:param <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> host_addresses: Node host addresses</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>port</strong> (<em>string</em>) &#8211; Node port</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.remove_lb_nodes">
+<tt class="descname">remove_lb_nodes</tt><big>(</big><em>lb_id</em>, <em>node_ids</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.remove_lb_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.remove_lb_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove one or more nodes</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lb_id</strong> (<em>string</em>) &#8211; Balancer id</li>
+<li><strong>node_ids</strong> (<em>list</em>) &#8211; List of node ids</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.update_lb_node_condition">
+<tt class="descname">update_lb_node_condition</tt><big>(</big><em>lb_id</em>, <em>node_id</em>, <em>condition</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.update_lb_node_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.update_lb_node_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update node condition - specifically to disable/enable</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>lb_id</strong> (<em>string</em>) &#8211; Balancer id</li>
+<li><strong>node_id</strong> (<em>string</em>) &#8211; Node id</li>
+<li><strong>condition</strong> (<em>string</em>) &#8211; ENABLED/DISABLED</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1331,7 +1624,7 @@ database server before failing.</li>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>name</strong> (<em>str</em>) &#8211; The name of the target db instance.</li>
+<li><strong>name</strong> (<em>str</em>) &#8211; The name of the target db instance</li>
 <li><strong>running</strong> (<em>bool</em>) &#8211; A flag to only look for instances that are
 actually <em>running</em>.</li>
 </ul>
@@ -1443,6 +1736,33 @@ object.</strong></li>
 </dd></dl>
 
 <dl class="method">
+<dt id="bang.stack.Stack.add_lb_secgroup">
+<tt class="descname">add_lb_secgroup</tt><big>(</big><em>lb_name</em>, <em>hosts</em>, <em>port</em><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.add_lb_secgroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.add_lb_secgroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Used by the load balancer deployer to register a hostname
+for a load balancer, in order that security group rules can be
+applied later. This is multiprocess-safe, but since keys are
+accessed only be a single load balancer deployer there should be
+no conflicts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>lb_name</strong> (<em>str</em>) &#8211; The load balancer name (as per the config file)</td>
+</tr>
+</tbody>
+</table>
+<p>:param <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> hosts:  The load balancer host[s], once known</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>port</strong> &#8211; The backend port that the LB will connect on</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="bang.stack.Stack.configure">
 <tt class="descname">configure</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/stack.html#Stack.configure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.stack.Stack.configure" title="Permalink to this definition">¶</a></dt>
 <dd><p>Executes the ansible playbooks that configure the servers in the stack.</p>
@@ -1528,8 +1848,8 @@ the same <a class="reference internal" href="#bang.util.SharedNamespace" title="
 </dd></dl>
 
 <dl class="attribute">
-<dt id="bang.stack.Stack.groups_and_vars">
-<tt class="descname">groups_and_vars</tt><em class="property"> = None</em><a class="headerlink" href="#bang.stack.Stack.groups_and_vars" title="Permalink to this definition">¶</a></dt>
+<dt id="bang.stack.Stack.lb_sec_groups">
+<tt class="descname">lb_sec_groups</tt><em class="property"> = None</em><a class="headerlink" href="#bang.stack.Stack.lb_sec_groups" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deployers stash inventory data for any newly-created servers in this
 mapping object.  Note: uses SharedMap because this must be
 multiprocess-safe.</p>
@@ -1791,12 +2111,14 @@ secret (i.e. matches SECRET_PATTERN).</p>
 <li><a class="reference internal" href="#module-bang.config"><tt class="docutils literal"><span class="pre">bang.config</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers"><tt class="docutils literal"><span class="pre">bang.deployers</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers.cloud"><tt class="docutils literal"><span class="pre">bang.deployers.cloud</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.deployers.default"><tt class="docutils literal"><span class="pre">bang.deployers.default</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers.deployer"><tt class="docutils literal"><span class="pre">bang.deployers.deployer</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.inventory"><tt class="docutils literal"><span class="pre">bang.inventory</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers"><tt class="docutils literal"><span class="pre">bang.providers</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.bases"><tt class="docutils literal"><span class="pre">bang.providers.bases</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.aws"><tt class="docutils literal"><span class="pre">bang.providers.aws</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.hpcloud"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.providers.hpcloud.load_balancer"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.load_balancer</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.hpcloud.nova_ext"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.hpcloud.reddwarf"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.reddwarf</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.openstack"><tt class="docutils literal"><span class="pre">bang.providers.openstack</span></tt></a></li>
@@ -1843,7 +2165,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
         <li class="right" >
           <a href="design.html" title="Design"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.5 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

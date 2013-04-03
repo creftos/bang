@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Bang! &mdash; bang 0.5 documentation</title>
+    <title>Bang! &mdash; bang 0.6 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.5 documentation" href="#" />
+    <link rel="top" title="bang 0.6 documentation" href="#" />
     <link rel="next" title="Installing Bang" href="installing.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="installing.html" title="Installing Bang"
              accesskey="N">next</a> |</li>
-        <li><a href="#">bang 0.5 documentation</a> &raquo;</li> 
+        <li><a href="#">bang 0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -56,8 +56,9 @@
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Bang automates deployment of server-based software projects.</p>
-<p>Projects often comprise multiple servers of varying roles, public cloud
-resources like storage <em>buckets</em> and message queues and other
+<p>Projects often comprise multiple servers of varying roles and in varying
+locations (e.g. traditional server room, cloud provider, multi-datacenter),
+public cloud resources like storage <em>buckets</em> and message queues and other
 IaaS/PaaS/Splat_aaS resources.  DevOps teams already use several configuration
 management tools like Ansible, Salt Stack, Puppet and Chef to automate
 on-server configuration.  There are also cloud resource <em>orchestration</em> tools
@@ -66,8 +67,9 @@ resource provisioning.  Bang combines orchestration with on-server
 configuration management to provide one-shot, automated deployment of entire
 project <em>stacks</em>.</p>
 <p>Bang instantiates cloud resources (e.g. AWS EC2/OpenStack Nova server
-instances), then leverages <a class="reference external" href="http://ansible.cc/">Ansible</a> for server
-configuration.</p>
+instances), then leverages <a class="reference external" href="http://ansible.cc/">Ansible</a> for configuration of
+all servers whether they are in a server room in the office, across the country
+in a private datacenter, or hosted by a public cloud provider.</p>
 <p>The latest online documentation lives at <a class="reference external" href="http://fr33jc.github.com/bang/">http://fr33jc.github.com/bang/</a>.</p>
 <a class="reference external image-reference" href="http://travis-ci.org/fr33jc/bang"><img alt="https://travis-ci.org/fr33jc/bang.png" src="https://travis-ci.org/fr33jc/bang.png" /></a>
 </div>
@@ -108,6 +110,7 @@ configuration.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="releases.html">Release Summary</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="releases.html#april-3-2013">0.6 - April 3, 2013</a></li>
 <li class="toctree-l2"><a class="reference internal" href="releases.html#march-11-2013">0.5 - March 11, 2013</a></li>
 <li class="toctree-l2"><a class="reference internal" href="releases.html#march-6-2013">0.4 - March 6, 2013</a></li>
 <li class="toctree-l2"><a class="reference internal" href="releases.html#february-11-2013">0.3 - February 11, 2013</a></li>
@@ -136,12 +139,14 @@ configuration.</p>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.config"><tt class="docutils literal"><span class="pre">bang.config</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.deployers"><tt class="docutils literal"><span class="pre">bang.deployers</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.deployers.cloud"><tt class="docutils literal"><span class="pre">bang.deployers.cloud</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.deployers.default"><tt class="docutils literal"><span class="pre">bang.deployers.default</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.deployers.deployer"><tt class="docutils literal"><span class="pre">bang.deployers.deployer</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.inventory"><tt class="docutils literal"><span class="pre">bang.inventory</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers"><tt class="docutils literal"><span class="pre">bang.providers</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers.bases"><tt class="docutils literal"><span class="pre">bang.providers.bases</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers.aws"><tt class="docutils literal"><span class="pre">bang.providers.aws</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers.hpcloud"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud</span></tt></a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers.hpcloud.load_balancer"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.load_balancer</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers.hpcloud.nova_ext"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers.hpcloud.reddwarf"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.reddwarf</span></tt></a></li>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-bang.providers.openstack"><tt class="docutils literal"><span class="pre">bang.providers.openstack</span></tt></a></li>
@@ -223,7 +228,7 @@ configuration.</p>
         <li class="right" >
           <a href="installing.html" title="Installing Bang"
              >next</a> |</li>
-        <li><a href="#">bang 0.5 documentation</a> &raquo;</li> 
+        <li><a href="#">bang 0.6 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

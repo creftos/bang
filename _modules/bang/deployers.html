@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.deployers &mdash; bang 0.5 documentation</title>
+    <title>bang.deployers &mdash; bang 0.6 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.5',
+        VERSION:     '0.6',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.5 documentation" href="../../index.html" />
+    <link rel="top" title="bang 0.6 documentation" href="../../index.html" />
     <link rel="up" title="bang" href="../bang.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
       </ul>
@@ -69,20 +69,9 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Base classes and definitions for bang deployers (deployable components)</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cloud</span>
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span>
-<span class="kn">from</span> <span class="nn">..providers</span> <span class="kn">import</span> <span class="n">get_provider</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">cloud</span><span class="p">,</span> <span class="n">default</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
 <span class="kn">from</span> <span class="nn">..util</span> <span class="kn">import</span> <span class="n">log</span>
-
-
-<span class="n">DEPLOYER_MAP</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">R</span><span class="o">.</span><span class="n">SSH_KEYS</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">SSHKeyDeployer</span><span class="p">,</span>
-        <span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">ServerDeployer</span><span class="p">,</span>
-        <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">SecurityGroupDeployer</span><span class="p">,</span>
-        <span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUP_RULES</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">SecurityGroupRulesetDeployer</span><span class="p">,</span>
-        <span class="n">R</span><span class="o">.</span><span class="n">BUCKETS</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">BucketDeployer</span><span class="p">,</span>
-        <span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">:</span> <span class="n">cloud</span><span class="o">.</span><span class="n">DatabaseDeployer</span><span class="p">,</span>
-        <span class="p">}</span>
 
 
 <div class="viewcode-block" id="get_stage_deployers"><a class="viewcode-back" href="../../api.html#bang.deployers.get_stage_deployers">[docs]</a><span class="k">def</span> <span class="nf">get_stage_deployers</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">stack</span><span class="p">):</span>
@@ -110,16 +99,12 @@
             <span class="k">continue</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Found config for resource type, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">res_type</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">res_config</span> <span class="ow">in</span> <span class="n">res_configs</span><span class="p">:</span>
-            <span class="n">pname</span> <span class="o">=</span> <span class="n">res_config</span><span class="p">[</span><span class="s">&#39;provider&#39;</span><span class="p">]</span>
-            <span class="n">provider</span> <span class="o">=</span> <span class="n">get_provider</span><span class="p">(</span><span class="n">pname</span><span class="p">,</span> <span class="n">creds</span><span class="p">[</span><span class="n">pname</span><span class="p">])</span>
-            <span class="n">consul</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_consul</span><span class="p">(</span><span class="n">res_type</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">consul</span><span class="p">:</span>
-                <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> does not provide </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pname</span><span class="p">,</span> <span class="n">res_type</span><span class="p">))</span>
-                <span class="k">continue</span>
-            <span class="n">deployer</span> <span class="o">=</span> <span class="n">DEPLOYER_MAP</span><span class="p">[</span><span class="n">res_type</span><span class="p">]</span>
-            <span class="n">count</span> <span class="o">=</span> <span class="n">res_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;instance_count&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">ds</span> <span class="o">=</span> <span class="p">[</span><span class="n">deployer</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">res_config</span><span class="p">,</span> <span class="n">consul</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">)]</span>
-            <span class="n">deployers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">PROVIDER</span> <span class="ow">in</span> <span class="n">res_config</span><span class="p">:</span>
+                <span class="n">ds</span> <span class="o">=</span> <span class="n">cloud</span><span class="o">.</span><span class="n">get_deployers</span><span class="p">(</span><span class="n">res_config</span><span class="p">,</span> <span class="n">res_type</span><span class="p">,</span> <span class="n">stack</span><span class="p">,</span> <span class="n">creds</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ds</span> <span class="o">=</span> <span class="p">[</span><span class="n">default</span><span class="o">.</span><span class="n">ServerDeployer</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">res_config</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">ds</span><span class="p">:</span>
+                <span class="n">deployers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">deployers</span></div>
 </pre></div>
 
@@ -154,7 +139,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.5 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" >bang</a> &raquo;</li> 
       </ul>
