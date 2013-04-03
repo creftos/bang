@@ -1,0 +1,320 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>bang.providers.hpcloud.load_balancer &mdash; bang 0.6 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.6',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="bang 0.6 documentation" href="../../../../index.html" />
+    <link rel="up" title="bang.providers.hpcloud" href="../hpcloud.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">bang 0.6 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../bang.html" >bang</a> &raquo;</li>
+          <li><a href="../../providers.html" >bang.providers</a> &raquo;</li>
+          <li><a href="../hpcloud.html" accesskey="U">bang.providers.hpcloud</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for bang.providers.hpcloud.load_balancer</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">...util</span> <span class="kn">import</span> <span class="n">log</span>
+
+<div class="viewcode-block" id="HPLoadBalancer"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer">[docs]</a><span class="k">class</span> <span class="nc">HPLoadBalancer</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience functions to manage HP cloud LBaaS instances. </span>
+<span class="sd">    LBaaS uses its own AZ-independent public URL for management,</span>
+<span class="sd">    but accepts the common auth token. Rather than integrating with</span>
+<span class="sd">    openstack, this is HP-cloud specific for now, since there is still</span>
+<span class="sd">    disagreement about the direction openstack&#39;s load balancing effort</span>
+<span class="sd">    will take.</span>
+
+<span class="sd">    TODO: The beta api doesn&#39;t seem to support tags, which we use elsewhere</span>
+<span class="sd">    for filtering a stack. Instead this&#39;ll use &#39;name&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="HPLoadBalancer.__init__"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hpcloud</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide a management URL (from the openstack service catalog)</span>
+<span class="sd">        and auth token (which can be pinched from novaclient)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">lb_catalog</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;Load Balancer&#39;</span><span class="p">,</span> 
+                                   <span class="n">hpcloud</span><span class="o">.</span><span class="n">os_catalog</span><span class="p">[</span><span class="s">&#39;access&#39;</span><span class="p">][</span><span class="s">&#39;serviceCatalog&#39;</span><span class="p">])</span>
+        <span class="n">lb_management_url</span> <span class="o">=</span> <span class="n">lb_catalog</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;endpoints&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;publicURL&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">management_url</span> <span class="o">=</span> <span class="n">lb_management_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span> <span class="o">=</span> <span class="n">hpcloud</span><span class="o">.</span><span class="n">os_auth_token</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.list_lbs"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.list_lbs">[docs]</a>    <span class="k">def</span> <span class="nf">list_lbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lists all LBaaS instances. To get details (nodes, external IPs)</span>
+<span class="sd">        use the ``lb_details`` call.</span>
+
+<span class="sd">        :rtype :class:`list` of :class:`dict`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s">&#39;get&#39;</span><span class="p">,</span> <span class="s">&#39;/loadbalancers&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">body</span><span class="p">[</span><span class="s">&#39;loadBalancers&#39;</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.lb_details"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.lb_details">[docs]</a>    <span class="k">def</span> <span class="nf">lb_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get details (including all nodes and external IPs)</span>
+
+<span class="sd">        :param string lb_id:  Load balancer id</span>
+
+<span class="sd">        :rtype :class:`dict`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s">&#39;get&#39;</span><span class="p">,</span> <span class="s">&#39;/loadbalancers/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">lb_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">body</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.find_lb_by_name"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.find_lb_by_name">[docs]</a>    <span class="k">def</span> <span class="nf">find_lb_by_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Look up a LBaaS instance by name (rather than id)</span>
+
+<span class="sd">        :attr string name:  The LBaaS name assigned at creation time</span>
+
+<span class="sd">        :rtype :class:`dict`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Finding load balancers matching name &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">matching</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">l</span><span class="p">:</span> <span class="n">l</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">list_lbs</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">matching</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Ambiguous; more than one load balancer matched &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">matching</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Found existing load balancer, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">matching</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;id&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">matching</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.create_lb"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.create_lb">[docs]</a>    <span class="k">def</span> <span class="nf">create_lb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">protocol</span><span class="o">=</span><span class="s">&#39;HTTP&#39;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">algorithm</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">virtual_ips</span><span class="o">=</span><span class="p">[],</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[],</span> <span class="n">node_port</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a new LBaaS instance. A name is required. If no nodes</span>
+<span class="sd">        are required, the instance ``status`` (after it&#39;s built) will be</span>
+<span class="sd">        ``ERROR`` until nodes are added. The return dict contains the id</span>
+<span class="sd">        and ``virtualIps`` (the external IP).</span>
+
+<span class="sd">        :param string name:  The LBaaS name - should be unique</span>
+
+<span class="sd">        :param string protocol:  Supported: HTTP, TCP</span>
+
+<span class="sd">        :param int port:  The external port. Supported: 80, 443, seemingly</span>
+
+<span class="sd">        :param list virtual_ips:  Use an existing IP (allows multiple</span>
+<span class="sd">                                  ports per IP)</span>
+
+<span class="sd">        :param list nodes:  Nodes addresses to add</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Creating load balancer &#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">protocol</span> <span class="o">=</span> <span class="n">protocol</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">nodes_to_add</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">nodes</span><span class="p">:</span>
+            <span class="n">nodes_to_add</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+                    <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;address&#39;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">node_port</span><span class="p">)},</span> 
+                    <span class="n">nodes</span>
+                    <span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s">&#39;protocol&#39;</span><span class="p">:</span> <span class="n">protocol</span><span class="p">,</span>
+            <span class="s">&#39;port&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">port</span><span class="p">),</span>
+            <span class="s">&#39;nodes&#39;</span><span class="p">:</span> <span class="n">nodes_to_add</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">virtual_ips</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;virtualIps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">i</span><span class="p">:</span> <span class="p">{</span><span class="s">&#39;id&#39;</span><span class="p">:</span> <span class="n">i</span><span class="p">},</span> <span class="n">virtual_ips</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">algorithm</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s">&#39;algorithm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">algorithm</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s">&#39;post&#39;</span><span class="p">,</span> <span class="s">&#39;/loadbalancers&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">body</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.delete_lb"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.delete_lb">[docs]</a>    <span class="k">def</span> <span class="nf">delete_lb</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete an instance</span>
+
+<span class="sd">        :param string lb_id:  Delete this LBaaS id</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Deleting load balancer </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">lb_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s">&#39;delete&#39;</span><span class="p">,</span> <span class="s">&#39;/loadbalancers/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">lb_id</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.add_lb_nodes"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.add_lb_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">add_lb_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_id</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Adds nodes to an existing LBaaS instance</span>
+
+<span class="sd">        :param string lb_id:  Balancer id</span>
+
+<span class="sd">        :param list nodes:  Nodes to add. {address, port, [condition]}</span>
+
+<span class="sd">        :rtype :class:`list`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Adding load balancer nodes </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">nodes</span><span class="p">)</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+                <span class="s">&#39;post&#39;</span><span class="p">,</span> 
+                <span class="s">&#39;/loadbalancers/</span><span class="si">%s</span><span class="s">/nodes&#39;</span> <span class="o">%</span> <span class="n">lb_id</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;nodes&#39;</span><span class="p">:</span> <span class="n">nodes</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">body</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.match_lb_nodes"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.match_lb_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">match_lb_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_id</span><span class="p">,</span> <span class="n">existing_nodes</span><span class="p">,</span> <span class="n">host_addresses</span><span class="p">,</span> <span class="n">host_port</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add and remove nodes to match the host addresses</span>
+<span class="sd">        and port given, based on existing_nodes</span>
+
+<span class="sd">        :param string lb_id: Load balancer id</span>
+
+<span class="sd">        :param :class:`list` of :class:`dict` existing_nodes: Existing nodes</span>
+
+<span class="sd">        :param :class:`list` host_addresses: Node host addresses</span>
+
+<span class="sd">        :param string port: Node port</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">delete_filter</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">n</span><span class="p">:</span> \
+                <span class="n">n</span><span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">host_addresses</span> <span class="ow">or</span> \
+                <span class="nb">str</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="s">&#39;port&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">str</span><span class="p">(</span><span class="n">host_port</span><span class="p">)</span>
+
+        <span class="n">delete_nodes</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">delete_filter</span><span class="p">,</span> <span class="n">existing_nodes</span><span class="p">)</span>
+        <span class="n">delete_node_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">delete_nodes</span><span class="p">]</span>
+        <span class="n">delete_node_hosts</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">delete_nodes</span><span class="p">]</span>
+        
+        <span class="k">if</span> <span class="n">delete_node_ids</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb_id</span><span class="p">,</span> <span class="n">delete_node_ids</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_lb_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">current_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">existing_nodes</span><span class="p">])</span>
+        <span class="n">current_nodes</span> <span class="o">-=</span> <span class="nb">set</span><span class="p">(</span><span class="n">delete_node_hosts</span><span class="p">)</span>
+        <span class="n">add_nodes</span> <span class="o">=</span> <span class="n">host_addresses</span> <span class="o">-</span> <span class="n">current_nodes</span>
+        
+        <span class="k">if</span> <span class="n">add_nodes</span><span class="p">:</span>
+            <span class="n">nodes_to_add</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="p">{</span><span class="s">&#39;address&#39;</span><span class="p">:</span> <span class="n">n</span><span class="p">,</span> <span class="s">&#39;port&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">host_port</span><span class="p">)}</span>
+                    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">add_nodes</span>
+            <span class="p">]</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb_id</span><span class="p">,</span> <span class="n">nodes_to_add</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_lb_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Were </span><span class="si">%d</span><span class="s"> nodes. Added </span><span class="si">%d</span><span class="s"> nodes; deleted </span><span class="si">%d</span><span class="s"> nodes&quot;</span> <span class="o">%</span> 
+                <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">existing_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">add_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">delete_nodes</span><span class="p">)))</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.remove_lb_nodes"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.remove_lb_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">remove_lb_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_id</span><span class="p">,</span> <span class="n">node_ids</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Remove one or more nodes</span>
+
+<span class="sd">        :param string lb_id:  Balancer id</span>
+
+<span class="sd">        :param list node_ids:  List of node ids</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Removing load balancer nodes </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">node_ids</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">node_ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span><span class="s">&#39;delete&#39;</span><span class="p">,</span> <span class="s">&#39;/loadbalancers/</span><span class="si">%s</span><span class="s">/nodes/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lb_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.update_lb_node_condition"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.update_lb_node_condition">[docs]</a>    <span class="k">def</span> <span class="nf">update_lb_node_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">condition</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Update node condition - specifically to disable/enable</span>
+
+<span class="sd">        :param string lb_id:  Balancer id</span>
+
+<span class="sd">        :param string node_id:  Node id</span>
+
+<span class="sd">        :param string condition:  ENABLED/DISABLED</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_request</span><span class="p">(</span>
+                <span class="s">&#39;put&#39;</span><span class="p">,</span> 
+                <span class="s">&#39;/loadbalancers/</span><span class="si">%s</span><span class="s">/nodes/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">lb_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">),</span>
+                <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;condition&#39;</span><span class="p">:</span> <span class="n">condition</span><span class="p">})</span>
+        </div>
+    <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})[</span><span class="s">&#39;X-Auth-Token&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})[</span><span class="s">&#39;Content-Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;application/json&#39;</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="n">url</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">management_url</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">body</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">body</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">resp</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">resp</span><span class="p">,</span> <span class="n">body</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../../index.html">bang 0.6 documentation</a> &raquo;</li>
+          <li><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li><a href="../../../bang.html" >bang</a> &raquo;</li>
+          <li><a href="../../providers.html" >bang.providers</a> &raquo;</li>
+          <li><a href="../hpcloud.html" >bang.providers.hpcloud</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, John Calixto.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
