@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Release Summary &mdash; bang 0.6 documentation</title>
+    <title>Release Summary &mdash; bang 0.7 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.6',
+        VERSION:     '0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.6 documentation" href="index.html" />
+    <link rel="top" title="bang 0.7 documentation" href="index.html" />
     <link rel="next" title="Road Map" href="roadmap.html" />
     <link rel="prev" title="Getting Help" href="help.html" /> 
   </head>
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="help.html" title="Getting Help"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -56,6 +56,31 @@
             
   <div class="section" id="release-summary">
 <h1>Release Summary<a class="headerlink" href="#release-summary" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="april-12-2013">
+<h2>0.7 - April 12, 2013<a class="headerlink" href="#april-12-2013" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first"><em>BREAKING CHANGE</em>:  In a stack config file, the top-level resource
+definition containers were lists.  From 0.7 onward, they must be
+defined as dictionaries.  This allows resource definitions to be
+deep-merged.  The <tt class="docutils literal"><span class="pre">just_run_a_playbook.yml</span></tt> example was updated
+to demonstrate the new config format.</p>
+<p>This change extends the reuse of common config stanzas that was
+previously only available for <em>general stack properties</em> and for
+<em>configuration scopes</em> to <em>resource definitions</em>.  Prior to this
+change, the main purpose for this deep-merge behaviour was to allow
+sysadmins to use a known working dev stack config file and specify
+a <em>subset config file</em> to override secrets (e.g. encryption keys)
+when deploying production stacks.  With the deep-merging of
+resource definitions, deployers can override any part of the config
+file and break up their stack configurations into multiple reusable
+<em>subset config files</em> as is most convenient for them.  For example,
+one could easily deploy stack clones in multiple public cloud
+regions using a single base stack config and a subset stack config
+for each target region overriding <tt class="docutils literal"><span class="pre">region_name</span></tt> in the server
+definitions.</p>
+</li>
+</ul>
+</div>
 <div class="section" id="april-3-2013">
 <h2>0.6 - April 3, 2013<a class="headerlink" href="#april-3-2013" title="Permalink to this headline">¶</a></h2>
 <ul>
@@ -156,6 +181,7 @@ matching running instance.</li>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Release Summary</a><ul>
+<li><a class="reference internal" href="#april-12-2013">0.7 - April 12, 2013</a></li>
 <li><a class="reference internal" href="#april-3-2013">0.6 - April 3, 2013</a></li>
 <li><a class="reference internal" href="#march-11-2013">0.5 - March 11, 2013</a></li>
 <li><a class="reference internal" href="#march-6-2013">0.4 - March 6, 2013</a></li>
@@ -209,7 +235,7 @@ matching running instance.</li>
         <li class="right" >
           <a href="help.html" title="Getting Help"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.config &mdash; bang 0.6 documentation</title>
+    <title>bang.config &mdash; bang 0.7 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.6',
+        VERSION:     '0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.6 documentation" href="../../index.html" />
+    <link rel="top" title="bang 0.7 documentation" href="../../index.html" />
     <link rel="up" title="bang" href="../bang.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.7 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
       </ul>
@@ -381,6 +381,18 @@
             <span class="n">svars</span> <span class="o">=</span> <span class="p">{</span><span class="n">A</span><span class="o">.</span><span class="n">STACK</span><span class="p">:</span> <span class="n">stack</span><span class="p">}</span>
             <span class="n">load_balancer</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">VARS</span><span class="p">]</span> <span class="o">=</span> <span class="n">svars</span>
 
+    <span class="k">def</span> <span class="nf">_convert_to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stanza_key</span><span class="p">,</span> <span class="n">name_key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Convert self[stanza_key] to a list. For each k, v</span>
+<span class="sd">        k, v = self[stanza_key].iteritems() assign </span>
+<span class="sd">        v[name_key] = k</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">converted_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">stanza_key</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">v</span><span class="p">[</span><span class="n">name_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span>
+            <span class="n">converted_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">converted_list</span>
+
 <div class="viewcode-block" id="Config.prepare"><a class="viewcode-back" href="../../api.html#bang.config.Config.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Reorganizes the data such that the deployment logic can find it all</span>
@@ -408,6 +420,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c"># TODO: take server_common_attributes and disperse it among the various</span>
         <span class="c"># server stanzas</span>
+
+        <span class="c"># First stage - turn all the dicts (SERVER, SECGROUP, DATABASE, LOADBAL) </span>
+        <span class="c"># into lists now they&#39;re merged properly</span>
+        <span class="k">for</span> <span class="n">stanza_key</span><span class="p">,</span> <span class="n">name_key</span> <span class="ow">in</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">NAME</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">SERVER_SECURITY_GROUPS</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">secgroup</span><span class="o">.</span><span class="n">NAME</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">LOAD_BALANCERS</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">loadbalancer</span><span class="o">.</span><span class="n">NAME</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">database</span><span class="o">.</span><span class="n">NAME</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">BUCKETS</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">),</span>
+                <span class="p">(</span><span class="n">R</span><span class="o">.</span><span class="n">QUEUES</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">NAME</span><span class="p">)):</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">stanza_key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_convert_to_list</span><span class="p">(</span><span class="n">stanza_key</span><span class="p">,</span> <span class="n">name_key</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_ssh_keys</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_secgroups</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_tags</span><span class="p">()</span>
@@ -505,7 +529,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.6 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.7 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" >bang</a> &raquo;</li> 
       </ul>

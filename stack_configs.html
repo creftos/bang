@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Stack Configurations &mdash; bang 0.6 documentation</title>
+    <title>Stack Configurations &mdash; bang 0.7 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.6',
+        VERSION:     '0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.6 documentation" href="index.html" />
+    <link rel="top" title="bang 0.7 documentation" href="index.html" />
     <link rel="next" title="Writing Ansible Playbooks" href="playbooks.html" />
     <link rel="prev" title="Running Bang" href="running.html" /> 
   </head>
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="running.html" title="Running Bang"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -141,9 +141,10 @@ cloud boundaries.  For example, a single stack might comprise:</p>
 <li>Message queues and object storage from AWS (i.e. SQS)</li>
 </ul>
 </div></blockquote>
-<p>Every stack resource key maps to a <em>list of definitions</em> for that
-particular resource type.  Each definition in the list is a key-value
-map of attributes.  Most attributes are specific to the type of
+<p>Every stack resource key maps to a <em>dictionary</em> for that
+particular resource type, where the keys are resource names.
+Each value of the dictionary is a key-value map of attributes.
+Most attributes are specific to the type of
 resource being deployed.</p>
 <p>Every cloud resource definition must contain a <tt class="docutils literal"><span class="pre">provider</span></tt> key whose
 value is the name of a Bang-supported cloud provider.</p>
@@ -163,13 +164,15 @@ the appropriate configuration scopes.</p>
 <dd>E.g. EC2 and OpenStack Nova security groups</dd>
 <dt>servers</dt>
 <dd>E.g. EC2, OpenStack Nova, VPS virtual machines.</dd>
+<dt>load_balancers:</dt>
+<dd>E.g. ElasticLoadBalancer, HP cloud LBaaS</dd>
 </dl>
 </div>
 <div class="section" id="configuration-scopes">
 <h3>Configuration Scopes<a class="headerlink" href="#configuration-scopes" title="Permalink to this headline">¶</a></h3>
 <p>Any top-level section name that is not specified above as a reserved
-key in <a class="reference internal" href="#general-stack-properties">General Stack Properties</a> or in <a href="#id1"><span class="problematic" id="id2">`Stack Resources
-Definitions`_</span></a>, is parsed and categorized as a custom configuration
+key in <a class="reference internal" href="#general-stack-properties">General Stack Properties</a> or in <a class="reference internal" href="#stack-resource-definitions">Stack Resource
+Definitions</a>, is parsed and categorized as a custom configuration
 scope.</p>
 <p>Any configuration scope names that are added to a server&#8217;s
 <tt class="docutils literal"><span class="pre">config_scopes</span></tt> list, make those values available to Ansible
@@ -264,7 +267,7 @@ user.</p>
         <li class="right" >
           <a href="running.html" title="Running Bang"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

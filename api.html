@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API &mdash; bang 0.6 documentation</title>
+    <title>API &mdash; bang 0.7 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.6',
+        VERSION:     '0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.6 documentation" href="index.html" />
+    <link rel="top" title="bang 0.7 documentation" href="index.html" />
     <link rel="prev" title="Design" href="design.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="design.html" title="Design"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -356,18 +356,16 @@ existing instance must also be &#8220;running&#8221;.</p>
 to create and discover LB instances, as well as match existing
 backend &#8216;nodes&#8217; to a list it&#8217;s given. It is assumed only a single
 &#8216;instance&#8217; per distinct load balancer needs to be created (i.e.
-that any elasticity is handled by the cloud service)
-E.g config:</p>
-<blockquote>
-<div><p>load_balancers:
-- name: test-balancer</p>
-<blockquote>
-<div>balance_server_name: server_defined_in_servers_section
-provider: hpcloud
-backend_port: &#8216;8080&#8217;
-protocol: tcp
-port: &#8216;443&#8217;</div></blockquote>
-</div></blockquote>
+that any elasticity is handled by the cloud service).</p>
+<p>Example config:</p>
+<div class="highlight-python"><pre>load_balancers:
+  test_balancer:
+    balance_server_name: server_defined_in_servers_section
+    provider: hpcloud
+    backend_port: '8080'
+    protocol: tcp
+    port: '443'</pre>
+</div>
 <dl class="method">
 <dt id="bang.deployers.cloud.LoadBalancerDeployer.__init__">
 <tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer.__init__" title="Permalink to this definition">¶</a></dt>
@@ -2165,7 +2163,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
         <li class="right" >
           <a href="design.html" title="Design"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.6 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.7 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

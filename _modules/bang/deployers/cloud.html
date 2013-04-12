@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.deployers.cloud &mdash; bang 0.6 documentation</title>
+    <title>bang.deployers.cloud &mdash; bang 0.7 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.6',
+        VERSION:     '0.7',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.6 documentation" href="../../../index.html" />
+    <link rel="top" title="bang 0.7 documentation" href="../../../index.html" />
     <link rel="up" title="bang.deployers" href="../deployers.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.6 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.7 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../deployers.html" accesskey="U">bang.deployers</a> &raquo;</li> 
@@ -330,15 +330,18 @@
 <span class="sd">    to create and discover LB instances, as well as match existing</span>
 <span class="sd">    backend &#39;nodes&#39; to a list it&#39;s given. It is assumed only a single</span>
 <span class="sd">    &#39;instance&#39; per distinct load balancer needs to be created (i.e.</span>
-<span class="sd">    that any elasticity is handled by the cloud service)</span>
-<span class="sd">    E.g config:</span>
+<span class="sd">    that any elasticity is handled by the cloud service).</span>
+
+<span class="sd">    Example config::</span>
+
 <span class="sd">      load_balancers:</span>
-<span class="sd">      - name: test-balancer</span>
-<span class="sd">        balance_server_name: server_defined_in_servers_section</span>
-<span class="sd">        provider: hpcloud</span>
-<span class="sd">        backend_port: &#39;8080&#39;</span>
-<span class="sd">        protocol: tcp</span>
-<span class="sd">        port: &#39;443&#39;</span>
+<span class="sd">        test_balancer:</span>
+<span class="sd">          balance_server_name: server_defined_in_servers_section</span>
+<span class="sd">          provider: hpcloud</span>
+<span class="sd">          backend_port: &#39;8080&#39;</span>
+<span class="sd">          protocol: tcp</span>
+<span class="sd">          port: &#39;443&#39;</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="LoadBalancerDeployer.__init__"><a class="viewcode-back" href="../../../api.html#bang.deployers.cloud.LoadBalancerDeployer.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -498,7 +501,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.6 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.7 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../deployers.html" >bang.deployers</a> &raquo;</li> 
