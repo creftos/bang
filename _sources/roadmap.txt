@@ -56,10 +56,12 @@ General Features
 
 - Autoscale servers.
 
+- Add ``--destroy`` to automate destruction of stacks.
+
 
 Providers
 ---------
-- Add AWS provider.
+- AWS
 
     - Add any deployers that don't really apply to less featureful
       public cloud providers.  E.g. SQS, ELB, SNS, etc...
