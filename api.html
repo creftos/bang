@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API &mdash; bang 0.8 documentation</title>
+    <title>API &mdash; bang 0.9 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.8',
+        VERSION:     '0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.8 documentation" href="index.html" />
+    <link rel="top" title="bang 0.9 documentation" href="index.html" />
     <link rel="prev" title="Design" href="design.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="design.html" title="Design"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.8 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.9 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -755,7 +755,7 @@ in <tt class="xref py py-mod docutils literal"><span class="pre">bang.resources<
 
 <dl class="method">
 <dt id="bang.providers.aws.EC2.create_secgroup">
-<tt class="descname">create_secgroup</tt><big>(</big><em>name</em>, <em>description</em><big>)</big><a class="headerlink" href="#bang.providers.aws.EC2.create_secgroup" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">create_secgroup</tt><big>(</big><em>name</em>, <em>description</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.create_secgroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.create_secgroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new server security group.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -773,7 +773,7 @@ in <tt class="xref py py-mod docutils literal"><span class="pre">bang.resources<
 
 <dl class="method">
 <dt id="bang.providers.aws.EC2.create_secgroup_rule">
-<tt class="descname">create_secgroup_rule</tt><big>(</big><em>protocol</em>, <em>from_port</em>, <em>to_port</em>, <em>source</em>, <em>target</em><big>)</big><a class="headerlink" href="#bang.providers.aws.EC2.create_secgroup_rule" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">create_secgroup_rule</tt><big>(</big><em>protocol</em>, <em>from_port</em>, <em>to_port</em>, <em>source</em>, <em>target</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.create_secgroup_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.create_secgroup_rule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new server security group rule.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -832,13 +832,18 @@ active immediately).</li>
 
 <dl class="method">
 <dt id="bang.providers.aws.EC2.delete_secgroup_rule">
-<tt class="descname">delete_secgroup_rule</tt><big>(</big><em>rule_def</em><big>)</big><a class="headerlink" href="#bang.providers.aws.EC2.delete_secgroup_rule" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">delete_secgroup_rule</tt><big>(</big><em>rule_def</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.delete_secgroup_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.delete_secgroup_rule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes the security group rule identified by <tt class="xref py py-attr docutils literal"><span class="pre">rule_def</span></tt></p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="bang.providers.aws.EC2.ec2">
+<tt class="descname">ec2</tt><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.ec2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.ec2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
 <dt id="bang.providers.aws.EC2.find_secgroup">
-<tt class="descname">find_secgroup</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#bang.providers.aws.EC2.find_secgroup" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">find_secgroup</tt><big>(</big><em>name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.find_secgroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.find_secgroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Find a security group by name.</p>
 <p>Returns a <a class="reference internal" href="#bang.providers.aws.EC2SecGroup" title="bang.providers.aws.EC2SecGroup"><tt class="xref py py-class docutils literal"><span class="pre">EC2SecGroup</span></tt></a> instance if found, otherwise returns
 None.</p>
@@ -878,42 +883,36 @@ describes a single server instance.</p>
 
 <dl class="class">
 <dt id="bang.providers.aws.EC2SecGroup">
-<em class="property">class </em><tt class="descclassname">bang.providers.aws.</tt><tt class="descname">EC2SecGroup</tt><big>(</big><em>ec2sg</em><big>)</big><a class="headerlink" href="#bang.providers.aws.EC2SecGroup" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">bang.providers.aws.</tt><tt class="descname">EC2SecGroup</tt><big>(</big><em>ec2sg</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2SecGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2SecGroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Represents an EC2 security group.</p>
 <p>The <tt class="xref py py-attr docutils literal"><span class="pre">rules</span></tt> attribute is a specialized dict whose keys are the
 <em>normalized</em> rule definitions, and whose values are EC2 grants which can be
 kwargs-expanded when passing
-<tt class="xref py py-meth docutils literal"><span class="pre">boto.ec2.securitygroup.SecurityGroup.revoke()</span></tt>.  E.g.</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>{</dt>
-<dd><dl class="first last docutils">
-<dt>(&#8216;tcp&#8217;, 1, 65535, &#8216;group-foo&#8217;): {</dt>
-<dd>&#8216;ip_protocol&#8217;: &#8216;tcp&#8217;,
-&#8216;from_port&#8217;: &#8216;1&#8217;,
-&#8216;to_port&#8217;: &#8216;65535&#8217;,
-&#8216;src_group&#8217;: &#8216;group-foo&#8217;,
-&#8216;target&#8217;: SecurityGroup:group-bar,
-},</dd>
-<dt>(&#8216;tcp&#8217;, 8080, 8080, &#8216;15.183.202.114/32&#8217;):  {</dt>
-<dd>&#8216;ip_protocol&#8217;: &#8216;tcp&#8217;,
-&#8216;from_port&#8217;: &#8216;8080&#8217;,
-&#8216;to_port&#8217;: &#8216;8080&#8217;,
-&#8216;cidr_ip&#8217;: &#8216;15.183.202.114/32&#8217;,
-&#8216;target&#8217;: SecurityGroup:group-bar,
-},</dd>
-</dl>
-</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
+<tt class="xref py py-meth docutils literal"><span class="pre">boto.ec2.securitygroup.SecurityGroup.revoke()</span></tt>.  E.g.:</p>
+<div class="highlight-python"><pre>{
+    ('tcp', 1, 65535, 'group-foo'): {
+        'ip_protocol': 'tcp',
+        'from_port': '1',
+        'to_port': '65535',
+        'src_group': 'group-foo',
+        'target': SecurityGroup:group-bar,
+        },
+    ('tcp', 8080, 8080, '15.183.202.114/32'):  {
+        'ip_protocol': 'tcp',
+        'from_port': '8080',
+        'to_port': '8080',
+        'cidr_ip': '15.183.202.114/32',
+        'target': SecurityGroup:group-bar,
+        },
+}</pre>
+</div>
 <p>This also maintains a reference to the original
 <tt class="xref py py-class docutils literal"><span class="pre">boto.ec2.securitygroup.SecurityGroup</span></tt> instance.</p>
 <p>Suitable for returning from <a class="reference internal" href="#bang.providers.aws.EC2.find_secgroup" title="bang.providers.aws.EC2.find_secgroup"><tt class="xref py py-meth docutils literal"><span class="pre">EC2.find_secgroup()</span></tt></a>.</p>
 <dl class="method">
 <dt id="bang.providers.aws.EC2SecGroup.__init__">
-<tt class="descname">__init__</tt><big>(</big><em>ec2sg</em><big>)</big><a class="headerlink" href="#bang.providers.aws.EC2SecGroup.__init__" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">__init__</tt><big>(</big><em>ec2sg</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2SecGroup.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2SecGroup.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1601,24 +1600,22 @@ describes a single server instance.</p>
 
 <dl class="class">
 <dt id="bang.providers.openstack.NovaSecGroup">
-<em class="property">class </em><tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">NovaSecGroup</tt><big>(</big><em>novasg</em><big>)</big><a class="headerlink" href="#bang.providers.openstack.NovaSecGroup" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">bang.providers.openstack.</tt><tt class="descname">NovaSecGroup</tt><big>(</big><em>novasg</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#NovaSecGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.NovaSecGroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Represents a Nova security group.</p>
 <p>The <tt class="xref py py-attr docutils literal"><span class="pre">rules</span></tt> attribute is a specialized dict whose keys are the
 <em>normalized</em> rule definitions, and whose values are the <em>Nova-specific</em>
-rule IDs.  E.g.</p>
-<blockquote>
-<div><dl class="docutils">
-<dt>{</dt>
-<dd>(&#8216;tcp&#8217;, 1, 65535, &#8216;group-foo&#8217;): 400459,
-(&#8216;tcp&#8217;, 8080, 8080, &#8216;15.183.202.114/32&#8217;): 424099,</dd>
-</dl>
-<p>}</p>
-</div></blockquote>
+rule IDs.  E.g.:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="p">{</span>
+    <span class="p">(</span><span class="s">&#39;tcp&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">65535</span><span class="p">,</span> <span class="s">&#39;group-foo&#39;</span><span class="p">):</span> <span class="mi">400459</span><span class="p">,</span>
+    <span class="p">(</span><span class="s">&#39;tcp&#39;</span><span class="p">,</span> <span class="mi">8080</span><span class="p">,</span> <span class="mi">8080</span><span class="p">,</span> <span class="s">&#39;15.183.202.114/32&#39;</span><span class="p">):</span> <span class="mi">424099</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 <p>Suitable for returning from <a class="reference internal" href="#bang.providers.openstack.Nova.find_secgroup" title="bang.providers.openstack.Nova.find_secgroup"><tt class="xref py py-meth docutils literal"><span class="pre">Nova.find_secgroup()</span></tt></a>.</p>
 <dl class="method">
 <dt id="bang.providers.openstack.NovaSecGroup.__init__">
-<tt class="descname">__init__</tt><big>(</big><em>novasg</em><big>)</big><a class="headerlink" href="#bang.providers.openstack.NovaSecGroup.__init__" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">__init__</tt><big>(</big><em>novasg</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#NovaSecGroup.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.NovaSecGroup.__init__" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -2283,7 +2280,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
         <li class="right" >
           <a href="design.html" title="Design"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.8 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.9 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

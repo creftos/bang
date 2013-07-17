@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.providers.openstack &mdash; bang 0.8 documentation</title>
+    <title>bang.providers.openstack &mdash; bang 0.9 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.8',
+        VERSION:     '0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.8 documentation" href="../../../index.html" />
+    <link rel="top" title="bang 0.9 documentation" href="../../../index.html" />
     <link rel="up" title="bang.providers" href="../providers.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.8 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.9 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" accesskey="U">bang.providers</a> &raquo;</li> 
@@ -113,6 +113,42 @@
             <span class="p">}</span>
 
 </div>
+<div class="viewcode-block" id="NovaSecGroup"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.NovaSecGroup">[docs]</a><span class="k">class</span> <span class="nc">NovaSecGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents a Nova security group.</span>
+
+<span class="sd">    The :attr:`rules` attribute is a specialized dict whose keys are the</span>
+<span class="sd">    *normalized* rule definitions, and whose values are the *Nova-specific*</span>
+<span class="sd">    rule IDs.  E.g.</span>
+
+<span class="sd">        {</span>
+<span class="sd">            (&#39;tcp&#39;, 1, 65535, &#39;group-foo&#39;): 400459,</span>
+<span class="sd">            (&#39;tcp&#39;, 8080, 8080, &#39;15.183.202.114/32&#39;): 424099,</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Suitable for returning from :meth:`Nova.find_secgroup`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="NovaSecGroup.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.NovaSecGroup.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">novasg</span><span class="p">):</span>
+        <span class="n">rules</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">novasg</span><span class="o">.</span><span class="n">rules</span><span class="p">:</span>
+            <span class="n">src_group</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;group&#39;</span><span class="p">)</span>
+            <span class="c"># TODO: allow for groups with different tenant ids.</span>
+            <span class="k">if</span> <span class="n">src_group</span><span class="p">:</span>
+                <span class="n">src</span> <span class="o">=</span> <span class="n">src_group</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">src</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s">&#39;ip_range&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;cidr&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">parsed</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;ip_protocol&#39;</span><span class="p">),</span>
+                    <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;from_port&#39;</span><span class="p">),</span>
+                    <span class="n">rule</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;to_port&#39;</span><span class="p">),</span>
+                    <span class="n">src</span><span class="p">,</span>
+                    <span class="p">)</span>
+            <span class="n">rules</span><span class="p">[</span><span class="n">parsed</span><span class="p">]</span> <span class="o">=</span> <span class="n">rule</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="n">rules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">novasg</span> <span class="o">=</span> <span class="n">novasg</span>
+
+</div></div>
 <div class="viewcode-block" id="Nova"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova">[docs]</a><span class="k">class</span> <span class="nc">Nova</span><span class="p">(</span><span class="n">Consul</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The consul for the OpenStack compute service.&quot;&quot;&quot;</span>
 <div class="viewcode-block" id="Nova.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -242,18 +278,15 @@
 </div>
 <div class="viewcode-block" id="Nova.find_secgroup"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.find_secgroup">[docs]</a>    <span class="k">def</span> <span class="nf">find_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Searches for, and returns a</span>
-<span class="sd">        :class:`novaclient.v1_1.security_groups.SecurityGroup` named</span>
-<span class="sd">        :attr:`name`.</span>
+<span class="sd">        Find a security group by name.</span>
+
+<span class="sd">        Returns a :class:`NovaSecGroup` instance if found, otherwise returns</span>
+<span class="sd">        None.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nova</span><span class="o">.</span><span class="n">security_groups</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">groups</span><span class="p">:</span>
-            <span class="k">return</span>
-        <span class="c"># TODO: will this ever happen?</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Found too many groups named </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;... found group </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">groups</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">groups</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NovaSecGroup</span><span class="p">(</span><span class="n">groups</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </div>
 <div class="viewcode-block" id="Nova.create_secgroup"><a class="viewcode-back" href="../../../api.html#bang.providers.openstack.Nova.create_secgroup">[docs]</a>    <span class="k">def</span> <span class="nf">create_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">desc</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -571,7 +604,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.8 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.9 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" >bang.providers</a> &raquo;</li> 

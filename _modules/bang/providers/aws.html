@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.providers.aws &mdash; bang 0.8 documentation</title>
+    <title>bang.providers.aws &mdash; bang 0.9 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.8',
+        VERSION:     '0.9',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.8 documentation" href="../../../index.html" />
+    <link rel="top" title="bang 0.9 documentation" href="../../../index.html" />
     <link rel="up" title="bang.providers" href="../providers.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.8 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.9 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" accesskey="U">bang.providers</a> &raquo;</li> 
@@ -72,7 +72,7 @@
 <span class="kn">from</span> <span class="nn">boto.exception</span> <span class="kn">import</span> <span class="n">EC2ResponseError</span>
 <span class="kn">import</span> <span class="nn">time</span>
 
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">TimeoutError</span><span class="p">,</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span><span class="p">,</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">BangError</span><span class="p">,</span> <span class="n">TimeoutError</span><span class="p">,</span> <span class="n">resources</span> <span class="k">as</span> <span class="n">R</span><span class="p">,</span> <span class="n">attributes</span> <span class="k">as</span> <span class="n">A</span>
 <span class="kn">from</span> <span class="nn">..util</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">poll_with_timeout</span>
 <span class="kn">from</span> <span class="nn">.bases</span> <span class="kn">import</span> <span class="n">Provider</span><span class="p">,</span> <span class="n">Consul</span>
 
@@ -95,6 +95,67 @@
             <span class="p">}</span>
 
 </div>
+<div class="viewcode-block" id="EC2SecGroup"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2SecGroup">[docs]</a><span class="k">class</span> <span class="nc">EC2SecGroup</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents an EC2 security group.</span>
+
+<span class="sd">    The :attr:`rules` attribute is a specialized dict whose keys are the</span>
+<span class="sd">    *normalized* rule definitions, and whose values are EC2 grants which can be</span>
+<span class="sd">    kwargs-expanded when passing</span>
+<span class="sd">    :meth:`boto.ec2.securitygroup.SecurityGroup.revoke`.  E.g.</span>
+
+<span class="sd">        {</span>
+<span class="sd">            (&#39;tcp&#39;, 1, 65535, &#39;group-foo&#39;): {</span>
+<span class="sd">                &#39;ip_protocol&#39;: &#39;tcp&#39;,</span>
+<span class="sd">                &#39;from_port&#39;: &#39;1&#39;,</span>
+<span class="sd">                &#39;to_port&#39;: &#39;65535&#39;,</span>
+<span class="sd">                &#39;src_group&#39;: &#39;group-foo&#39;,</span>
+<span class="sd">                &#39;target&#39;: SecurityGroup:group-bar,</span>
+<span class="sd">                },</span>
+<span class="sd">            (&#39;tcp&#39;, 8080, 8080, &#39;15.183.202.114/32&#39;):  {</span>
+<span class="sd">                &#39;ip_protocol&#39;: &#39;tcp&#39;,</span>
+<span class="sd">                &#39;from_port&#39;: &#39;8080&#39;,</span>
+<span class="sd">                &#39;to_port&#39;: &#39;8080&#39;,</span>
+<span class="sd">                &#39;cidr_ip&#39;: &#39;15.183.202.114/32&#39;,</span>
+<span class="sd">                &#39;target&#39;: SecurityGroup:group-bar,</span>
+<span class="sd">                },</span>
+<span class="sd">        }</span>
+
+<span class="sd">    This also maintains a reference to the original</span>
+<span class="sd">    :class:`boto.ec2.securitygroup.SecurityGroup` instance.</span>
+
+<span class="sd">    Suitable for returning from :meth:`EC2.find_secgroup`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="EC2SecGroup.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2SecGroup.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ec2sg</span><span class="p">):</span>
+        <span class="n">owner_id</span> <span class="o">=</span> <span class="n">ec2sg</span><span class="o">.</span><span class="n">owner_id</span>
+        <span class="n">rules</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">ec2sg</span><span class="o">.</span><span class="n">rules</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="n">rule</span><span class="o">.</span><span class="n">ip_protocol</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">from_port</span><span class="p">)</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">rule</span><span class="o">.</span><span class="n">to_port</span><span class="p">)</span>
+            <span class="n">core</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s">&#39;ip_protocol&#39;</span><span class="p">:</span> <span class="n">p</span><span class="p">,</span>
+                    <span class="s">&#39;from_port&#39;</span><span class="p">:</span> <span class="n">f</span><span class="p">,</span>
+                    <span class="s">&#39;to_port&#39;</span><span class="p">:</span> <span class="n">t</span><span class="p">,</span>
+                    <span class="s">&#39;target&#39;</span><span class="p">:</span> <span class="n">ec2sg</span><span class="p">,</span>
+                    <span class="p">}</span>
+            <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">rule</span><span class="o">.</span><span class="n">grants</span><span class="p">:</span>
+                <span class="n">parsed</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">cidr_ip</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="s">&#39;source&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">cidr_ip</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">g</span><span class="o">.</span><span class="n">owner_id</span> <span class="o">==</span> <span class="n">owner_id</span> <span class="ow">and</span> <span class="n">g</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">ec2sg</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                    <span class="n">parsed</span><span class="p">[</span><span class="s">&#39;source_self&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="n">ec2sg</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">parsed</span><span class="p">[</span><span class="s">&#39;source_group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">/</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">owner_id</span><span class="p">,</span> <span class="n">g</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">parsed</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">core</span><span class="p">)</span>
+                <span class="n">rules</span><span class="p">[(</span><span class="n">p</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">s</span><span class="p">)]</span> <span class="o">=</span> <span class="n">parsed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rules</span> <span class="o">=</span> <span class="n">rules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ec2sg</span> <span class="o">=</span> <span class="n">ec2sg</span>
+
+</div></div>
 <div class="viewcode-block" id="EC2"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2">[docs]</a><span class="k">class</span> <span class="nc">EC2</span><span class="p">(</span><span class="n">Consul</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The consul for the compute service in AWS (EC2).&quot;&quot;&quot;</span>
 <div class="viewcode-block" id="EC2.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -102,14 +163,19 @@
         <span class="n">creds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">provider</span><span class="o">.</span><span class="n">creds</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">access_key_id</span> <span class="o">=</span> <span class="n">creds</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">creds</span><span class="o">.</span><span class="n">ACCESS_KEY_ID</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">secret_key</span> <span class="o">=</span> <span class="n">creds</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">creds</span><span class="o">.</span><span class="n">SECRET_ACCESS_KEY</span><span class="p">]</span>
-
-        <span class="c"># this connection lets boto pick the default region.  be sure to use</span>
-        <span class="c"># set_region() if you need a specific region.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ec2</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">connect_ec2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_key_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">secret_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ec2</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="EC2.ec2"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2.ec2">[docs]</a>    <span class="k">def</span> <span class="nf">ec2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ec2</span><span class="p">:</span>
+            <span class="c"># this connection lets boto pick the default region.  be sure to use</span>
+            <span class="c"># set_region() if you need a specific region.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ec2</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">connect_ec2</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">access_key_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">secret_key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ec2</span>
 </div>
 <div class="viewcode-block" id="EC2.set_region"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2.set_region">[docs]</a>    <span class="k">def</span> <span class="nf">set_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_name</span><span class="p">):</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Setting region to </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">region_name</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ec2</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">ec2</span><span class="o">.</span><span class="n">connect_to_region</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ec2</span> <span class="o">=</span> <span class="n">boto</span><span class="o">.</span><span class="n">ec2</span><span class="o">.</span><span class="n">connect_to_region</span><span class="p">(</span>
                 <span class="n">region_name</span><span class="p">,</span>
                 <span class="n">aws_access_key_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">access_key_id</span><span class="p">,</span>
                 <span class="n">aws_secret_access_key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">secret_key</span><span class="p">,</span>
@@ -208,6 +274,62 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">running</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">TimeoutError</span><span class="p">(</span><span class="s">&#39;Could not launch server within allotted time.&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">server_to_dict</span><span class="p">(</span><span class="n">running</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EC2.find_secgroup"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2.find_secgroup">[docs]</a>    <span class="k">def</span> <span class="nf">find_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Find a security group by name.</span>
+
+<span class="sd">        Returns a :class:`EC2SecGroup` instance if found, otherwise returns</span>
+<span class="sd">        None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ec2</span><span class="o">.</span><span class="n">get_all_security_groups</span><span class="p">(</span><span class="n">filters</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;group-name&#39;</span><span class="p">:</span> <span class="n">name</span><span class="p">})</span>
+        <span class="k">if</span> <span class="n">res</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EC2SecGroup</span><span class="p">(</span><span class="n">res</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</div>
+<div class="viewcode-block" id="EC2.create_secgroup"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2.create_secgroup">[docs]</a>    <span class="k">def</span> <span class="nf">create_secgroup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new server security group.</span>
+
+<span class="sd">        :param str name:  The name of the security group to create.</span>
+<span class="sd">        :param str description:  A short description of the group.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ec2</span><span class="o">.</span><span class="n">create_security_group</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;... created group </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EC2.create_secgroup_rule"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2.create_secgroup_rule">[docs]</a>    <span class="k">def</span> <span class="nf">create_secgroup_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">from_port</span><span class="p">,</span> <span class="n">to_port</span><span class="p">,</span>
+            <span class="n">source</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new server security group rule.</span>
+
+<span class="sd">        :param str protocol:  E.g. ``tcp``, ``icmp``, etc...</span>
+<span class="sd">        :param int from_port:  E.g. ``1``</span>
+<span class="sd">        :param int to_port:  E.g. ``65535``</span>
+<span class="sd">        :param str source:</span>
+<span class="sd">        :param str target:  The target security group.  I.e. the group in which</span>
+<span class="sd">            this rule should be created.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;ip_protocol&#39;</span><span class="p">:</span> <span class="n">protocol</span><span class="p">,</span>
+            <span class="s">&#39;from_port&#39;</span><span class="p">:</span> <span class="n">from_port</span><span class="p">,</span>
+            <span class="s">&#39;to_port&#39;</span><span class="p">:</span> <span class="n">to_port</span>
+        <span class="p">}</span>
+        <span class="n">sg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_secgroup</span><span class="p">(</span><span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">ec2sg</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sg</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BangError</span><span class="p">(</span><span class="s">&quot;Security group not found, </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">target</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">source</span><span class="p">:</span>
+            <span class="c"># Treat as cidr (/ is mask)</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;cidr_ip&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;src_group&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_secgroup</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">ec2sg</span>
+        <span class="n">sg</span><span class="o">.</span><span class="n">authorize</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="EC2.delete_secgroup_rule"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.EC2.delete_secgroup_rule">[docs]</a>    <span class="k">def</span> <span class="nf">delete_secgroup_rule</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule_def</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes the security group rule identified by :attr:`rule_def`&quot;&quot;&quot;</span>
+        <span class="n">sg</span> <span class="o">=</span> <span class="n">rule_def</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;target&#39;</span><span class="p">)</span>
+        <span class="n">sg</span><span class="o">.</span><span class="n">revoke</span><span class="p">(</span><span class="o">**</span><span class="n">rule_def</span><span class="p">)</span>
 
 </div></div>
 <div class="viewcode-block" id="S3"><a class="viewcode-back" href="../../../api.html#bang.providers.aws.S3">[docs]</a><span class="k">class</span> <span class="nc">S3</span><span class="p">(</span><span class="n">Consul</span><span class="p">):</span>
@@ -260,7 +382,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.8 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.9 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" >bang.providers</a> &raquo;</li> 
