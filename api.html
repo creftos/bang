@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API &mdash; bang 0.10.1 documentation</title>
+    <title>API &mdash; bang 0.11 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.10.1',
+        VERSION:     '0.11',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.10.1 documentation" href="index.html" />
+    <link rel="top" title="bang 0.11 documentation" href="index.html" />
     <link rel="prev" title="Design" href="design.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="design.html" title="Design"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.10.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -64,6 +64,96 @@
 <dt id="bang.TimeoutError">
 <em class="property">exception </em><tt class="descclassname">bang.</tt><tt class="descname">TimeoutError</tt><a class="reference internal" href="_modules/bang.html#TimeoutError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.TimeoutError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#bang.BangError" title="bang.BangError"><tt class="xref py py-class docutils literal"><span class="pre">bang.BangError</span></tt></a></p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-bang.attributes">
+<span id="bang-attributes"></span><h2><a class="reference internal" href="#module-bang.attributes" title="bang.attributes"><tt class="xref py py-mod docutils literal"><span class="pre">bang.attributes</span></tt></a><a class="headerlink" href="#module-bang.attributes" title="Permalink to this headline">¶</a></h2>
+<p>Constants for attribute names of the various resources.</p>
+<p>This module contains the top-level config file attributes including those that
+are typically placed in ~/.bangrc.</p>
+<dl class="data">
+<dt id="bang.attributes.DEPLOYER_CREDS">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">DEPLOYER_CREDS</tt><em class="property"> = 'deployer_credentials'</em><a class="headerlink" href="#bang.attributes.DEPLOYER_CREDS" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dict containing credentials for various cloud providers in which the keys
+can be any valid provider.  E.g.  <tt class="docutils literal"><span class="pre">aws</span></tt>, <tt class="docutils literal"><span class="pre">hpcloud</span></tt>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.LOGGING">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">LOGGING</tt><em class="property"> = 'logging'</em><a class="headerlink" href="#bang.attributes.LOGGING" title="Permalink to this definition">¶</a></dt>
+<dd><p>The top-level key for logging-related configuration options.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.NAME">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">NAME</tt><em class="property"> = 'name'</em><a class="headerlink" href="#bang.attributes.NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stack name.  Its value is used to tag servers and other cloud resources.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.NAME_TAG_NAME">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">NAME_TAG_NAME</tt><em class="property"> = 'name_tag_name'</em><a class="headerlink" href="#bang.attributes.NAME_TAG_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Like chicken fried chicken... this is a way to configure the name of the tag
+in which the combined stack-role (a.k.a. <em>name</em>) will be stored.  By
+default, unless this is specified directly in ~/.bangrc, the <em>name</em> value
+will be assigned to a tag named &#8220;Name&#8221; (this is the default tag displayed
+in the AWS management console).  I.e. using Bang defaults, the server
+named &#8220;bar&#8221; in the stack named &#8220;foo&#8221; will have the following tags:</p>
+<div class="highlight-python"><pre>stack:  foo
+role:   bar
+Name:   foo-bar</pre>
+</div>
+<p>In some cases, admins may have other purposes for the &#8220;Name&#8221; tag.  If
+~/.bangrc were to have <tt class="docutils literal"><span class="pre">name_tag_name</span></tt> set to <tt class="docutils literal"><span class="pre">descriptor</span></tt>, then the
+server described above would have the following tags:</p>
+<div class="highlight-python"><pre>stack:       foo
+role:        bar
+descriptor:  foo-bar</pre>
+</div>
+<p>To prevent Bang from assigning the <em>name</em> value to a tag, assign an empty
+string to the <tt class="docutils literal"><span class="pre">name_tag_name</span></tt> attribute in ~/.bangrc.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.PLAYBOOKS">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">PLAYBOOKS</tt><em class="property"> = 'playbooks'</em><a class="headerlink" href="#bang.attributes.PLAYBOOKS" title="Permalink to this definition">¶</a></dt>
+<dd><p>The ordered list of playbooks to run <em>after</em> provisioning the cloud
+resources.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.PROVIDER">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">PROVIDER</tt><em class="property"> = 'provider'</em><a class="headerlink" href="#bang.attributes.PROVIDER" title="Permalink to this definition">¶</a></dt>
+<dd><p>The resource provider (e.g. <tt class="docutils literal"><span class="pre">aws</span></tt>, <tt class="docutils literal"><span class="pre">hpcloud</span></tt>).  Values for the
+<tt class="docutils literal"><span class="pre">provider</span></tt> attribute will be used to look up the appropriate
+<a class="reference internal" href="#bang.providers.bases.Provider" title="bang.providers.bases.Provider"><tt class="xref py py-class docutils literal"><span class="pre">Provider</span></tt></a> subclass to use when instantiating
+the associated resource.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.SERVER_CLASS">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">SERVER_CLASS</tt><em class="property"> = 'server_class'</em><a class="headerlink" href="#bang.attributes.SERVER_CLASS" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a <em>derived</em> attribute that Bang provides for instance tagging, and
+for Ansible playbooks to consume.  It&#8217;s a combination of the <a class="reference internal" href="#bang.attributes.NAME" title="bang.attributes.NAME"><tt class="xref py py-attr docutils literal"><span class="pre">NAME</span></tt></a>
+and the <a class="reference internal" href="#bang.attributes.VERSION" title="bang.attributes.VERSION"><tt class="xref py py-attr docutils literal"><span class="pre">VERSION</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.STACK">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">STACK</tt><em class="property"> = 'stack'</em><a class="headerlink" href="#bang.attributes.STACK" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a <em>derived</em> attribute that Bang provides for instance tagging, and
+for Ansible playbooks to consume.  It&#8217;s a combination of the <a class="reference internal" href="#bang.attributes.NAME" title="bang.attributes.NAME"><tt class="xref py py-attr docutils literal"><span class="pre">NAME</span></tt></a>
+and the <a class="reference internal" href="#bang.attributes.VERSION" title="bang.attributes.VERSION"><tt class="xref py py-attr docutils literal"><span class="pre">VERSION</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="bang.attributes.VERSION">
+<tt class="descclassname">bang.attributes.</tt><tt class="descname">VERSION</tt><em class="property"> = 'version'</em><a class="headerlink" href="#bang.attributes.VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stack version.  Often, you need a global version of a stack in a
+playbook.  E.g. when a web client wants to query a web service for API
+compatibility, the playbooks could configure the web service to report this
+stack version.</p>
 </dd></dl>
 
 </div>
@@ -351,7 +441,7 @@ existing instance must also be &#8220;running&#8221;.</p>
 <dl class="class">
 <dt id="bang.deployers.cloud.LoadBalancerDeployer">
 <em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">LoadBalancerDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#LoadBalancerDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.LoadBalancerDeployer" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.BaseDeployer" title="bang.deployers.cloud.BaseDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.BaseDeployer</span></tt></a></p>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.RegionedDeployer" title="bang.deployers.cloud.RegionedDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.RegionedDeployer</span></tt></a></p>
 <p>Cloud-managed load balancer deployer. Assumes a consul able
 to create and discover LB instances, as well as match existing
 backend &#8216;nodes&#8217; to a list it&#8217;s given. It is assumed only a single
@@ -361,6 +451,7 @@ that any elasticity is handled by the cloud service).</p>
 <div class="highlight-python"><pre>load_balancers:
   test_balancer:
     balance_server_name: server_defined_in_servers_section
+    region: region-1.geo-1
     provider: hpcloud
     backend_port: '8080'
     protocol: tcp
@@ -1012,28 +1103,6 @@ keys are used.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="bang.providers.hpcloud.HPNova">
-<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.</tt><tt class="descname">HPNova</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPNova"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPNova" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#bang.providers.openstack.Nova" title="bang.providers.openstack.Nova"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.openstack.Nova</span></tt></a></p>
-<dl class="method">
-<dt id="bang.providers.hpcloud.HPNova.create_server">
-<tt class="descname">create_server</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPNova.create_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPNova.create_server" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wraps <a class="reference internal" href="#bang.providers.openstack.Nova.create_server" title="bang.providers.openstack.Nova.create_server"><tt class="xref py py-meth docutils literal"><span class="pre">bang.providers.openstack.Nova.create_server()</span></tt></a> to apply
-hpcloud specialization, namely pulling IP addresses from the hpcloud&#8217;s
-non-standard return values.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="bang.providers.hpcloud.HPNova.find_servers">
-<tt class="descname">find_servers</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPNova.find_servers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPNova.find_servers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Wraps <a class="reference internal" href="#bang.providers.openstack.Nova.find_servers" title="bang.providers.openstack.Nova.find_servers"><tt class="xref py py-meth docutils literal"><span class="pre">bang.providers.openstack.Nova.find_servers()</span></tt></a> to apply
-hpcloud specialization, namely pulling IP addresses from the hpcloud&#8217;s
-non-standard return values.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="bang.providers.hpcloud.HPRedDwarf">
 <em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.</tt><tt class="descname">HPRedDwarf</tt><big>(</big><em>provider</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#HPRedDwarf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.HPRedDwarf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#bang.providers.openstack.RedDwarf" title="bang.providers.openstack.RedDwarf"><tt class="xref py py-class docutils literal"><span class="pre">bang.providers.openstack.RedDwarf</span></tt></a></p>
@@ -1074,23 +1143,6 @@ attempting to connect to the running mysql server.</li>
 </table>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="function">
-<dt id="bang.providers.hpcloud.fix_hp_addrs">
-<tt class="descclassname">bang.providers.hpcloud.</tt><tt class="descname">fix_hp_addrs</tt><big>(</big><em>server</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud.html#fix_hp_addrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.fix_hp_addrs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Works around hpcloud&#8217;s peculiar &#8220;all ip addresses are returned as private
-even though one is public&#8221; bug.  This is also what the official hpfog gem
-does in the <tt class="docutils literal"><span class="pre">Fog::Compute::HP::Server#public_ip_address</span></tt> method.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>server</strong> (<em>dict</em>) &#8211; Contains the server ID, a list of public IP addresses,
-and a list of private IP addresses.</td>
-</tr>
-</tbody>
-</table>
 </dd></dl>
 
 </div>
@@ -1215,7 +1267,9 @@ use the <tt class="docutils literal"><span class="pre">lb_details</span></tt> ca
 <dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.match_lb_nodes">
 <tt class="descname">match_lb_nodes</tt><big>(</big><em>lb_id</em>, <em>existing_nodes</em>, <em>host_addresses</em>, <em>host_port</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.match_lb_nodes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.match_lb_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add and remove nodes to match the host addresses
-and port given, based on existing_nodes</p>
+and port given, based on existing_nodes. HPCS doesn&#8217;t
+allow a load balancer with no backends, so we&#8217;ll add
+first, delete after.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1253,6 +1307,11 @@ and port given, based on existing_nodes</p>
 </tbody>
 </table>
 </dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.set_region">
+<tt class="descname">set_region</tt><big>(</big><em>region_name</em><big>)</big><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.set_region" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.update_lb_node_condition">
@@ -1494,35 +1553,67 @@ time.</li>
 
 <dl class="method">
 <dt id="bang.providers.openstack.Nova.create_server">
-<tt class="descname">create_server</tt><big>(</big><em>basename</em>, <em>disk_image_id</em>, <em>instance_type</em>, <em>ssh_key_name</em>, <em>tags=None</em>, <em>availability_zone=None</em>, <em>timeout_s=120</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.create_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.create_server" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new server instance.  This call blocks until the server is
-created and available for normal use, or <tt class="xref py py-attr docutils literal"><span class="pre">timeout_s</span></tt> has elapsed.</p>
+<tt class="descname">create_server</tt><big>(</big><em>basename</em>, <em>disk_image_id</em>, <em>instance_type</em>, <em>ssh_key_name</em>, <em>tags=None</em>, <em>availability_zone=None</em>, <em>timeout_s=120</em>, <em>floating_ip=True</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.create_server"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.create_server" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Creates a new server instance.  This call blocks until the server is</dt>
+<dd><p class="first">created and available for normal use, or <tt class="xref py py-attr docutils literal"><span class="pre">timeout_s</span></tt> has elapsed.</p>
+<table class="last docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">param str basename:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">An identifier for the server.  A random postfix
+will be appended to this basename to work around OpenStack Nova
+REST API limitations.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param str disk_image_id:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The identifier of the base disk image to use
+as the rootfs.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param str instance_type:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The name of an OpenStack instance type, or
+<em>flavor</em>.  This is specific to the OpenStack provider installation.</td>
+</tr>
+</tbody>
+</table>
+</dd>
+</dl>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>basename</strong> (<em>str</em>) &#8211; An identifier for the server.  A random postfix
-will be appended to this basename to work around OpenStack Nova
-REST API limitations.</li>
-<li><strong>disk_image_id</strong> (<em>str</em>) &#8211; The identifier of the base disk image to use
-as the rootfs.</li>
-<li><strong>instance_type</strong> (<em>str</em>) &#8211; The name of an OpenStack instance type, or
-<em>flavor</em>.  This is specific to the OpenStack provider installation.</li>
-<li><strong>ssh_key_name</strong> (<em>str</em>) &#8211; The name of the ssh key to inject into the
-target server&#8217;s <tt class="docutils literal"><span class="pre">authorized_keys</span></tt> file.  The key must already
-have been registered with the OpenStack Nova provider.</li>
-<li><strong>tags</strong> (<tt class="xref py py-class docutils literal"><span class="pre">Mapping</span></tt>) &#8211; Up to 5 key-value pairs of arbitrary strings to use as
-<em>tags</em> for the server instance.</li>
-<li><strong>availability_zone</strong> (<em>str</em>) &#8211; The name of the availability zone in
-which to place the server.</li>
-<li><strong>timeout_s</strong> (<em>float</em>) &#8211; The number of seconds to poll for an active
-server before failing.  Defaults to <tt class="docutils literal"><span class="pre">0</span></tt> (i.e. Expect server to be
-active immediately).</li>
-</ul>
-</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>ssh_key_name</strong> (<em>str</em>) &#8211; <dl class="docutils">
+<dt>The name of the ssh key to inject into the</dt>
+<dd>target server&#8217;s <tt class="docutils literal"><span class="pre">authorized_keys</span></tt> file.  The key must already
+have been registered with the OpenStack Nova provider.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">param tags:</th><td class="field-body">Up to 5 key-value pairs of arbitrary strings to use as
+<em>tags</em> for the server instance.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></p>
+<tr class="field-even field"><th class="field-name">type tags:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">Mapping</span></tt></td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param str availability_zone:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The name of the availability zone in
+which to place the server.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">param float timeout_s:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The number of seconds to poll for an active
+server before failing.  Defaults to <tt class="docutils literal"><span class="pre">0</span></tt> (i.e. Expect server to be
+active immediately).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">param bool floating_ip:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">Allocate a floating IP (in
+openstack 13.5 this doesn&#8217;t happen automatically, so only
+don&#8217;t do it if you know what you&#8217;re doing)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">rtype:</th><td class="field-body"><tt class="xref py py-class docutils literal"><span class="pre">dict</span></tt></td>
+</tr>
+</tbody>
+</table>
 </td>
 </tr>
 </tbody>
@@ -2223,6 +2314,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
   <ul>
 <li><a class="reference internal" href="#">API</a><ul>
 <li><a class="reference internal" href="#module-bang"><tt class="docutils literal"><span class="pre">bang</span></tt></a></li>
+<li><a class="reference internal" href="#module-bang.attributes"><tt class="docutils literal"><span class="pre">bang.attributes</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.config"><tt class="docutils literal"><span class="pre">bang.config</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers"><tt class="docutils literal"><span class="pre">bang.deployers</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers.cloud"><tt class="docutils literal"><span class="pre">bang.deployers.cloud</span></tt></a></li>
@@ -2280,7 +2372,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
         <li class="right" >
           <a href="design.html" title="Design"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.10.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

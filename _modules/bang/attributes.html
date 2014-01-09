@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.providers &mdash; bang 0.11 documentation</title>
+    <title>bang.attributes &mdash; bang 0.11 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -49,7 +49,7 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <h1>Source code for bang.providers</h1><div class="highlight"><pre>
+  <h1>Source code for bang.attributes</h1><div class="highlight"><pre>
 <span class="c"># Copyright 2012 - John Calixto</span>
 <span class="c">#</span>
 <span class="c"># This file is part of bang.</span>
@@ -66,43 +66,63 @@
 <span class="c">#</span>
 <span class="c"># You should have received a copy of the GNU General Public License</span>
 <span class="c"># along with bang.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
-<span class="kn">from</span> <span class="nn">.aws</span> <span class="kn">import</span> <span class="n">AWS</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Constants for attribute names of the various resources.</span>
 
-<span class="n">PROVIDER_MAP</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s">&#39;aws&#39;</span><span class="p">:</span> <span class="n">AWS</span><span class="p">,</span>
-        <span class="p">}</span>
+<span class="sd">This module contains the top-level config file attributes including those that</span>
+<span class="sd">are typically placed in ~/.bangrc.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">creds</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">secgroup</span><span class="p">,</span> <span class="n">tags</span><span class="p">,</span> <span class="n">database</span><span class="p">,</span> <span class="n">ssh_key</span><span class="p">,</span> <span class="n">loadbalancer</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">.hpcloud</span> <span class="kn">import</span> <span class="n">HPCloud</span>
-    <span class="n">PROVIDER_MAP</span><span class="p">[</span><span class="s">&#39;hpcloud&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">HPCloud</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="k">pass</span>
+<span class="c">#: The stack name.  Its value is used to tag servers and other cloud resources.</span>
+<span class="n">NAME</span> <span class="o">=</span> <span class="s">&#39;name&#39;</span>
 
-<span class="c"># provider object cache:</span>
-<span class="n">_PROVIDERS</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="c">#: The stack version.  Often, you need a global version of a stack in a</span>
+<span class="c">#: playbook.  E.g. when a web client wants to query a web service for API</span>
+<span class="c">#: compatibility, the playbooks could configure the web service to report this</span>
+<span class="c">#: stack version.</span>
+<span class="n">VERSION</span> <span class="o">=</span> <span class="s">&#39;version&#39;</span>
 
+<span class="c">#: The ordered list of playbooks to run *after* provisioning the cloud</span>
+<span class="c">#: resources.</span>
+<span class="n">PLAYBOOKS</span> <span class="o">=</span> <span class="s">&#39;playbooks&#39;</span>
 
-<div class="viewcode-block" id="get_provider"><a class="viewcode-back" href="../../api.html#bang.providers.get_provider">[docs]</a><span class="k">def</span> <span class="nf">get_provider</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">creds</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generates and memoizes a :class:`~bang.providers.provider.Provider` object</span>
-<span class="sd">    for the given name.</span>
+<span class="n">STACK</span> <span class="o">=</span> <span class="s">&#39;stack&#39;</span>
+<span class="n">KEY</span> <span class="o">=</span> <span class="s">&#39;key&#39;</span>
+<span class="n">SERVER_CLASS</span> <span class="o">=</span> <span class="s">&#39;server_class&#39;</span>
+<span class="n">PROVIDER</span> <span class="o">=</span> <span class="s">&#39;provider&#39;</span>
 
-<span class="sd">    :param str name:  The provider name, as given in the config stanza.  This</span>
-<span class="sd">        token is used to find the</span>
-<span class="sd">        appropriate :class:`~bang.providers.provider.Provider`.</span>
+<span class="c">#: A dict containing credentials for various cloud providers in which the keys</span>
+<span class="c">#: can be any of the following:</span>
+<span class="c">#:</span>
+<span class="c">#:     - ``aws``</span>
+<span class="c">#:     - ``hpcloud``</span>
+<span class="c">#:</span>
+<span class="n">DEPLOYER_CREDS</span> <span class="o">=</span> <span class="s">&#39;deployer_credentials&#39;</span>
+<span class="n">LOGGING</span> <span class="o">=</span> <span class="s">&#39;logging&#39;</span>
 
-<span class="sd">    :param dict creds:  The credentials dictionary that is appropriate for the</span>
-<span class="sd">        desired provider.  Typically, a sub-dict from the main stack config.</span>
-
-<span class="sd">    :rtype:  :class:`~bang.providers.provider.Provider`</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">p</span> <span class="o">=</span> <span class="n">_PROVIDERS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">p</span><span class="p">:</span>
-        <span class="n">provider</span> <span class="o">=</span> <span class="n">PROVIDER_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="n">p</span> <span class="o">=</span> <span class="n">provider</span><span class="p">(</span><span class="n">creds</span><span class="p">)</span>
-        <span class="n">_PROVIDERS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
-    <span class="k">return</span> <span class="n">p</span></div>
+<span class="c">#: Like chicken fried chicken... this is a way to configure the name of the tag</span>
+<span class="c">#: in which the combined stack-role (a.k.a. *name*) will be stored.  By</span>
+<span class="c">#: default, unless this is specified directly in ~/.bangrc, the *name* value</span>
+<span class="c">#: will be assigned to a tag named &quot;Name&quot; (this is the default tag displayed</span>
+<span class="c">#: in the AWS management console).  I.e. using Bang defaults, the server</span>
+<span class="c">#: named &quot;bar&quot; in the stack named &quot;foo&quot; will have the following tags::</span>
+<span class="c">#:</span>
+<span class="c">#:     stack:  foo</span>
+<span class="c">#:     role:   bar</span>
+<span class="c">#:     Name:   foo-bar</span>
+<span class="c">#:</span>
+<span class="c">#: In some cases, admins may have other purposes for the &quot;Name&quot; tag.  If</span>
+<span class="c">#: ~/.bangrc were to have ``name_tag_name`` set to ``descriptor``, then the</span>
+<span class="c">#: server described above would have the following tags::</span>
+<span class="c">#:</span>
+<span class="c">#:     stack:       foo</span>
+<span class="c">#:     role:        bar</span>
+<span class="c">#:     descriptor:  foo-bar</span>
+<span class="c">#:</span>
+<span class="c">#: To prevent Bang from assigning the *name* value to a tag, assign an empty</span>
+<span class="c">#: string to the ``name_tag_name`` attribute in ~/.bangrc.</span>
+<span class="n">NAME_TAG_NAME</span> <span class="o">=</span> <span class="s">&#39;name_tag_name&#39;</span>
 </pre></div>
 
           </div>

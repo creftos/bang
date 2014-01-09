@@ -10,7 +10,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Index &mdash; bang 0.10.1 documentation</title>
+    <title>Index &mdash; bang 0.11 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.10.1',
+        VERSION:     '0.11',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -27,7 +27,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.10.1 documentation" href="index.html" /> 
+    <link rel="top" title="bang 0.11 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -39,7 +39,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">bang 0.10.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -279,6 +279,10 @@
   </dt>
 
       
+  <dt><a href="api.html#module-bang.attributes">bang.attributes (module)</a>
+  </dt>
+
+      
   <dt><a href="api.html#module-bang.config">bang.config (module)</a>
   </dt>
 
@@ -494,10 +498,6 @@
 
       <dd><dl>
         
-  <dt><a href="api.html#bang.providers.hpcloud.HPNova.create_server">(bang.providers.hpcloud.HPNova method)</a>
-  </dt>
-
-        
   <dt><a href="api.html#bang.providers.openstack.Nova.create_server">(bang.providers.openstack.Nova method)</a>
   </dt>
 
@@ -540,8 +540,6 @@
   <dt><a href="api.html#bang.util.deep_merge_dicts">deep_merge_dicts() (in module bang.util)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.delete">delete() (bang.providers.hpcloud.nova_ext.DiabloVolumeManager method)</a>
   </dt>
@@ -556,6 +554,8 @@
   </dt>
 
       </dl></dd>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.delete_lb">delete_lb() (bang.providers.hpcloud.load_balancer.HPLoadBalancer method)</a>
   </dt>
@@ -582,6 +582,10 @@
       </dl></dd>
       
   <dt><a href="api.html#bang.deployers.deployer.Deployer">Deployer (class in bang.deployers.deployer)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#bang.attributes.DEPLOYER_CREDS">DEPLOYER_CREDS (in module bang.attributes)</a>
   </dt>
 
       
@@ -686,20 +690,12 @@
 
       <dd><dl>
         
-  <dt><a href="api.html#bang.providers.hpcloud.HPNova.find_servers">(bang.providers.hpcloud.HPNova method)</a>
-  </dt>
-
-        
   <dt><a href="api.html#bang.providers.openstack.Nova.find_servers">(bang.providers.openstack.Nova method)</a>
   </dt>
 
       </dl></dd>
       
   <dt><a href="api.html#bang.providers.openstack.Nova.find_ssh_pub_key">find_ssh_pub_key() (bang.providers.openstack.Nova method)</a>
-  </dt>
-
-      
-  <dt><a href="api.html#bang.providers.hpcloud.fix_hp_addrs">fix_hp_addrs() (in module bang.providers.hpcloud)</a>
   </dt>
 
       
@@ -796,14 +792,10 @@
   <dt><a href="api.html#bang.providers.hpcloud.reddwarf.HPDbaas">HPDbaas (class in bang.providers.hpcloud.reddwarf)</a>
   </dt>
 
-      
-  <dt><a href="api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer">HPLoadBalancer (class in bang.providers.hpcloud.load_balancer)</a>
-  </dt>
-
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#bang.providers.hpcloud.HPNova">HPNova (class in bang.providers.hpcloud)</a>
+  <dt><a href="api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer">HPLoadBalancer (class in bang.providers.hpcloud.load_balancer)</a>
   </dt>
 
       
@@ -882,6 +874,10 @@
   <dt><a href="api.html#bang.deployers.cloud.LoadBalancerSecurityGroupsDeployer">LoadBalancerSecurityGroupsDeployer (class in bang.deployers.cloud)</a>
   </dt>
 
+      
+  <dt><a href="api.html#bang.attributes.LOGGING">LOGGING (in module bang.attributes)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -905,15 +901,23 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="api.html#bang.providers.openstack.Nova">Nova (class in bang.providers.openstack)</a>
+  <dt><a href="api.html#bang.attributes.NAME">NAME (in module bang.attributes)</a>
   </dt>
 
       
-  <dt><a href="api.html#bang.providers.openstack.OpenStack.nova_client">nova_client (bang.providers.openstack.OpenStack attribute)</a>
+  <dt><a href="api.html#bang.attributes.NAME_TAG_NAME">NAME_TAG_NAME (in module bang.attributes)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#bang.providers.openstack.Nova">Nova (class in bang.providers.openstack)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#bang.providers.openstack.OpenStack.nova_client">nova_client (bang.providers.openstack.OpenStack attribute)</a>
+  </dt>
+
       
   <dt><a href="api.html#bang.providers.openstack.NovaSecGroup">NovaSecGroup (class in bang.providers.openstack)</a>
   </dt>
@@ -953,6 +957,10 @@
   </dt>
 
       
+  <dt><a href="api.html#bang.attributes.PLAYBOOKS">PLAYBOOKS (in module bang.attributes)</a>
+  </dt>
+
+      
   <dt><a href="api.html#bang.util.poll_with_timeout">poll_with_timeout() (in module bang.util)</a>
   </dt>
 
@@ -964,6 +972,10 @@
 
       
   <dt><a href="api.html#bang.providers.bases.Provider">Provider (class in bang.providers.bases)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#bang.attributes.PROVIDER">PROVIDER (in module bang.attributes)</a>
   </dt>
 
   </dl></td>
@@ -1063,6 +1075,10 @@
   </dt>
 
       
+  <dt><a href="api.html#bang.attributes.SERVER_CLASS">SERVER_CLASS (in module bang.attributes)</a>
+  </dt>
+
+      
   <dt><a href="api.html#bang.providers.aws.server_to_dict">server_to_dict() (in module bang.providers.aws)</a>
   </dt>
 
@@ -1087,6 +1103,10 @@
   </dt>
 
       <dd><dl>
+        
+  <dt><a href="api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.set_region">(bang.providers.hpcloud.load_balancer.HPLoadBalancer method)</a>
+  </dt>
+
         
   <dt><a href="api.html#bang.providers.openstack.Nova.set_region">(bang.providers.openstack.Nova method)</a>
   </dt>
@@ -1120,6 +1140,10 @@
 
       
   <dt><a href="api.html#bang.stack.Stack">Stack (class in bang.stack)</a>
+  </dt>
+
+      
+  <dt><a href="api.html#bang.attributes.STACK">STACK (in module bang.attributes)</a>
   </dt>
 
       
@@ -1169,6 +1193,12 @@
   </dt>
 
   </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="api.html#bang.attributes.VERSION">VERSION (in module bang.attributes)</a>
+  </dt>
+
+  </dl></td>
 </tr></table>
 
 
@@ -1207,7 +1237,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">bang 0.10.1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
