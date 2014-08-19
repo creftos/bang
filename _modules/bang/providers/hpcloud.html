@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.providers.hpcloud &mdash; bang 0.11 documentation</title>
+    <title>bang.providers.hpcloud &mdash; bang 0.12 documentation</title>
     
     <link rel="stylesheet" href="../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.11 documentation" href="../../../index.html" />
+    <link rel="top" title="bang 0.12 documentation" href="../../../index.html" />
     <link rel="up" title="bang.providers" href="../providers.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" accesskey="U">bang.providers</a> &raquo;</li> 
@@ -74,59 +74,10 @@
 <span class="kn">from</span> <span class="nn">...util</span> <span class="kn">import</span> <span class="n">log</span><span class="p">,</span> <span class="n">poll_with_timeout</span>
 <span class="kn">from</span> <span class="nn">..openstack</span> <span class="kn">import</span> <span class="p">(</span><span class="n">OpenStack</span><span class="p">,</span> <span class="n">Nova</span><span class="p">,</span> <span class="n">RedDwarf</span><span class="p">,</span>
         <span class="n">DEFAULT_STORAGE_SIZE_GB</span><span class="p">,</span> <span class="n">DEFAULT_TIMEOUT_S</span><span class="p">,</span> <span class="n">db_to_dict</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.nova_ext</span> <span class="kn">import</span> <span class="n">DiabloVolumeManager</span>
 <span class="kn">from</span> <span class="nn">.reddwarf</span> <span class="kn">import</span> <span class="n">HPDbaas</span>
 <span class="kn">from</span> <span class="nn">.load_balancer</span> <span class="kn">import</span> <span class="n">HPLoadBalancer</span>
 
 
-<div class="viewcode-block" id="fix_hp_addrs"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.fix_hp_addrs">[docs]</a><span class="k">def</span> <span class="nf">fix_hp_addrs</span><span class="p">(</span><span class="n">server</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Works around hpcloud&#39;s peculiar &quot;all ip addresses are returned as private</span>
-<span class="sd">    even though one is public&quot; bug.  This is also what the official hpfog gem</span>
-<span class="sd">    does in the ``Fog::Compute::HP::Server#public_ip_address`` method.</span>
-
-<span class="sd">    :param dict server:  Contains the server ID, a list of public IP addresses,</span>
-<span class="sd">        and a list of private IP addresses.</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">fixed</span> <span class="o">=</span> <span class="p">{</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">ID</span><span class="p">:</span> <span class="n">server</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">ID</span><span class="p">]}</span>
-    <span class="n">both</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PRIVATE_IPS</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">both</span><span class="p">:</span>
-        <span class="n">fixed</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PUBLIC_IPS</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">both</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
-        <span class="n">fixed</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">PRIVATE_IPS</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">both</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
-    <span class="k">return</span> <span class="n">fixed</span>
-
-</div>
-<div class="viewcode-block" id="HPNova"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPNova">[docs]</a><span class="k">class</span> <span class="nc">HPNova</span><span class="p">(</span><span class="n">Nova</span><span class="p">):</span>
-<div class="viewcode-block" id="HPNova.find_servers"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPNova.find_servers">[docs]</a>    <span class="k">def</span> <span class="nf">find_servers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Wraps :meth:`bang.providers.openstack.Nova.find_servers` to apply</span>
-<span class="sd">        hpcloud specialization, namely pulling IP addresses from the hpcloud&#39;s</span>
-<span class="sd">        non-standard return values.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">servers</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">HPNova</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">find_servers</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">fix_hp_addrs</span><span class="p">,</span> <span class="n">servers</span><span class="p">)</span>
-</div>
-<div class="viewcode-block" id="HPNova.create_server"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPNova.create_server">[docs]</a>    <span class="k">def</span> <span class="nf">create_server</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Wraps :meth:`bang.providers.openstack.Nova.create_server` to apply</span>
-<span class="sd">        hpcloud specialization, namely pulling IP addresses from the hpcloud&#39;s</span>
-<span class="sd">        non-standard return values.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c"># hpcloud&#39;s management console stuffs all of its tags in a &quot;tags&quot; tag.</span>
-        <span class="c"># populate it with the stack and role values here only at server</span>
-        <span class="c"># creation time.  what users do with it after server creation is up to</span>
-        <span class="c"># them.</span>
-        <span class="n">tags</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;tags&#39;</span><span class="p">]</span>
-        <span class="n">tags</span><span class="p">[</span><span class="n">A</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">TAGS</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
-                <span class="n">tags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">STACK</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">),</span>
-                <span class="n">tags</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">ROLE</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">),</span>
-                <span class="p">])</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">HPNova</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">create_server</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">fix_hp_addrs</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
-</div></div>
 <div class="viewcode-block" id="HPRedDwarf"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPRedDwarf">[docs]</a><span class="k">class</span> <span class="nc">HPRedDwarf</span><span class="p">(</span><span class="n">RedDwarf</span><span class="p">):</span>
 <div class="viewcode-block" id="HPRedDwarf.create_db"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPRedDwarf.create_db">[docs]</a>    <span class="k">def</span> <span class="nf">create_db</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance_name</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">,</span>
             <span class="n">admin_username</span><span class="p">,</span> <span class="n">admin_password</span><span class="p">,</span> <span class="n">security_groups</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">db_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
@@ -213,10 +164,10 @@
 <div class="viewcode-block" id="HPCloud.__init__"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPCloud.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">HPCloud</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONSUL_MAP</span>
-        <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">]</span> <span class="o">=</span> <span class="n">HPNova</span>
+        <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">SERVERS</span><span class="p">]</span> <span class="o">=</span> <span class="n">Nova</span>
         <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">DATABASES</span><span class="p">]</span> <span class="o">=</span> <span class="n">HPRedDwarf</span>
         <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">LOAD_BALANCERS</span><span class="p">]</span> <span class="o">=</span> <span class="n">HPLoadBalancer</span>
-        <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">DYNAMIC_LB_SEC_GROUPS</span><span class="p">]</span> <span class="o">=</span> <span class="n">HPNova</span>
+        <span class="n">cm</span><span class="p">[</span><span class="n">R</span><span class="o">.</span><span class="n">DYNAMIC_LB_SEC_GROUPS</span><span class="p">]</span> <span class="o">=</span> <span class="n">Nova</span>
 </div>
     <span class="nd">@property</span>
 <div class="viewcode-block" id="HPCloud.load_balancer_client"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPCloud.load_balancer_client">[docs]</a>    <span class="k">def</span> <span class="nf">load_balancer_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -233,7 +184,6 @@
             <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;auth_system&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;secretkey&#39;</span>
 
         <span class="n">nc</span> <span class="o">=</span> <span class="n">NovaClient</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">nc</span><span class="o">.</span><span class="n">volumes</span> <span class="o">=</span> <span class="n">DiabloVolumeManager</span><span class="p">(</span><span class="n">nc</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">nc</span>
 
 <div class="viewcode-block" id="HPCloud.authenticate"><a class="viewcode-back" href="../../../api.html#bang.providers.hpcloud.HPCloud.authenticate">[docs]</a>    <span class="k">def</span> <span class="nf">authenticate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -321,7 +271,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../providers.html" >bang.providers</a> &raquo;</li> 

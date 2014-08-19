@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Road Map &mdash; bang 0.11 documentation</title>
+    <title>Road Map &mdash; bang 0.12 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.11 documentation" href="index.html" />
+    <link rel="top" title="bang 0.12 documentation" href="index.html" />
     <link rel="next" title="Design" href="design.html" />
     <link rel="prev" title="Release Summary" href="releases.html" /> 
   </head>
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="releases.html" title="Release Summary"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -62,6 +62,10 @@ so they won&#8217;t be forgotten along the way.</p>
 <div class="section" id="general-features">
 <h2>General Features<a class="headerlink" href="#general-features" title="Permalink to this headline">¶</a></h2>
 <ul>
+<li><p class="first">Allow overriding path to .bangrc via environment variable.  This
+allows external utilities to manage multiple sets of
+deployer_credentials (e.g. a bangrc per client).</p>
+</li>
 <li><p class="first">Add extension/plugin mechanism.  At the moment, the mercurial-style
 (i.e. using an rc-file for registering extensions) is the most
 palatable because it does <em>not</em> demand using setuptools, and
@@ -128,6 +132,16 @@ dependencies.</p>
 public cloud providers.  E.g. SQS, ELB, SNS, etc...</li>
 <li>Create ssh keypairs if specified by the user in their
 ~/.bangrc.</li>
+<li>Add DNS updates via Route53 API.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Docker/LXC</p>
+<blockquote>
+<div><ul class="simple">
+<li>Add Docker and LXC images as base images.</li>
+<li>Add Docker and LXC containers to Ansible inventories.</li>
+<li>Use Ansible playbooks to make changes within containers.</li>
 </ul>
 </div></blockquote>
 </li>
@@ -137,6 +151,14 @@ public cloud providers.  E.g. SQS, ELB, SNS, etc...</li>
 <blockquote>
 <div><ul class="simple">
 <li>DB Security Groups</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">RightScale</p>
+<blockquote>
+<div><ul class="simple">
+<li>Add this as a new provider and enable mixed RightScale+AWS
+stacks.</li>
 </ul>
 </div></blockquote>
 </li>
@@ -202,7 +224,7 @@ public cloud providers.  E.g. SQS, ELB, SNS, etc...</li>
         <li class="right" >
           <a href="releases.html" title="Release Summary"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

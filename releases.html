@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Release Summary &mdash; bang 0.11 documentation</title>
+    <title>Release Summary &mdash; bang 0.12 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.11 documentation" href="index.html" />
+    <link rel="top" title="bang 0.12 documentation" href="index.html" />
     <link rel="next" title="Road Map" href="roadmap.html" />
     <link rel="prev" title="Getting Help" href="help.html" /> 
   </head>
@@ -45,7 +45,7 @@
         <li class="right" >
           <a href="help.html" title="Getting Help"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -56,6 +56,38 @@
             
   <div class="section" id="release-summary">
 <h1>Release Summary<a class="headerlink" href="#release-summary" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="august-19-2014">
+<h2>0.12 - August 19, 2014<a class="headerlink" href="#august-19-2014" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">Update to ansible &gt;= 1.6.3.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Allow ansible vars plugins to work.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Add RightScale provider.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Add server creation and launch support.</li>
+<li>Expose underlying RightScale response for errors.</li>
+<li>Implement <tt class="docutils literal"><span class="pre">create_stack()</span></tt> to create RightScale
+<em>deployments</em>.</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">Reuse existing servers <em>if possible</em>.  Some scenarios allow a
+server instance to be found and usable as a deployment target (e.g.
+bang run failed but server instance launched successfully).</p>
+</li>
+<li><p class="first">Allow configuration of logging via ~/.bangrc.</p>
+</li>
+<li><p class="first">Add backwards support for python 2.6.</p>
+</li>
+<li><p class="first">Reorganize and add new examples.</p>
+</li>
+</ul>
+</div>
 <div class="section" id="january-8-2014">
 <h2>0.11 - January 8, 2014<a class="headerlink" href="#january-8-2014" title="Permalink to this headline">¶</a></h2>
 <ul>
@@ -245,6 +277,7 @@ matching running instance.</li>
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Release Summary</a><ul>
+<li><a class="reference internal" href="#august-19-2014">0.12 - August 19, 2014</a></li>
 <li><a class="reference internal" href="#january-8-2014">0.11 - January 8, 2014</a></li>
 <li><a class="reference internal" href="#july-22-2013">0.10.1 - July 22, 2013</a></li>
 <li><a class="reference internal" href="#july-16-2013">0.9 - July 16, 2013</a></li>
@@ -304,7 +337,7 @@ matching running instance.</li>
         <li class="right" >
           <a href="help.html" title="Getting Help"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

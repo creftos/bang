@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>API &mdash; bang 0.11 documentation</title>
+    <title>API &mdash; bang 0.12 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="bang 0.11 documentation" href="index.html" />
+    <link rel="top" title="bang 0.12 documentation" href="index.html" />
     <link rel="prev" title="Design" href="design.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="design.html" title="Design"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -311,6 +311,11 @@ they will be ignored.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="bang.config.read_raw_bangrc">
+<tt class="descclassname">bang.config.</tt><tt class="descname">read_raw_bangrc</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/config.html#read_raw_bangrc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.read_raw_bangrc" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="bang.config.resolve_config_spec">
 <tt class="descclassname">bang.config.</tt><tt class="descname">resolve_config_spec</tt><big>(</big><em>config_spec</em>, <em>config_dir=''</em><big>)</big><a class="reference internal" href="_modules/bang/config.html#resolve_config_spec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.config.resolve_config_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resolves <tt class="xref py py-attr docutils literal"><span class="pre">config_spec</span></tt> to a path to a config file.</p>
@@ -344,33 +349,8 @@ configuration files.</li>
 </dd></dl>
 
 </div>
-<div class="section" id="module-bang.deployers">
-<span id="bang-deployers"></span><h2><a class="reference internal" href="#module-bang.deployers" title="bang.deployers"><tt class="xref py py-mod docutils literal"><span class="pre">bang.deployers</span></tt></a><a class="headerlink" href="#module-bang.deployers" title="Permalink to this headline">¶</a></h2>
-<p>Base classes and definitions for bang deployers (deployable components)</p>
-<dl class="function">
-<dt id="bang.deployers.get_stage_deployers">
-<tt class="descclassname">bang.deployers.</tt><tt class="descname">get_stage_deployers</tt><big>(</big><em>keys</em>, <em>stack</em><big>)</big><a class="reference internal" href="_modules/bang/deployers.html#get_stage_deployers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.get_stage_deployers" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a list of deployer objects that <em>create</em> cloud resources.  Each
-member of the list is responsible for provisioning a single stack resource
-(e.g. a virtual server, a security group, a bucket, etc...).</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>keys</strong> (<tt class="xref py py-class docutils literal"><span class="pre">Iterable</span></tt>) &#8211; A list of top-level configuration keys for which to create
-deployers.</li>
-<li><strong>config</strong> (<a class="reference internal" href="#bang.stack.Stack" title="bang.stack.Stack"><tt class="xref py py-class docutils literal"><span class="pre">Stack</span></tt></a>) &#8211; A stack object.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><tt class="xref py py-class docutils literal"><span class="pre">list</span></tt> of <a class="reference internal" href="#bang.deployers.deployer.Deployer" title="bang.deployers.deployer.Deployer"><tt class="xref py py-class docutils literal"><span class="pre">Deployer</span></tt></a></p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
+<div class="section" id="bang-deployers">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">bang.deployers</span></tt><a class="headerlink" href="#bang-deployers" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-bang.deployers.cloud">
 <span id="bang-deployers-cloud"></span><h2><a class="reference internal" href="#module-bang.deployers.cloud" title="bang.deployers.cloud"><tt class="xref py py-mod docutils literal"><span class="pre">bang.deployers.cloud</span></tt></a><a class="headerlink" href="#module-bang.deployers.cloud" title="Permalink to this headline">¶</a></h2>
@@ -405,6 +385,45 @@ deployers.</li>
 <tt class="descname">create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#BucketDeployer.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.BucketDeployer.create" title="Permalink to this definition">¶</a></dt>
 <dd><p>Creates a new bucket</p>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="bang.deployers.cloud.CloudManagerServerDeployer">
+<em class="property">class </em><tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">CloudManagerServerDeployer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#CloudManagerServerDeployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.CloudManagerServerDeployer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#bang.deployers.cloud.ServerDeployer" title="bang.deployers.cloud.ServerDeployer"><tt class="xref py py-class docutils literal"><span class="pre">bang.deployers.cloud.ServerDeployer</span></tt></a></p>
+<p>Server deployer for cloud management services.</p>
+<p>Cloud management services like RightScale and Scalr provide constructs like
+server templates (a.k.a. roles) to bundle together disk image ids with
+on-server configuration automation (e.g. RightScripts, Scalr scripts).
+This deployer replaces the low-level provisioning functionality in the base
+<a class="reference internal" href="#bang.deployers.cloud.ServerDeployer" title="bang.deployers.cloud.ServerDeployer"><tt class="xref py py-class docutils literal"><span class="pre">ServerDeployer</span></tt></a> with a <a class="reference internal" href="#bang.deployers.cloud.CloudManagerServerDeployer.create" title="bang.deployers.cloud.CloudManagerServerDeployer.create"><tt class="xref py py-meth docutils literal"><span class="pre">create()</span></tt></a> method that is more suited to
+the high-level launching mechanism provided by cloud management services.</p>
+<dl class="method">
+<dt id="bang.deployers.cloud.CloudManagerServerDeployer.__init__">
+<tt class="descname">__init__</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#CloudManagerServerDeployer.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.CloudManagerServerDeployer.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.CloudManagerServerDeployer.create">
+<tt class="descname">create</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#CloudManagerServerDeployer.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.CloudManagerServerDeployer.create" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.CloudManagerServerDeployer.create_stack">
+<tt class="descname">create_stack</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#CloudManagerServerDeployer.create_stack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.CloudManagerServerDeployer.create_stack" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.CloudManagerServerDeployer.define">
+<tt class="descname">define</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#CloudManagerServerDeployer.define"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.CloudManagerServerDeployer.define" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines a new server.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="bang.deployers.cloud.CloudManagerServerDeployer.find_def">
+<tt class="descname">find_def</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#CloudManagerServerDeployer.find_def"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.CloudManagerServerDeployer.find_def" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -618,7 +637,18 @@ config file.</p>
 the existing instances must also be &#8220;running&#8221;.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="bang.deployers.cloud.ServerDeployer.wait_for_running">
+<tt class="descname">wait_for_running</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#ServerDeployer.wait_for_running"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.ServerDeployer.wait_for_running" title="Permalink to this definition">¶</a></dt>
+<dd><p>Waits for found servers to be operational</p>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="bang.deployers.cloud.get_deployer">
+<tt class="descclassname">bang.deployers.cloud.</tt><tt class="descname">get_deployer</tt><big>(</big><em>provider</em>, <em>res_type</em><big>)</big><a class="reference internal" href="_modules/bang/deployers/cloud.html#get_deployer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.deployers.cloud.get_deployer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="bang.deployers.cloud.get_deployers">
@@ -710,6 +740,11 @@ manually deployed cloud servers).</p>
 <dl class="method">
 <dt id="bang.inventory.BangsibleInventory.__init__">
 <tt class="descname">__init__</tt><big>(</big><em>groups</em>, <em>hostvars</em><big>)</big><a class="reference internal" href="_modules/bang/inventory.html#BangsibleInventory.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.inventory.BangsibleInventory.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.inventory.BangsibleInventory.get_variables">
+<tt class="descname">get_variables</tt><big>(</big><em>hostname</em>, <em>vault_password=None</em><big>)</big><a class="reference internal" href="_modules/bang/inventory.html#BangsibleInventory.get_variables"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.inventory.BangsibleInventory.get_variables" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -899,11 +934,10 @@ will be appended to this basename to work around OpenStack Nova
 REST API limitations.</li>
 <li><strong>disk_image_id</strong> (<em>str</em>) &#8211; The identifier of the base disk image to use
 as the rootfs.</li>
-<li><strong>instance_type</strong> (<em>str</em>) &#8211; The name of an OpenStack instance type, or
-<em>flavor</em>.  This is specific to the OpenStack provider installation.</li>
+<li><strong>instance_type</strong> (<em>str</em>) &#8211; The name of an EC2 instance type.</li>
 <li><strong>ssh_key_name</strong> (<em>str</em>) &#8211; The name of the ssh key to inject into the
 target server&#8217;s <tt class="docutils literal"><span class="pre">authorized_keys</span></tt> file.  The key must already
-have been registered with the OpenStack Nova provider.</li>
+have been registered in the target EC2 region.</li>
 <li><strong>tags</strong> (<tt class="xref py py-class docutils literal"><span class="pre">Mapping</span></tt>) &#8211; Up to 5 key-value pairs of arbitrary strings to use as
 <em>tags</em> for the server instance.</li>
 <li><strong>availability_zone</strong> (<em>str</em>) &#8211; The name of the availability zone in
@@ -930,6 +964,11 @@ active immediately).</li>
 <dl class="attribute">
 <dt id="bang.providers.aws.EC2.ec2">
 <tt class="descname">ec2</tt><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.ec2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.ec2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.aws.EC2.find_running">
+<tt class="descname">find_running</tt><big>(</big><em>server_attrs</em>, <em>timeout_s</em><big>)</big><a class="reference internal" href="_modules/bang/providers/aws.html#EC2.find_running"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.aws.EC2.find_running" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1310,7 +1349,7 @@ first, delete after.</p>
 
 <dl class="method">
 <dt id="bang.providers.hpcloud.load_balancer.HPLoadBalancer.set_region">
-<tt class="descname">set_region</tt><big>(</big><em>region_name</em><big>)</big><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.set_region" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">set_region</tt><big>(</big><em>region_name</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/load_balancer.html#HPLoadBalancer.set_region"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.load_balancer.HPLoadBalancer.set_region" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1335,41 +1374,8 @@ first, delete after.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="module-bang.providers.hpcloud.nova_ext">
-<span id="bang-providers-hpcloud-nova-ext"></span><h2><a class="reference internal" href="#module-bang.providers.hpcloud.nova_ext" title="bang.providers.hpcloud.nova_ext"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt></a><a class="headerlink" href="#module-bang.providers.hpcloud.nova_ext" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
-<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager">
-<em class="property">class </em><tt class="descclassname">bang.providers.hpcloud.nova_ext.</tt><tt class="descname">DiabloVolumeManager</tt><big>(</big><em>api</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">novaclient.v1_1.volumes.VolumeManager</span></tt></p>
-<p>The volumes extension deployed by HP Cloud uses an older endpoint,
-<tt class="docutils literal"><span class="pre">/os-volumes</span></tt>, from the OpenStack Diablo timeframe.  Unfortunately, the
-endpoint in <tt class="docutils literal"><span class="pre">python-novaclient</span></tt> is hardcoded.  This class overrides any
-methods that specify an endpoint of <tt class="docutils literal"><span class="pre">/volumes</span></tt>.</p>
-<p>Besides the use of the <tt class="docutils literal"><span class="pre">/os-volumes</span></tt> endpoint, the methods in this class
-were mostly pinched from its base,
-<tt class="xref py py-class docutils literal"><span class="pre">novaclient.v1_1.volumes.VolumeManager</span></tt>.</p>
-<dl class="method">
-<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.create">
-<tt class="descname">create</tt><big>(</big><em>size</em>, <em>snapshot_id=None</em>, <em>display_name=None</em>, <em>display_description=None</em>, <em>volume_type=None</em>, <em>availability_zone=None</em>, <em>imageRef=None</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.create" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.delete">
-<tt class="descname">delete</tt><big>(</big><em>volume</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.delete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.delete" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.get">
-<tt class="descname">get</tt><big>(</big><em>volume_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.get" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="bang.providers.hpcloud.nova_ext.DiabloVolumeManager.list">
-<tt class="descname">list</tt><big>(</big><em>detailed=True</em>, <em>search_opts=None</em><big>)</big><a class="reference internal" href="_modules/bang/providers/hpcloud/nova_ext.html#DiabloVolumeManager.list"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.hpcloud.nova_ext.DiabloVolumeManager.list" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+<div class="section" id="bang-providers-hpcloud-nova-ext">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt><a class="headerlink" href="#bang-providers-hpcloud-nova-ext" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="module-bang.providers.hpcloud.reddwarf">
 <span id="bang-providers-hpcloud-reddwarf"></span><h2><a class="reference internal" href="#module-bang.providers.hpcloud.reddwarf" title="bang.providers.hpcloud.reddwarf"><tt class="xref py py-mod docutils literal"><span class="pre">bang.providers.hpcloud.reddwarf</span></tt></a><a class="headerlink" href="#module-bang.providers.hpcloud.reddwarf" title="Permalink to this headline">¶</a></h2>
@@ -1633,6 +1639,11 @@ instances.</p>
 <tt class="descname">delete_secgroup_rule</tt><big>(</big><em>rule_id</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.delete_secgroup_rule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.delete_secgroup_rule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Deletes the security group rule identified by <tt class="xref py py-attr docutils literal"><span class="pre">rule_id</span></tt></p>
 </dd></dl>
+
+<dl class="method">
+<dt id="bang.providers.openstack.Nova.find_running">
+<tt class="descname">find_running</tt><big>(</big><em>server_attrs</em>, <em>timeout_s</em><big>)</big><a class="reference internal" href="_modules/bang/providers/openstack.html#Nova.find_running"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.providers.openstack.Nova.find_running" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="bang.providers.openstack.Nova.find_secgroup">
@@ -2112,6 +2123,34 @@ when running ad-hoc ops tasks.  For more details, see:
 </dd></dl>
 
 <dl class="class">
+<dt id="bang.util.NullHandler">
+<em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">NullHandler</tt><big>(</big><em>level=0</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#NullHandler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.NullHandler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">logging.Handler</span></tt></p>
+<p>This handler does nothing. It&#8217;s intended to be used to avoid the
+&#8220;No handlers could be found for logger XXX&#8221; one-off warning. This is
+important for library code, which may contain code to log events. If a user
+of the library does not configure logging, the one-off warning might be
+produced; to avoid this, the library developer simply needs to instantiate
+a NullHandler and add it to the top-level logger of the library module or
+package.</p>
+<dl class="method">
+<dt id="bang.util.NullHandler.createLock">
+<tt class="descname">createLock</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/bang/util.html#NullHandler.createLock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.NullHandler.createLock" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.util.NullHandler.emit">
+<tt class="descname">emit</tt><big>(</big><em>record</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#NullHandler.emit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.NullHandler.emit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="bang.util.NullHandler.handle">
+<tt class="descname">handle</tt><big>(</big><em>record</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#NullHandler.handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.NullHandler.handle" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="bang.util.S3Handler">
 <em class="property">class </em><tt class="descclassname">bang.util.</tt><tt class="descname">S3Handler</tt><big>(</big><em>bucket</em>, <em>prefix=''</em><big>)</big><a class="reference internal" href="_modules/bang/util.html#S3Handler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bang.util.S3Handler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">logging.handlers.BufferingHandler</span></tt></p>
@@ -2316,7 +2355,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
 <li><a class="reference internal" href="#module-bang"><tt class="docutils literal"><span class="pre">bang</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.attributes"><tt class="docutils literal"><span class="pre">bang.attributes</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.config"><tt class="docutils literal"><span class="pre">bang.config</span></tt></a></li>
-<li><a class="reference internal" href="#module-bang.deployers"><tt class="docutils literal"><span class="pre">bang.deployers</span></tt></a></li>
+<li><a class="reference internal" href="#bang-deployers"><tt class="docutils literal"><span class="pre">bang.deployers</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers.cloud"><tt class="docutils literal"><span class="pre">bang.deployers.cloud</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers.default"><tt class="docutils literal"><span class="pre">bang.deployers.default</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.deployers.deployer"><tt class="docutils literal"><span class="pre">bang.deployers.deployer</span></tt></a></li>
@@ -2326,7 +2365,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
 <li><a class="reference internal" href="#module-bang.providers.aws"><tt class="docutils literal"><span class="pre">bang.providers.aws</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.hpcloud"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.hpcloud.load_balancer"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.load_balancer</span></tt></a></li>
-<li><a class="reference internal" href="#module-bang.providers.hpcloud.nova_ext"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt></a></li>
+<li><a class="reference internal" href="#bang-providers-hpcloud-nova-ext"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.nova_ext</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.hpcloud.reddwarf"><tt class="docutils literal"><span class="pre">bang.providers.hpcloud.reddwarf</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.providers.openstack"><tt class="docutils literal"><span class="pre">bang.providers.openstack</span></tt></a></li>
 <li><a class="reference internal" href="#module-bang.stack"><tt class="docutils literal"><span class="pre">bang.stack</span></tt></a></li>
@@ -2372,7 +2411,7 @@ secret (i.e. matches SECRET_PATTERN).</p>
         <li class="right" >
           <a href="design.html" title="Design"
              >previous</a> |</li>
-        <li><a href="index.html">bang 0.11 documentation</a> &raquo;</li> 
+        <li><a href="index.html">bang 0.12 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">

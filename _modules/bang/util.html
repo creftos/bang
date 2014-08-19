@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.util &mdash; bang 0.11 documentation</title>
+    <title>bang.util &mdash; bang 0.12 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.11 documentation" href="../../index.html" />
+    <link rel="top" title="bang 0.12 documentation" href="../../index.html" />
     <link rel="up" title="bang" href="../bang.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
       </ul>
@@ -92,12 +92,33 @@
 <span class="c"># use the multiprocessing logger so when we start parallelizing the</span>
 <span class="c"># deploys, we have a seamless transition.</span>
 <span class="n">_mlog</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">get_logger</span><span class="p">()</span>
-<span class="n">log</span> <span class="o">=</span> <span class="n">_mlog</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="s">&#39;bang&#39;</span><span class="p">)</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">_mlog</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">_mlog</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s">&#39;bang&#39;</span><span class="p">)))</span>
+
+
+<span class="c"># this is stolen from python2.7 to have support in 2.6 - noqa</span>
+<div class="viewcode-block" id="NullHandler"><a class="viewcode-back" href="../../api.html#bang.util.NullHandler">[docs]</a><span class="k">class</span> <span class="nc">NullHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Handler</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This handler does nothing. It&#39;s intended to be used to avoid the</span>
+<span class="sd">    &quot;No handlers could be found for logger XXX&quot; one-off warning. This is</span>
+<span class="sd">    important for library code, which may contain code to log events. If a user</span>
+<span class="sd">    of the library does not configure logging, the one-off warning might be</span>
+<span class="sd">    produced; to avoid this, the library developer simply needs to instantiate</span>
+<span class="sd">    a NullHandler and add it to the top-level logger of the library module or</span>
+<span class="sd">    package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="NullHandler.handle"><a class="viewcode-back" href="../../api.html#bang.util.NullHandler.handle">[docs]</a>    <span class="k">def</span> <span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="NullHandler.emit"><a class="viewcode-back" href="../../api.html#bang.util.NullHandler.emit">[docs]</a>    <span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="NullHandler.createLock"><a class="viewcode-back" href="../../api.html#bang.util.NullHandler.createLock">[docs]</a>    <span class="k">def</span> <span class="nf">createLock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="bp">None</span>
 
 <span class="c"># give this logger at least one handler to avoid pesky warnings for bang</span>
-<span class="c"># commands that don&#39;t actually care about logging</span>
-<span class="n">_mlog</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
-<span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">NullHandler</span><span class="p">())</span>
+<span class="c"># commands that don&#39;t actually care about logging</span></div></div>
+<span class="n">_mlog</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">NullHandler</span><span class="p">())</span>
+<span class="n">log</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">NullHandler</span><span class="p">())</span>
 <span class="k">del</span> <span class="n">_mlog</span>
 
 
@@ -484,7 +505,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" >bang</a> &raquo;</li> 
       </ul>

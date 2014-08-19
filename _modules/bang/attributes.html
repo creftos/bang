@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.attributes &mdash; bang 0.11 documentation</title>
+    <title>bang.attributes &mdash; bang 0.12 documentation</title>
     
     <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.11 documentation" href="../../index.html" />
+    <link rel="top" title="bang 0.12 documentation" href="../../index.html" />
     <link rel="up" title="bang" href="../bang.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" accesskey="U">bang</a> &raquo;</li> 
       </ul>
@@ -87,18 +87,17 @@
 <span class="c">#: resources.</span>
 <span class="n">PLAYBOOKS</span> <span class="o">=</span> <span class="s">&#39;playbooks&#39;</span>
 
-<span class="n">STACK</span> <span class="o">=</span> <span class="s">&#39;stack&#39;</span>
-<span class="n">KEY</span> <span class="o">=</span> <span class="s">&#39;key&#39;</span>
-<span class="n">SERVER_CLASS</span> <span class="o">=</span> <span class="s">&#39;server_class&#39;</span>
+<span class="c">#: The resource provider (e.g. ``aws``, ``hpcloud``).  Values for the</span>
+<span class="c">#: ``provider`` attribute will be used to look up the appropriate</span>
+<span class="c">#: :class:`~bang.providers.bases.Provider` subclass to use when instantiating</span>
+<span class="c">#: the associated resource.</span>
 <span class="n">PROVIDER</span> <span class="o">=</span> <span class="s">&#39;provider&#39;</span>
 
 <span class="c">#: A dict containing credentials for various cloud providers in which the keys</span>
-<span class="c">#: can be any of the following:</span>
-<span class="c">#:</span>
-<span class="c">#:     - ``aws``</span>
-<span class="c">#:     - ``hpcloud``</span>
-<span class="c">#:</span>
+<span class="c">#: can be any valid provider.  E.g.  ``aws``, ``hpcloud``.</span>
 <span class="n">DEPLOYER_CREDS</span> <span class="o">=</span> <span class="s">&#39;deployer_credentials&#39;</span>
+
+<span class="c">#: The top-level key for logging-related configuration options.</span>
 <span class="n">LOGGING</span> <span class="o">=</span> <span class="s">&#39;logging&#39;</span>
 
 <span class="c">#: Like chicken fried chicken... this is a way to configure the name of the tag</span>
@@ -123,6 +122,18 @@
 <span class="c">#: To prevent Bang from assigning the *name* value to a tag, assign an empty</span>
 <span class="c">#: string to the ``name_tag_name`` attribute in ~/.bangrc.</span>
 <span class="n">NAME_TAG_NAME</span> <span class="o">=</span> <span class="s">&#39;name_tag_name&#39;</span>
+
+<span class="c">#: This is a *derived* attribute that Bang provides for instance tagging, and</span>
+<span class="c">#: for Ansible playbooks to consume.  It&#39;s a combination of the :attr:`NAME`</span>
+<span class="c">#: and the :attr:`VERSION`.</span>
+<span class="n">STACK</span> <span class="o">=</span> <span class="s">&#39;stack&#39;</span>
+
+<span class="n">KEY</span> <span class="o">=</span> <span class="s">&#39;key&#39;</span>
+
+<span class="c">#: This is a *derived* attribute that Bang provides for instance tagging, and</span>
+<span class="c">#: for Ansible playbooks to consume.  It&#39;s a combination of the :attr:`NAME`</span>
+<span class="c">#: and the :attr:`VERSION`.</span>
+<span class="n">SERVER_CLASS</span> <span class="o">=</span> <span class="s">&#39;server_class&#39;</span>
 </pre></div>
 
           </div>
@@ -156,7 +167,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li>
           <li><a href="../bang.html" >bang</a> &raquo;</li> 
       </ul>

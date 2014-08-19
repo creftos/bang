@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>bang.providers.hpcloud.load_balancer &mdash; bang 0.11 documentation</title>
+    <title>bang.providers.hpcloud.load_balancer &mdash; bang 0.12 documentation</title>
     
     <link rel="stylesheet" href="../../../../_static/default.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../../',
-        VERSION:     '0.11',
+        VERSION:     '0.12',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="../../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../../_static/doctools.js"></script>
-    <link rel="top" title="bang 0.11 documentation" href="../../../../index.html" />
+    <link rel="top" title="bang 0.12 documentation" href="../../../../index.html" />
     <link rel="up" title="bang.providers.hpcloud" href="../hpcloud.html" /> 
   </head>
   <body>
@@ -38,7 +38,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../../providers.html" >bang.providers</a> &raquo;</li>
@@ -73,13 +73,22 @@
 <span class="sd">        Provide a management URL (from the openstack service catalog)</span>
 <span class="sd">        and auth token (which can be pinched from novaclient)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-
-        <span class="n">lb_catalog</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;Load Balancer&#39;</span><span class="p">,</span> 
-                                   <span class="n">hpcloud</span><span class="o">.</span><span class="n">os_catalog</span><span class="p">[</span><span class="s">&#39;access&#39;</span><span class="p">][</span><span class="s">&#39;serviceCatalog&#39;</span><span class="p">])</span>
-        <span class="n">lb_management_url</span> <span class="o">=</span> <span class="n">lb_catalog</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;endpoints&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;publicURL&#39;</span><span class="p">]</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">management_url</span> <span class="o">=</span> <span class="n">lb_management_url</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span> <span class="o">=</span> <span class="n">hpcloud</span><span class="o">.</span><span class="n">os_auth_token</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">catalog</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;Load Balancer&#39;</span><span class="p">,</span> 
+                              <span class="n">hpcloud</span><span class="o">.</span><span class="n">os_catalog</span><span class="p">[</span><span class="s">&#39;access&#39;</span><span class="p">][</span><span class="s">&#39;serviceCatalog&#39;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">management_url</span> <span class="o">=</span> <span class="bp">None</span>
+</div>
+<div class="viewcode-block" id="HPLoadBalancer.set_region"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.set_region">[docs]</a>    <span class="k">def</span> <span class="nf">set_region</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">region_name</span><span class="p">):</span>
+        <span class="n">region_lb</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;region&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">region_name</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">catalog</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;endpoints&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">region_lb</span><span class="p">:</span>
+            <span class="n">available_regions</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;region&#39;</span><span class="p">]</span> 
+                                 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">catalog</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;endpoints&#39;</span><span class="p">]]</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;No LB provider matching region </span><span class="si">%s</span><span class="s"> (</span><span class="si">%s</span><span class="s">)&quot;</span> <span class="o">%</span>
+                    <span class="p">(</span><span class="n">region_name</span><span class="p">,</span> <span class="n">available_regions</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">management_url</span> <span class="o">=</span> <span class="n">region_lb</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;publicURL&#39;</span><span class="p">]</span>
+
 </div>
 <div class="viewcode-block" id="HPLoadBalancer.list_lbs"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.list_lbs">[docs]</a>    <span class="k">def</span> <span class="nf">list_lbs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -188,7 +197,9 @@
 <div class="viewcode-block" id="HPLoadBalancer.match_lb_nodes"><a class="viewcode-back" href="../../../../api.html#bang.providers.hpcloud.load_balancer.HPLoadBalancer.match_lb_nodes">[docs]</a>    <span class="k">def</span> <span class="nf">match_lb_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lb_id</span><span class="p">,</span> <span class="n">existing_nodes</span><span class="p">,</span> <span class="n">host_addresses</span><span class="p">,</span> <span class="n">host_port</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add and remove nodes to match the host addresses</span>
-<span class="sd">        and port given, based on existing_nodes</span>
+<span class="sd">        and port given, based on existing_nodes. HPCS doesn&#39;t</span>
+<span class="sd">        allow a load balancer with no backends, so we&#39;ll add</span>
+<span class="sd">        first, delete after.</span>
 
 <span class="sd">        :param string lb_id: Load balancer id</span>
 
@@ -206,10 +217,6 @@
         <span class="n">delete_node_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">delete_nodes</span><span class="p">]</span>
         <span class="n">delete_node_hosts</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">delete_nodes</span><span class="p">]</span>
         
-        <span class="k">if</span> <span class="n">delete_node_ids</span><span class="p">:</span>
-            <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb_id</span><span class="p">,</span> <span class="n">delete_node_ids</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">remove_lb_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
-
         <span class="n">current_nodes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">n</span><span class="p">[</span><span class="s">&#39;address&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">existing_nodes</span><span class="p">])</span>
         <span class="n">current_nodes</span> <span class="o">-=</span> <span class="nb">set</span><span class="p">(</span><span class="n">delete_node_hosts</span><span class="p">)</span>
         <span class="n">add_nodes</span> <span class="o">=</span> <span class="n">host_addresses</span> <span class="o">-</span> <span class="n">current_nodes</span>
@@ -221,6 +228,10 @@
             <span class="p">]</span>
             <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb_id</span><span class="p">,</span> <span class="n">nodes_to_add</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_lb_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">delete_node_ids</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">lb_id</span><span class="p">,</span> <span class="n">delete_node_ids</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">remove_lb_nodes</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
         
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Were </span><span class="si">%d</span><span class="s"> nodes. Added </span><span class="si">%d</span><span class="s"> nodes; deleted </span><span class="si">%d</span><span class="s"> nodes&quot;</span> <span class="o">%</span> 
                 <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">existing_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">add_nodes</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">delete_nodes</span><span class="p">)))</span>
@@ -253,6 +264,8 @@
                 <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;condition&#39;</span><span class="p">:</span> <span class="n">condition</span><span class="p">})</span>
         </div>
     <span class="k">def</span> <span class="nf">_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">management_url</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Call set_region first&quot;</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})[</span><span class="s">&#39;X-Auth-Token&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">auth_token</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s">&#39;headers&#39;</span><span class="p">,</span> <span class="p">{})[</span><span class="s">&#39;Content-Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;application/json&#39;</span>
         <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
@@ -305,7 +318,7 @@
         <li class="right" >
           <a href="../../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../../index.html">bang 0.11 documentation</a> &raquo;</li>
+        <li><a href="../../../../index.html">bang 0.12 documentation</a> &raquo;</li>
           <li><a href="../../../index.html" >Module code</a> &raquo;</li>
           <li><a href="../../../bang.html" >bang</a> &raquo;</li>
           <li><a href="../../providers.html" >bang.providers</a> &raquo;</li>
