@@ -157,7 +157,7 @@ class EC2(Consul):
 
     def create_server(self, basename, disk_image_id, instance_type,
             ssh_key_name, tags=None, availability_zone=None,
-            timeout_s=DEFAULT_TIMEOUT_S, **kwargs):
+            timeout_s=DEFAULT_TIMEOUT_S, **provider_extras):
         """
         Creates a new server instance.  This call blocks until the server is
         created and available for normal use, or :attr:`timeout_s` has elapsed.
@@ -199,7 +199,7 @@ class EC2(Consul):
                 key_name=ssh_key_name,
                 placement=availability_zone,
                 disable_api_termination=True,
-                **kwargs
+                **provider_extras
                 )
         instance = res.instances[0]
 
@@ -282,7 +282,38 @@ class EC2(Consul):
 
 
 class S3(Consul):
-    pass
+    """The consul for the storage service in AWS (S3)."""
+    def __init__(self, *args, **kwargs):
+        super(S3, self).__init__(*args, **kwargs)
+        creds = self.provider.creds
+        self.access_key_id = creds[A.creds.ACCESS_KEY_ID]
+        self.secret_key = creds[A.creds.SECRET_ACCESS_KEY]
+        self._s3 = None
+
+    @property
+    def s3(self):
+        if not self._s3:
+            # this connection lets boto pick the default region.  be sure to use
+            # set_region() if you need a specific region.
+            self._s3 = boto.connect_s3(self.access_key_id, self.secret_key)
+        return self._s3
+
+    def set_region(self, region_name):
+        log.debug("Setting region to %s" % region_name)
+        self._s3 = boto.s3.connect_to_region(
+                region_name,
+                aws_access_key_id=self.access_key_id,
+                aws_secret_access_key=self.secret_key,
+                )
+
+    def create_bucket(self, name):
+        """
+        Creates a new S3 bucket.
+        :param str name: E.g. 'mybucket'
+        """
+        log.info('Creating bucket %s...' % name)
+        self.s3.create_bucket(name)
+
 
 
 class RDS(Consul):

@@ -272,7 +272,8 @@ class Stack(object):
         if ssh_user:
             pb_kwargs['remote_user'] = ssh_user
 
-        ansible_verbosity = cfg.get(A.ANSIBLE, {}).get(A.ansible.VERBOSITY, 1)
+        ansible_cfg = cfg.get(A.ANSIBLE, {})
+        ansible_verbosity = ansible_cfg.get(A.ansible.VERBOSITY, 1)
         ansible.utils.VERBOSITY = ansible_verbosity
         for playbook in cfg.get(A.PLAYBOOKS, []):
             playbook_path = os.path.join(playbook_dir, playbook)
@@ -299,6 +300,7 @@ class Stack(object):
                     # ``host_list`` is used to generate the inventory, but
                     # don't worry, we override the inventory later
                     'host_list': [],
+                    'vault_password': ansible_cfg.get(A.ansible.VAULT_PASS),
                     }
             pb_kwargs.update(extra_kwargs)
             pb = PlayBook(**pb_kwargs)
@@ -348,7 +350,12 @@ class Stack(object):
         http://ansible.cc/docs/api.html#external-inventory-scripts
 
         """
-        print json.dumps(copy.deepcopy(self.groups_and_vars.lists))
+        inv_lists = copy.deepcopy(self.groups_and_vars.lists)
+        # sort the host lists to help consumers of the inventory (e.g. ansible
+        # playbooks)
+        for l in inv_lists.values():
+            l.sort()
+        print json.dumps(inv_lists)
 
     def show_host(self, host):
         """

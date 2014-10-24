@@ -36,8 +36,18 @@ version: 0.1
 playbooks:
 - a_playbook.yml
 
+ansible:
+  # ask_vault_pass: true
+  # vault_pass: "thisshouldfail"
+  vault_pass: "bangbang"
+
 servers:
   my_other_pc:
     groups:
     - useless
     hostname: 192.168.0.10
+
+  ignore_me:
+    groups:
+    - to_be_ignored
+    hostname: 192.168.0.11

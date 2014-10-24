@@ -70,6 +70,7 @@ class ServerDeployer(RegionedDeployer):
         super(ServerDeployer, self).__init__(*args, **kwargs)
         self.namespace = self.stack.get_namespace(self.name)
         self.server_attrs = None
+        self.provider_extras = getattr(self, self.provider, {})
         self.phases = [
                 (True, self.find_existing),
                 (lambda: self.server_attrs, self.wait_for_running),
@@ -118,6 +119,7 @@ class ServerDeployer(RegionedDeployer):
                 availability_zone=self.availability_zone,
                 timeout_s=self.launch_timeout_s,
                 security_groups=self.security_groups,
+                **self.provider_extras
                 )
         log.debug('Post launch delay: %d s' % self.post_launch_delay_s)
         time.sleep(self.post_launch_delay_s)
@@ -182,14 +184,15 @@ class CloudManagerServerDeployer(ServerDeployer):
                 tags=self.tags,
                 availability_zone=self.availability_zone,
                 security_groups=self.security_groups,
+                **self.provider_extras
                 )
         log.debug('Defined server %s' % self.server_def)
 
     def create(self):
         self.server_attrs = self.consul.create_server(
                 self.server_def,
-                self.inputs,
                 timeout_s=self.launch_timeout_s,
+                **self.provider_extras
                 )
         log.debug('Post launch delay: %d s' % self.post_launch_delay_s)
         time.sleep(self.post_launch_delay_s)

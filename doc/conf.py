@@ -34,8 +34,7 @@ sys.path.insert(0, PROJECT_DIR)
 extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.viewcode',
-        'rst2pdf.pdfbuilder',
-        'sphinxcontrib.programoutput',
+        'sphinxarg.ext',
         ]
 
 # Add any paths that contain templates here, relative to this directory.
