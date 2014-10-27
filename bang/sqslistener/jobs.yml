@@ -1,0 +1,3 @@
+---
+test_job_1:
+  bang-stack: sqs-listener-examples/example-job-1.yml

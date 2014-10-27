@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+#       /etc/init.d/sqs-listener
+#
+#       This SQS Listener polls amazon aws for provisioning commands.
+#
+
+# Source function library.
+. /etc/init.d/functions
+. /etc/bang/.activate-BANG
+
+start() {
+        echo -n "Starting sqs-listener: "
+        daemon python /etc/bang/listen.py
+        RET=$?
+        touch /var/lock/subsys/sqs-listener
+        return $RET
+}
+
+stop() {
+        echo -n "Shutting down sqs-listener: "
+        killproc /etc/bang/listen.py
+        RET=$?
+        rm -f /var/lock/subsys/sqs-listener
+        return $RET
+	return 1
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        #<report the status of the daemons in free-form format,
+        #perhaps with the status function>
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: sqs-listener {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
+exit $?

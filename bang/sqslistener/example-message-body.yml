@@ -1,0 +1,6 @@
+---
+name: test_job_1
+parameters:
+- param1
+- param2
+- param3
