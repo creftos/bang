@@ -23,7 +23,7 @@ stop() {
         RET=$?
         rm -f /var/lock/subsys/sqs-listener
         return $RET
-	return 1
+        return 1
 }
 
 case "$1" in

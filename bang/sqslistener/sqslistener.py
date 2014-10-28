@@ -23,6 +23,7 @@ import time
 import boto.sqs
 from boto.sqs.message import Message
 from boto.exception import SQSError
+from multiprocessing import Pool
 
 LOGGING_CONFIG_PATH = "logging-conf.yml"
 SQS_LISTENER_CONFIG_PATH = "sqs-listener-conf.yml"
@@ -68,6 +69,7 @@ class SQSListener:
 
         self.load_jobs_config(JOBS_CONFIG_PATH)
         self.polling_interval = polling_interval
+        self.pool = Pool(processes=10)
 
         self.logger.debug("Set up complete.")
 
@@ -92,7 +94,9 @@ class SQSListener:
         try:
             # log message here.
             job_name = self.parse_job(message)
-            self.start_job_process(job_name)
+            self.logger.info("Setting up async job..")
+            result = self.pool.apply_async(self.start_job_process, self, job_name)
+            result.get(timeout=5)
 
             self.post_response("Received and processed: " + message.get_body())
 
@@ -102,9 +106,8 @@ class SQSListener:
             print "An error occurred processing a message."
 
     def parse_job(self, message):
-
         job_yaml = yaml.load(message.get_body())
-        return job_yaml.name
+        return job_yaml
 
     def start_job_process(self, job_name):
         self.logger.info("Starting job process: " + job_name)
@@ -121,8 +124,6 @@ class SQSListener:
                 self.jobs = yaml.load(f.read())
         else:
             logging.severe("No jobs config file found at: " + filename)
-
-
 
     def start_polling(self):
         self.logger.info("Starting polling")
