@@ -21,13 +21,16 @@ import yaml
 import logging, logging.config
 import time
 import boto.sqs
+from sqsjobs import SQSJobs
 from boto.sqs.message import Message
 from boto.exception import SQSError
 from multiprocessing import Pool
+from sqsmultiprocessutils import start_job_process
 
 LOGGING_CONFIG_PATH = "logging-conf.yml"
 SQS_LISTENER_CONFIG_PATH = "sqs-listener-conf.yml"
 JOBS_CONFIG_PATH = "jobs.yml"
+DEFAULT_POOL_PROCESSES = 5
 
 DEFAULT_CONFIG_LEVEL = logging.DEBUG
 
@@ -67,9 +70,11 @@ class SQSListener:
         except SQSError:
             print "An error occurred setting up an SQS Connection."
 
-        self.load_jobs_config(JOBS_CONFIG_PATH)
+        self.job_set = SQSJobs()
+        self.job_set.load_jobs_from_file(JOBS_CONFIG_PATH)
+
         self.polling_interval = polling_interval
-        self.pool = Pool(processes=10)
+        self.pool = Pool(processes=DEFAULT_POOL_PROCESSES)
 
         self.logger.debug("Set up complete.")
 
@@ -93,37 +98,29 @@ class SQSListener:
     def process_message(self, message):
         try:
             # log message here.
-            job_name = self.parse_job(message)
-            self.logger.info("Setting up async job..")
-            result = self.pool.apply_async(self.start_job_process, self, job_name)
-            result.get(timeout=5)
+            yaml_message_body = yaml.load(message.get_body())
+            job_name = yaml_message_body.keys()[0]
+            self.logger.info("Processing message " + job_name)
 
-            self.post_response("Received and processed: " + message.get_body())
+            if yaml_message_body[job_name].has_key("parameters"):
+                job_parameters = yaml_message_body[job_name]["parameters"]
+            else:
+                job_parameters = ()
+
+            job = self.job_set.generate_job(job_name, job_parameters)
+
+            start_job_process(self.pool, job)
 
             self.queue.delete_message(message)
+            self.post_response("Received Job: " + job_name)
+
         except SQSError:
             self.logger.ERROR("An error occurred processing a message")
             print "An error occurred processing a message."
 
-    def parse_job(self, message):
-        job_yaml = yaml.load(message.get_body())
-        return job_yaml
-
-    def start_job_process(self, job_name):
-        self.logger.info("Starting job process: " + job_name)
-        pass
 
     def load_sqs_listener_config(self, filename):
         self.logger.info("Loading general sqs listener config from file: " + filename)
-
-    def load_jobs_config(self, filename):
-        self.logger.info("Loading jobs config from file: " + filename)
-
-        if os.path.exists(filename):
-            with open(filename, 'rt') as f:
-                self.jobs = yaml.load(f.read())
-        else:
-            logging.severe("No jobs config file found at: " + filename)
 
     def start_polling(self):
         self.logger.info("Starting polling")

@@ -16,27 +16,7 @@
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-import boto.Message
-from bang.sqslistener.sqslistener import SQSListener
-import logging
+import unittest.mock
 
-class TestJobs(unittest.TestCase):
-    def test_import_jobs(self):
-        listener = SQSListener()
-
-        test_job_name = listener.jobs.get("name")
-
-        self.assertEqual("example job", test_job_name)
-        pass # TODO Placeholder
-
-    def test_parse_job(self):
-        job = ( "---"
-                "name: test_job_1"
-                "path: sqs-listener-examples/example-job-1.yml"
-                "parameters:"
-                "- param1"
-                "- param2"
-                "- param3" )
-
-        listener = SQSListener()
-        pass # TODO Placeholder
+class TestSQSListener(unittest.TestCase):
+    pass
