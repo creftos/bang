@@ -16,7 +16,6 @@
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-#import unittest.mock
 import yaml
 from bang.sqslistener.sqsjobs import SQSJobs
 
@@ -38,4 +37,3 @@ class TestSQSJobs(unittest.TestCase):
         self.assertEquals(new_job.bang_stacks[1], "/path/to/second.yml")
         self.assertEquals(new_job.parameters[0], "param1")
         self.assertEquals(new_job.parameters[1], "param2")
-

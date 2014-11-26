@@ -16,7 +16,22 @@
 # You should have received a copy of the GNU General Public License
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqslistener import SQSListener
+import logging
 
-listener = SQSListener()
-listener.start_polling()
+logger = logging.getLogger("SQSListener")
+
+class AnsibleCallbacks(object):
+
+    def __init__(self, stats, playbook_cb, runner_cb):
+        self.stats = stats
+        self.playbook_cb = playbook_cb
+        self.runner_cb = runner_cb
+
+    def log_summary(self):
+        hosts = sorted(self.stats.processed.keys())
+        failed = False
+        for h in hosts:
+            hsum = self.stats.summarize(h)
+            if hsum['failures'] or hsum['unreachable']:
+                failed = True
+            logger.info("%-30s : %s" % (h, hsum))

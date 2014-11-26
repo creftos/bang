@@ -16,16 +16,32 @@
 # You should have received a copy of the GNU General Public License
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
 
-import yaml
 
-class SQSListenerMessageContent:
-    def __init__(self, message):
-        self.message_yaml = yaml.load(message.get_body())
+import unittest
+from boto.sqs.message import Message
 
-    def get_name(self):
-        return self.message_yaml[0]
+from bang.sqslistener.request_message import RequestMessage
 
-    def parse_parameters(self):
-        return self.message_yaml[0]["parameters"]
+
+class TestRequestMessage(unittest.TestCase):
+
+    def test_parse_yaml(self):
+
+        message_body=("---\n"
+                      "test_job_1:\n"
+                      "  request_id: 12\n")
+
+        message = Message(body=message_body)
+
+        request_message = RequestMessage(message)
+
+        assert request_message.job_name == 'test_job_1'
+        assert request_message.request_id == 12
+
+
+
+
+
+
 
 

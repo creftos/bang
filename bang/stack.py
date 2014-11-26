@@ -32,6 +32,7 @@ from .deployers import get_stage_deployers
 from .inventory import BangsibleInventory
 from .util import log, SharedNamespace, SharedMap
 from . import BangError, resources as R, attributes as A
+from sqslistener.ansiblecallbacks import AnsibleCallbacks
 
 
 def require_inventory(f):
@@ -330,6 +331,8 @@ class Stack(object):
 
             if failed:
                 raise BangError("Server configuration failed!")
+
+            return AnsibleCallbacks(stats, playbook_cb, runner_cb)
 
     def gather_inventory(self):
         """
