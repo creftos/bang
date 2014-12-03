@@ -8,7 +8,7 @@ handlers:
     class: logging.FileHandler
     level: DEBUG
     formatter: default
-    filename: logs/sqs-listener.log
+    filename: tests/resources/sqslistener/logs/sqs-listener.log
 loggers:
   SQSListener:
     level: DEBUG

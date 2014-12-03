@@ -38,21 +38,21 @@ yaml.add_representer(OrderedDict, response_message_presenter)
 
 
 class ResponseMessage:
-    def __init__(self, job_name, request_id, success_flag, additional_message=""):
+    def __init__(self,
+                 job_name,
+                 request_id,
+                 job_state,  # Eg. success, failure, started, working
+                 additional_message=""):
+
         self.name = job_name
+        self.job_state = job_state
         self.request_id = request_id
-
-        if success_flag:
-            self.result = "success"
-        else:
-            self.result = "failure"
-
         self.message = additional_message
 
     def dump_yaml(self):
         d = OrderedDict(name=self.name,
                         request_id=self.request_id,
-                        result=self.result,
+                        result=self.job_state,
                         message=multiline_literal(self.message))
 
         return yaml.dump(d, explicit_start=True)

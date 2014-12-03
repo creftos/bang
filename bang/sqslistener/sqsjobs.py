@@ -24,6 +24,9 @@ import logging
 
 logger = logging.getLogger("SQSListener")
 
+class SQSJobError(Exception):
+    pass
+
 class SQSJobs():
     """SQS Jobs"""
     def __init__(self):
@@ -39,15 +42,15 @@ class SQSJobs():
         else:
             raise Exception("No job definition found at: " + jobs_definition_path)
 
-    def generate_job(self, job_name, job_id, parameters=()):
+    def generate_job(self, job_name, parameters=()):
         try:
             bang_stacks = self.jobs_yaml[job_name]["bang-stacks"]
             return SQSJob(job_name, bang_stacks, parameters)
 
         except KeyError, e:
-            logger.error("YAML missing key in jobs config: %s" % str(e))
+            logger.exception("YAML missing key in jobs config: %s" % str(e))
+            raise SQSJobError(e)
 
-        return None
 
 class SQSJob():
     """A single job"""

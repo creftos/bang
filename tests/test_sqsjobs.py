@@ -18,6 +18,8 @@
 import unittest
 import yaml
 from bang.sqslistener.sqsjobs import SQSJobs
+from bang.sqslistener.sqsjobs import SQSJobError
+
 
 class TestSQSJobs(unittest.TestCase):
     def test_generate_job(self):
@@ -37,3 +39,17 @@ class TestSQSJobs(unittest.TestCase):
         self.assertEquals(new_job.bang_stacks[1], "/path/to/second.yml")
         self.assertEquals(new_job.parameters[0], "param1")
         self.assertEquals(new_job.parameters[1], "param2")
+
+    def test_generate_job_missing(self):
+        jobs_yaml = yaml.load(
+        ( "---\n"
+          "test_job_name:\n"
+          "  bang-stacks:\n"
+          "  - /path/to/first.yml\n"
+          "  - /path/to/second.yml\n"))
+
+        job_set = SQSJobs()
+        job_set.load_jobs_from_yaml_object(jobs_yaml)
+
+        with self.assertRaises(SQSJobError):
+            job_set.generate_job("test_job_name_missing", ("param1", "param2"))

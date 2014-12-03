@@ -26,10 +26,8 @@ from boto.sqs.connection import SQSConnection
 
 class TestSQSListener(unittest.TestCase):
 
-    mockedConnection = mock.Mock()
-    mockedConnection.return_value = SQSConnection()
     def setUp(self):
-        self.sqsListener = SQSListener(jobs_config_path='resources/sqslistener/jobs.yml')
+        self.sqsListener = SQSListener(jobs_config_path='tests/resources/sqslistener/jobs.yml')
 
     @mock.patch.object(Queue, 'write')
     def test_post_response(self, mock_write_method):
@@ -46,16 +44,36 @@ class TestSQSListener(unittest.TestCase):
         self.sqsListener.poll_queue()
         assert mock_get_messages_method.called
 
+    # TODO: Fix delete message assertion.
+    # @mock.patch('boto.sqs.connection.SQSConnection.get_queue.delete_message')
+    @mock.patch('boto.sqs.connect_to_region')
+    @mock.patch('boto.sqs.connection.SQSConnection.get_queue')
     @mock.patch('bang.sqslistener.sqslistener.SQSListener.post_response')
-    def process_message_test(self, mock_post_response):
+    def process_message_test(self, mock_post_response, mock_get_queue, mock_connect_to_region):  #, mock_delete_message):
+
+        self.sqsListener = SQSListener(
+            aws_region="test-region",
+            queue_name="test-queue",
+            response_queue_name="test-response-queue",
+            polling_interval=99,
+            jobs_config_path='tests/resources/sqslistener/jobs.yml',
+            logging_config_path='tests/resources/sqslistener/logging-conf.yml')
+
+        test_yaml_message =    ( "---\n"
+                                "test_job_1:\n"
+                                "  request_id: 108\n")
+
         # TODO: Process message does several other things that need to be tested.
         # TODO: I need to look into mocking actual return values of things as well.
-        message = boto.sqs.message.Message()
+
+        message = boto.sqs.message.Message(body=test_yaml_message)
         self.sqsListener.process_message(message)
+
         assert mock_post_response.called
+        #assert mock_delete_message.called
 
     def load_sqs_listener_config_test(self):
-        pass
+        self.sqsListener.load_sqs_listener_config('tests/resources/sqslistener/.sqslistener-example')
 
     def start_polling_test(self):
         pass
@@ -65,18 +83,19 @@ class TestSQSListener(unittest.TestCase):
 
 
 class TestSQSListenerNoSetup(unittest.TestCase):
+
     @mock.patch('boto.sqs.connect_to_region')
-    def setup_conn_test(self,
-                   mock_connect_to_region):
+    @mock.patch('boto.sqs.connection.SQSConnection.get_queue')
+    def setup_conn_test(self, mock_get_queue, mock_connect_to_region):
 
         self.sqsListener = SQSListener(
             aws_region="test-region",
             queue_name="test-queue",
             response_queue_name="test-response-queue",
             polling_interval=99,
-            jobs_config_path='resources/sqslistener/jobs.yml'
-            logging_config_path='resources/sqslistener/logging-conf.yml',)
+            jobs_config_path='tests/resources/sqslistener/jobs.yml',
+            logging_config_path='tests/resources/sqslistener/logging-conf.yml')
 
         assert mock_connect_to_region.called
-
+        # assert mock_get_queue.called
 

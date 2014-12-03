@@ -30,7 +30,7 @@ from sqsmultiprocessutils import start_job_process
 from request_message import RequestMessage
 
 DEFAULT_POOL_PROCESSES = 5
-DEFAULT_CONFIG_LEVEL = logging.DEBUG
+DEFAULT_CONFIG_LEVEL = logging.INFO
 
 class SQSListenerException(Exception):
     pass
@@ -70,23 +70,23 @@ class SQSListener:
 
         self.logger = logging.getLogger("SQSListener")
 
-        self.logger.debug("Starting up SQS Listener...")
+        self.logger.info("Starting up SQS Listener...")
 
         ### Set up the remainder of the listener configuration ###
         if jobs_config_path is None:
-            self.logger.debug("Getting jobs config path from listener config...")
+            self.logger.info("Getting jobs config path from listener config...")
             jobs_config_path = listener_config_yaml['jobs_config_path']
         if aws_region is None:
-            self.logger.debug("Getting aws region from listener config...")
+            self.logger.info("Getting aws region from listener config...")
             aws_region = listener_config_yaml['aws_region']
         if queue_name is None:
-            self.logger.debug("Getting job queue name config path from listener config...")
+            self.logger.info("Getting job queue name config path from listener config...")
             queue_name = listener_config_yaml['job_queue_name']
         if response_queue_name is None:
-            self.logger.debug("Getting response queue name from listener config...")
+            self.logger.info("Getting response queue name from listener config...")
             response_queue_name = listener_config_yaml['response_queue_name']
         if polling_interval is None:
-            self.logger.debug("Getting polling interval length from listener config...")
+            self.logger.info("Getting polling interval length from listener config...")
             polling_interval = listener_config_yaml['polling_interval']
 
         ### Connect to AWS ###
@@ -120,10 +120,10 @@ class SQSListener:
         self.polling_interval = polling_interval
         self.pool = MyPool(processes=DEFAULT_POOL_PROCESSES)
 
-        self.logger.debug("Set up complete.")
+        self.logger.info("Set up complete.")
 
     def connect_to_sqs(self, aws_region):
-        self.logger.debug("Connecting to SQS...")
+        self.logger.info("Connecting to SQS...")
         self.logger.info("Connecting to Region: %s" % aws_region)
         self.conn = boto.sqs.connect_to_region(aws_region)
 
@@ -152,8 +152,8 @@ class SQSListener:
             request_id = request_message.request_id
             self.logger.info("Sending message to response queue:\n%s" % request_id)
             self.post_response(response_message_body)
-            # self.queue.delete_message(message)
-            # self.logger.info("Message deleted with id: %s" % request_id.)
+            self.queue.delete_message(message)
+            self.logger.info("Message deleted with id: %s" % request_id)
         except SQSError:
             self.logger.ERROR("An error occurred processing a message")
             print "An error occurred processing a message."

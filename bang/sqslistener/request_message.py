@@ -21,30 +21,27 @@ import logging
 
 logger = logging.getLogger("SQSListener")
 
+class RequestMessageException(Exception):
+    pass
+
 class RequestMessage:
     def __init__(self, message=None):
         if message is not None:
-            try:
                 yaml_message_body = message.get_body()
                 self.parse_yaml(yaml_message_body)
-
-            except Exception as e:
-                logger.error("Request Message failure, see exception:")
-                logger.error(e)
         else:
-            raise Exception("Message Body required.")
+            raise RequestMessageException("Message Body required.")
 
-    def parse_yaml(self, yaml_message_body):
-        yaml_message_body = yaml.load(yaml_message_body)
+    def parse_yaml(self, message_body):
+        yaml_message_body = yaml.load(message_body)
+        if yaml_message_body is None:
+            raise RequestMessageException("Can't have an empty message body.")
+
         self.job_name = yaml_message_body.keys()[0]
-        # if "request_id" not in yaml_message_body[self.job_name]:
-        #     print "not there"
-        #     raise yaml.YAMLError("Request messages must contain a request id.")
+        if yaml_message_body[self.job_name] is None or "request_id" not in yaml_message_body[self.job_name]:
+            raise RequestMessageException("Request messages must contain a request id.")
 
         self.request_id = yaml_message_body[self.job_name]['request_id']
-
-        print "ajsdlkfjlkasdjlkf : %s" % self.request_id
-
         if yaml_message_body[self.job_name].has_key("parameters"):
             self.job_parameters = yaml_message_body[self.job_name]["parameters"]
         else:

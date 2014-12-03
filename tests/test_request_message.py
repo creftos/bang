@@ -21,6 +21,7 @@ import unittest
 from boto.sqs.message import Message
 
 from bang.sqslistener.request_message import RequestMessage
+from bang.sqslistener.request_message import RequestMessageException
 
 
 class TestRequestMessage(unittest.TestCase):
@@ -39,9 +40,29 @@ class TestRequestMessage(unittest.TestCase):
         assert request_message.request_id == 12
 
 
+    def test_parse_yaml_missing_request_id(self):
 
+        # Every request message needs to have a request_id
+        message_body_bad = ("---\n"
+                            "test_job_1:\n"
+                            "\n")
 
+        bad_message = Message(body=message_body_bad)  # Bad message to test exception throwing with
 
+        with self.assertRaises(RequestMessageException):
+            request_message = RequestMessage(Message(body=message_body_bad))
 
+    def test_parse_yaml_with_params_missing_request_id(self):
 
+        # Every request message needs to have a request_id
+        message_body_bad = ("---\n"
+                            "test_job_1:\n"
+                            "  parameters:\n"
+                            "    - one\n"
+                            "    - two\n"
+                            "    - three\n")
 
+        bad_message = Message(body=message_body_bad)  # Bad message to test exception throwing with
+
+        with self.assertRaises(RequestMessageException):
+            request_message = RequestMessage(Message(body=message_body_bad))
