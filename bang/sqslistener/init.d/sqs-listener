@@ -7,15 +7,24 @@
 
 # Source function library.
 . /etc/init.d/functions
-. /etc/bang/.activate-BANG
 
-prog="bang-dispatcher"
-OPTIONS="~/.sqslistener"
+# Default options
+CONFIG_PATH="~/.sqslistener"
 PIDFILE="/var/lock/subsys/sqs-listener"
+BANG_DISPATCHER="bang-dispatcher" # Uses system executable unless overriden.
+
+# User-specified variables
+. /etc/default/bang-dispatcher
+
+if [ -z $BANG_DISPATCHER ]; then
+        >&2 echo "Error: BANG_DISPATCHER variable cannot be empty."
+        exit 1
+fi
+
 
 start() {
         echo -n "Starting sqs-listener: "
-        daemon $prog $OPTIONS
+        daemon $BANG_DISPATCHER $CONFIG_PATH
         RET=$?
         touch $PIDFILE
         return $RET
@@ -23,14 +32,14 @@ start() {
 
 stop() {
         echo -n "Shutting down sqs-listener: "
-        killproc $prog
+        killproc $BANG_DISPATCHER
         RET=$?
         rm -f $PIDFILE
         return $RET
 }
 
 check_status() {
-    status -p $PIDFILE $prog
+    status -p $PIDFILE $BANG_DISPATCHER
 }
 
 case "$1" in

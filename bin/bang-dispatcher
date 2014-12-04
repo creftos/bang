@@ -22,6 +22,11 @@
 
 # Copied and modified from bin/bang
 
+if len(sys.argv) < 1:
+    arg_path = None  # If None, it will use the default ~/.sqslistener
+else:
+    arg_path = sys.argv[0]
+
 import sys
 
 try:
@@ -42,4 +47,4 @@ from bang.sqslistener.start_sqslistener import start_sqslistener
 
 
 if __name__ == '__main__':
-    start_sqslistener()
+    start_sqslistener(configfile_path=arg_path)
