@@ -1,5 +1,8 @@
-#!/usr/bin/python
-# Copyright 2014 - Brian J. Donohoe
+#!/usr/bin/env python
+# bang
+# ====
+#
+# Copyright 2012 - Brian J. Donohoe
 #
 # This file is part of bang.
 #
@@ -15,9 +18,28 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
+#
 
-from sqslistener import SQSListener
+# Copied and modified from bin/bang
 
-def start_sqslistener():
-    listener = SQSListener()
-    listener.start_polling()
+import sys
+
+try:
+    import bang.sqslistener
+except ImportError:
+    # maybe we're running from a checkout
+    import os.path
+    BANG_SRC_DIR = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            '..',
+            )
+        )
+    sys.path.insert(0, BANG_SRC_DIR)
+    import bang.sqslistener
+
+from bang.sqslistener.start_sqslistener import start_sqslistener
+
+
+if __name__ == '__main__':
+    start_sqslistener()
