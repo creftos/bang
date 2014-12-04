@@ -73,7 +73,14 @@ class TestSQSListener(unittest.TestCase):
         #assert mock_delete_message.called
 
     def load_sqs_listener_config_test(self):
-        self.sqsListener.load_sqs_listener_config('tests/resources/sqslistener/.sqslistener-example')
+        test_yaml = self.sqsListener.load_sqs_listener_config('tests/resources/sqslistener/.sqslistener')
+        assert test_yaml['aws_region'] == 'us-east-1'
+        assert test_yaml['job_queue_name'] == 'bang-queue'
+        assert test_yaml['jobs_config_path'] == 'tests/resources/sqslistener/jobs.yml'
+        assert test_yaml['logging_config_path'] == 'tests/resources/sqslistener/logging-conf.yml'
+        assert test_yaml['polling_interval'] == 2
+        assert test_yaml['response_queue_name'] == 'bang-response'
+
 
     def start_polling_test(self):
         pass
@@ -99,3 +106,9 @@ class TestSQSListenerNoSetup(unittest.TestCase):
         assert mock_connect_to_region.called
         # assert mock_get_queue.called
 
+
+    @mock.patch('boto.sqs.connect_to_region')
+    @mock.patch('boto.sqs.connection.SQSConnection.get_queue')
+    def test_listener_config_path(self, mock_get_queue, mock_connect_to_region):
+
+        self.sqsListener = SQSListener(listener_config_path='tests/resources/sqslistener/.sqslistener')

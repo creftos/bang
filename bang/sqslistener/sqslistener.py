@@ -54,9 +54,11 @@ class SQSListener:
                  logging_config_path=None,      # eg. /home/user/sqslistener/logging-config.yml
                  listener_config_path=None):    # eg. /home/user/.sqslistener
 
+
+        ### Load Sqslistener Configuration ###
+        listener_config_yaml = self.load_sqs_listener_config(listener_config_path)
+
         ### Set up logging ###
-        if listener_config_path is None:
-            listener_config_yaml = self.load_sqs_listener_config(listener_config_path)
         if logging_config_path is None:
             logging_config_path = listener_config_yaml['logging_config_path']
 
