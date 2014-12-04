@@ -9,21 +9,28 @@
 . /etc/init.d/functions
 . /etc/bang/.activate-BANG
 
+prog="bang-dispatcher"
+OPTIONS="~/.sqslistener"
+PIDFILE="/var/lock/subsys/sqs-listener"
+
 start() {
         echo -n "Starting sqs-listener: "
-        daemon python /etc/bang/listen.py
+        daemon $prog $OPTIONS
         RET=$?
-        touch /var/lock/subsys/sqs-listener
+        touch $PIDFILE
         return $RET
 }
 
 stop() {
         echo -n "Shutting down sqs-listener: "
-        killproc /etc/bang/listen.py
+        killproc $prog
         RET=$?
-        rm -f /var/lock/subsys/sqs-listener
+        rm -f $PIDFILE
         return $RET
-        return 1
+}
+
+check_status() {
+    status -p $PIDFILE $prog
 }
 
 case "$1" in
@@ -34,8 +41,7 @@ case "$1" in
         stop
         ;;
     status)
-        #<report the status of the daemons in free-form format,
-        #perhaps with the status function>
+        check_status
         ;;
     restart)
         stop

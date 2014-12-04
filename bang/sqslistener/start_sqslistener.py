@@ -18,6 +18,6 @@
 
 from sqslistener import SQSListener
 
-def start_sqslistener():
-    listener = SQSListener()
+def start_sqslistener(configfile_path):
+    listener = SQSListener(listener_config_path=configfile_path)
     listener.start_polling()
