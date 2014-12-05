@@ -21,6 +21,9 @@ if [ -z $BANG_DISPATCHER ]; then
         exit 1
 fi
 
+if [ -z $HOME ]; then
+        export HOME='/root'
+fi
 
 start() {
         echo -n "Starting sqs-listener: "

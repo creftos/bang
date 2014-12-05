@@ -28,6 +28,7 @@ from boto.exception import SQSError
 from non_daemonized_pool import MyPool
 from sqsmultiprocessutils import start_job_process
 from request_message import RequestMessage
+from response_message import ResponseMessage
 
 DEFAULT_POOL_PROCESSES = 5
 DEFAULT_CONFIG_LEVEL = logging.INFO
@@ -38,11 +39,12 @@ class SQSListenerException(Exception):
 
 class SQSListener:
     def load_sqs_listener_config(self, listener_config_path=None):
-        if listener_config_path is None:
+        if listener_config_path is None or listener_config_path == "":
             listener_config_path = os.path.join(os.environ['HOME'], '.sqslistener')
         with open(listener_config_path) as f:
             ret = yaml.safe_load(f)
             return ret
+        raise SQSListenerException("Missing listener configuration file: %s" % listener_config_path)
         return {}
 
     def __init__(self,
@@ -148,17 +150,23 @@ class SQSListener:
     def process_message(self, message):
         try:
             request_message = RequestMessage(message)
-            self.logger.info("Processing message %d for job %s" % (request_message.request_id, request_message.job_name))
+            self.logger.info("Processing message %s for job %s" % (request_message.request_id, request_message.job_name))
             job = self.job_set.generate_job(request_message.job_name, request_message.job_parameters)
-            response_message_body = start_job_process(self.pool, job, request_message.request_id)
+            started_response_message = ResponseMessage(job_name=request_message.job_name,
+                                                   request_id=request_message.request_id,
+                                                   job_state="started",
+                                                   additional_message="Request has been received and the job is in progress.")
+
+            started_response_message_body = started_response_message.dump_yaml()
+            self.post_response(started_response_message_body)
+            completed_message_body = start_job_process(self.pool, job, request_message.request_id, self.response_queue, request_message)
             request_id = request_message.request_id
             self.logger.info("Sending message to response queue:\n%s" % request_id)
-            self.post_response(response_message_body)
+            self.post_response(completed_message_body)
             self.queue.delete_message(message)
             self.logger.info("Message deleted with id: %s" % request_id)
         except SQSError:
             self.logger.ERROR("An error occurred processing a message")
-            print "An error occurred processing a message."
 
     def start_polling(self):
         self.logger.info("Starting polling...")

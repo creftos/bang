@@ -20,15 +20,14 @@
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-# Copied and modified from bin/bang
-
-if len(sys.argv) < 1:
-    arg_path = None  # If None, it will use the default ~/.sqslistener
-else:
-    arg_path = sys.argv[0]
-
 import sys
 
+if len(sys.argv) < 2:
+    arg_path = None  # If None, it will use the default ~/.sqslistener
+else:
+    arg_path = sys.argv[1]
+
+# Copied and modified from bin/bang
 try:
     import bang.sqslistener
 except ImportError:

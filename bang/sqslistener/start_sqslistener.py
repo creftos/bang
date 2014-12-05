@@ -21,3 +21,6 @@ from sqslistener import SQSListener
 def start_sqslistener(configfile_path):
     listener = SQSListener(listener_config_path=configfile_path)
     listener.start_polling()
+
+if __name__ == "__main__":
+  start_sqslistener(None)

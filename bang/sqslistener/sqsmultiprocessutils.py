@@ -39,22 +39,24 @@ logger.debug("Note that ansible.callbacks.verbose has been monkey patched!")
 ### End monkey patch ###
 
 
-def start_job_process(pool, job, request_id):
+def start_job_process(pool, job, request_id, message_queue, request_message):
     if job is not None:
-        result = pool.apply_async(perform_job, [job, request_id])
+        result = pool.apply_async(perform_job, [job, request_id, message_queue, request_message])
         return result.get()
     else:
         logger.error("Job with request_id %s, does not exist." % str(request_id))
 
 
-def perform_job(job, request_id):
+def perform_job(job, request_id, message_queue, request_message):
     try:
         config = Config.from_config_specs(job.bang_stacks)
         stack = Stack(config)
         stack.deploy()
 
         ansible_callbacks = stack.configure(playbook_callbacks_class=SQSListenerPlaybookCallbacks,
-                                            playbook_runner_callbacks_class=SQSListenerPlaybookRunnerCallbacks)
+                                            playbook_runner_callbacks_class=SQSListenerPlaybookRunnerCallbacks,
+                                            sqs_response_queue=message_queue,
+                                            request_message=request_message)
         ansible_callbacks.log_summary()
 
     except Exception as e:
