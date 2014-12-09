@@ -262,7 +262,6 @@ class SQSListenerPlaybookCallbacks(PlaybookCallbacks):
                 return getpass.getpass(msg)
             return raw_input(msg)
 
-
         if confirm:
             while True:
                 result = prompt(msg, private)

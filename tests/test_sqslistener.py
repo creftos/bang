@@ -16,64 +16,68 @@
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-import mock
-from boto.sqs.queue import Queue
 from bang.sqslistener.sqslistener import SQSListener
 import boto
 import boto.sqs.connection
-from boto.sqs.connection import SQSConnection
+from moto import mock_sqs
+from mock import MagicMock
+from mock import patch
+from boto.sqs.message import Message
+import yaml
 
+JOBS_CONFIG_PATH = 'tests/resources/sqslistener/jobs.yml'
+LISTENER_CONFIG_PATH = 'tests/resources/sqslistener/.sqslistener'
+
+mocked_success_response_body = ("---\n"
+                                "job_name: test_job_1\n"
+                                "request_id: qwertyasdfjkl;\n"
+                                "result: success\n"
+                                "message: |-\n"
+                                "  Job was mocked!\n")
+
+mocked_failure_response_body = ("---\n"
+                                "job_name: test_job_not_there\n"
+                                "request_id: qwertyasdfjkl;\n"
+                                "result: failure\n"
+                                "message: |-\n"
+                                "  Job was mocked!\n")
 
 class TestSQSListener(unittest.TestCase):
 
     def setUp(self):
-        self.sqsListener = SQSListener(jobs_config_path='tests/resources/sqslistener/jobs.yml')
+        self.boto_sqs_patcher = mock_sqs()
+        self.MockClass = self.boto_sqs_patcher.start()
 
-    @mock.patch.object(Queue, 'write')
-    def test_post_response(self, mock_write_method):
-        self.sqsListener.post_response("Message Body Test")
-        assert mock_write_method.called
+        mock_connection = boto.connect_sqs()
+        mock_connection.create_queue('bang-queue')
+        mock_connection.create_queue('bang-response')
 
-    @mock.patch.object(Queue, 'write')
-    def post_response_test(self, mock_write_method):
-        self.sqsListener.post_response("Message Body Test")
-        assert mock_write_method.called
+        boto.sqs.connect_to_region = MagicMock(name="mock_connect_to_sqs", return_value=mock_connection)
 
-    @mock.patch.object(Queue, 'get_messages')
-    def poll_queue_test(self, mock_get_messages_method):
-        self.sqsListener.poll_queue()
-        assert mock_get_messages_method.called
+        self.sqslistener = SQSListener(listener_config_path=LISTENER_CONFIG_PATH)
 
-    # TODO: Fix delete message assertion.
-    # @mock.patch('boto.sqs.connection.SQSConnection.get_queue.delete_message')
-    @mock.patch('boto.sqs.connect_to_region')
-    @mock.patch('boto.sqs.connection.SQSConnection.get_queue')
-    @mock.patch('bang.sqslistener.sqslistener.SQSListener.post_response')
-    def process_message_test(self, mock_post_response, mock_get_queue, mock_connect_to_region):  #, mock_delete_message):
+    def tearDown(self):
+        self.boto_sqs_patcher.stop()
 
-        self.sqsListener = SQSListener(
-            aws_region="test-region",
-            queue_name="test-queue",
-            response_queue_name="test-response-queue",
-            polling_interval=99,
-            jobs_config_path='tests/resources/sqslistener/jobs.yml',
-            logging_config_path='tests/resources/sqslistener/logging-conf.yml')
+    def post_response_test(self):
+        test_message_body = "Message Body Test"
+        self.sqslistener.post_response(test_message_body)
 
-        test_yaml_message =    ( "---\n"
-                                "test_job_1:\n"
-                                "  request_id: 108\n")
+        try:
+            response_message = self.sqslistener.response_queue.get_messages()[0]
+        except IndexError:
+            raise AssertionError("Response message did not make it onto the queue.")
 
-        # TODO: Process message does several other things that need to be tested.
-        # TODO: I need to look into mocking actual return values of things as well.
+        assert response_message.get_body() == test_message_body
 
-        message = boto.sqs.message.Message(body=test_yaml_message)
-        self.sqsListener.process_message(message)
-
-        assert mock_post_response.called
-        #assert mock_delete_message.called
+    @patch('boto.sqs.queue.Queue.get_messages')
+    def poll_queue_test(self, mock_get_messages):
+        self.sqslistener.poll_queue()
+        assert mock_get_messages.called
 
     def load_sqs_listener_config_test(self):
-        test_yaml = self.sqsListener.load_sqs_listener_config('tests/resources/sqslistener/.sqslistener')
+        test_yaml = self.sqslistener.load_sqs_listener_config('tests/resources/sqslistener/.sqslistener')
+
         assert test_yaml['aws_region'] == 'us-east-1'
         assert test_yaml['job_queue_name'] == 'bang-queue'
         assert test_yaml['jobs_config_path'] == 'tests/resources/sqslistener/jobs.yml'
@@ -81,34 +85,26 @@ class TestSQSListener(unittest.TestCase):
         assert test_yaml['polling_interval'] == 2
         assert test_yaml['response_queue_name'] == 'bang-response'
 
+    @patch('bang.sqslistener.sqslistener.start_job_process', return_value=mocked_success_response_body)
+    @patch('boto.sqs.queue.Queue.delete_message')
+    def process_message_test(self, mock_delete_message, mock_start_job_process):
+        message = Message(body=("test_job_1:\n"
+                                "  request_id: qwertyasdfjkl;"))
 
-    def start_polling_test(self):
-        pass
+        self.sqslistener.process_message(message)
 
-    def stop_polling_test(self):
-        pass
+        assert mock_start_job_process.called
+        assert mock_delete_message.called
 
+    @patch('bang.sqslistener.sqslistener.start_job_process', return_value=mocked_failure_response_body)
+    @patch('boto.sqs.queue.Queue.delete_message')
+    def process_message_test_job_missing(self, mock_delete_message, mock_start_job_process):
+        message = Message(body=("test_job_not_there:\n"
+                                "  request_id: qwertyasdfjkl;"))
 
-class TestSQSListenerNoSetup(unittest.TestCase):
+        self.sqslistener.process_message(message)
 
-    @mock.patch('boto.sqs.connect_to_region')
-    @mock.patch('boto.sqs.connection.SQSConnection.get_queue')
-    def setup_conn_test(self, mock_get_queue, mock_connect_to_region):
-
-        self.sqsListener = SQSListener(
-            aws_region="test-region",
-            queue_name="test-queue",
-            response_queue_name="test-response-queue",
-            polling_interval=99,
-            jobs_config_path='tests/resources/sqslistener/jobs.yml',
-            logging_config_path='tests/resources/sqslistener/logging-conf.yml')
-
-        assert mock_connect_to_region.called
-        # assert mock_get_queue.called
-
-
-    @mock.patch('boto.sqs.connect_to_region')
-    @mock.patch('boto.sqs.connection.SQSConnection.get_queue')
-    def test_listener_config_path(self, mock_get_queue, mock_connect_to_region):
-
-        self.sqsListener = SQSListener(listener_config_path='tests/resources/sqslistener/.sqslistener')
+        # Note: 'A started' message does not get put on the queue if the job is missing.
+        for msg in self.sqslistener.response_queue.get_messages():
+            msg_yaml = yaml.load(msg.get_body())
+            assert msg_yaml['result'] == 'failed'

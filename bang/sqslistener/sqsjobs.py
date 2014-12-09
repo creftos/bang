@@ -49,7 +49,7 @@ class SQSJobs():
 
         except KeyError, e:
             logger.exception("YAML missing key in jobs config: %s" % str(e))
-            raise SQSJobError(e)
+            raise SQSJobError("Missing job from jobs yaml: %s " % e)
 
 
 class SQSJob():
