@@ -27,6 +27,9 @@ logger = logging.getLogger("SQSListener")
 class SQSJobError(Exception):
     pass
 
+class SQSJobsError(Exception):
+    pass
+
 class SQSJobs():
     """SQS Jobs"""
     def __init__(self):
@@ -40,7 +43,7 @@ class SQSJobs():
             with open(jobs_definition_path, 'rt') as f:
                 self.jobs_yaml = yaml.load(f.read())
         else:
-            raise Exception("No job definition found at: " + jobs_definition_path)
+            raise SQSJobsError("No job definition found at: " + jobs_definition_path)
 
     def generate_job(self, job_name, parameters=()):
         try:

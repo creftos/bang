@@ -35,7 +35,7 @@ def monkey_patched_verbose(msg, host=None, caplevel=2):
     logger.info("%s - %s" % (host, msg))
 
 ansible.callbacks.verbose = monkey_patched_verbose
-logger.debug("Note that ansible.callbacks.verbose has been monkey patched!")
+# logger.debug("Note that ansible.callbacks.verbose has been monkey patched!")
 ### End monkey patch ###
 
 

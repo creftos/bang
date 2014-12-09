@@ -33,6 +33,9 @@ class RequestMessage:
             raise RequestMessageException("Message Body required.")
 
     def parse_yaml(self, message_body):
+        if message_body is None:
+            raise RequestMessageException("Message body cannot be None.")
+
         yaml_message_body = yaml.safe_load(message_body)
         if yaml_message_body is None:
             raise RequestMessageException("Can't have an empty message body.")

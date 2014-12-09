@@ -17,6 +17,8 @@
 
 import unittest
 from bang.sqslistener.sqslistener import SQSListener
+from bang.sqslistener.sqslistener import SQSListenerException
+from bang.sqslistener.sqslistener import MissingQueueException
 import boto
 import boto.sqs.connection
 from moto import mock_sqs
@@ -24,6 +26,7 @@ from mock import MagicMock
 from mock import patch
 from boto.sqs.message import Message
 import yaml
+import tornado.testing
 
 JOBS_CONFIG_PATH = 'tests/resources/sqslistener/jobs.yml'
 LISTENER_CONFIG_PATH = 'tests/resources/sqslistener/.sqslistener'
@@ -108,3 +111,93 @@ class TestSQSListener(unittest.TestCase):
         for msg in self.sqslistener.response_queue.get_messages():
             msg_yaml = yaml.load(msg.get_body())
             assert msg_yaml['result'] == 'failed'
+
+
+    def load_sqs_listener_config_test_none_path(self):
+        with patch.dict('os.environ', {'HOME': 'tests/resources/sqslistener/fake-home'}):
+            test_yaml = self.sqslistener.load_sqs_listener_config(listener_config_path=None)
+            assert test_yaml['aws_region'] == 'us-east-1-fake-home'
+            assert test_yaml['job_queue_name'] == 'bang-queue-fake-home'
+            assert test_yaml['jobs_config_path'] == 'tests/resources/sqslistener/jobs-fake-home.yml'
+            assert test_yaml['logging_config_path'] == 'tests/resources/sqslistener/logging-conf-fake-home.yml'
+            assert test_yaml['polling_interval'] == 4
+            assert test_yaml['response_queue_name'] == 'bang-response-fake-home'
+
+    def load_sqs_listener_config_test_missing_file(self):
+        with self.assertRaises(SQSListenerException):
+            self.sqslistener.load_sqs_listener_config(listener_config_path='this/path/doesnt/exist')
+
+    def setup_logging_test(self):
+        logger = self.sqslistener.setup_logging('tests/resources/sqslistener/logging-conf.yml')
+
+    def setup_logging_missing_test(self):
+        logger = self.sqslistener.setup_logging('this/file/does/not/exist/logging-conf.yml')
+
+    @patch('bang.sqslistener.sqslistener.SQSListener.process_message')
+    def poll_queue_test(self, mock_process_message):
+        example_message_body = "---\ntest_job_name:\n  request_id: testrequestid\n"
+        message = Message()
+        message.set_body(example_message_body)
+        self.sqslistener.queue.write(message)
+        self.sqslistener.poll_queue()
+        assert mock_process_message.called
+
+    # def poll_queue_test_problem_with_message_body(self):
+    #     example_message_body = "problem"
+    #     message = Message()
+    #     message.set_body(example_message_body)
+    #     self.sqslistener.queue.write(message)
+    #     self.sqslistener.poll_queue()
+
+
+class AsyncTests(tornado.testing.AsyncTestCase):
+    pass
+    # @mock_sqs
+    # @patch('bang.sqslistener.sqslistener.SQSListener.poll_queue')
+    # def test_start_polling(self, mock_poll_queue):
+    #     boto_sqs_patcher = mock_sqs()
+    #     mockClass = boto_sqs_patcher.start()
+    #
+    #     mock_connection = boto.connect_sqs()
+    #     mock_connection.create_queue('bang-queue')
+    #     mock_connection.create_queue('bang-response')
+    #
+    #     sqslistener = SQSListener(listener_config_path=LISTENER_CONFIG_PATH)
+    #
+    #     sqslistener.start_polling()
+    #     sqslistener.stop_polling()
+    #
+    #     assert mock_poll_queue.called
+    #
+    #     boto_sqs_patcher.stop()
+
+
+class TestSQSListenerNoSetup(unittest.TestCase):
+
+    def test_missing_request_queue(self):
+        boto_sqs_patcher = mock_sqs()
+        mockClass = boto_sqs_patcher.start()
+
+        mock_connection = boto.connect_sqs()
+        mock_connection.create_queue('bang-queue')
+
+        boto.sqs.connect_to_region = MagicMock(name="mock_connect_to_sqs", return_value=mock_connection)
+
+        with self.assertRaises(MissingQueueException):
+            self.sqslistener = SQSListener(listener_config_path=LISTENER_CONFIG_PATH)
+
+        boto_sqs_patcher.stop()
+
+    def test_missing_response_queue(self):
+        boto_sqs_patcher = mock_sqs()
+        mockClass = boto_sqs_patcher.start()
+
+        mock_connection = boto.connect_sqs()
+        mock_connection.create_queue('response-queue')
+
+        boto.sqs.connect_to_region = MagicMock(name="mock_connect_to_sqs", return_value=mock_connection)
+
+        with self.assertRaises(MissingQueueException):
+            self.sqslistener = SQSListener(listener_config_path=LISTENER_CONFIG_PATH)
+
+        boto_sqs_patcher.stop()

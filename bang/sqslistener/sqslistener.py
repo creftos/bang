@@ -37,27 +37,11 @@ DEFAULT_CONFIG_LEVEL = logging.INFO
 class SQSListenerException(Exception):
     pass
 
+class MissingQueueException(Exception):
+    pass
+
 
 class SQSListener:
-    def load_sqs_listener_config(self, listener_config_path=None):
-        if listener_config_path is None or listener_config_path == "":
-            listener_config_path = os.path.join(os.environ['HOME'], '.sqslistener')
-        with open(listener_config_path) as f:
-            ret = yaml.safe_load(f)
-            return ret
-        raise SQSListenerException("Missing listener configuration file: %s" % listener_config_path)
-        return {}
-
-    def setup_logging(self, logging_config_path):
-        if os.path.exists(logging_config_path):
-            with open(logging_config_path, 'rt') as f:
-                config = yaml.load(f.read())
-
-            logging.config.dictConfig(config)
-        else:
-            logging.basicConfig(level=DEFAULT_CONFIG_LEVEL)
-
-        return logging.getLogger("SQSListener")
 
     def __init__(self,
                  aws_region=None,               # eg. "us-east-1"
@@ -96,25 +80,20 @@ class SQSListener:
             polling_interval = listener_config_yaml['polling_interval']
 
         ### Connect to AWS ###
-        try:
-            self.conn = self.connect_to_sqs(aws_region)
-            self.logger.info("Connecting to request queue: %s" % queue_name)
-            self.queue = self.conn.get_queue(queue_name)
-            self.logger.info("Connecting to response queue: %s" % response_queue_name)
-            self.response_queue = self.conn.get_queue(response_queue_name)
+        self.conn = self.connect_to_sqs(aws_region)
+        self.logger.info("Connecting to request queue: %s" % queue_name)
+        self.queue = self.conn.get_queue(queue_name)
+        self.logger.info("Connecting to response queue: %s" % response_queue_name)
+        self.response_queue = self.conn.get_queue(response_queue_name)
 
-            if self.queue is None:
-                error_msg = "Queue %s does not exist." % queue_name
-                self.logger.critical(error_msg)
-                raise SQSListenerException(error_msg)
-            if self.response_queue is None:
-                error_msg = "Queue %s does not exist." % response_queue_name
-                self.logger.critical(error_msg)
-                raise SQSListenerException(error_msg)
-
-        except SQSError:
-            self.logger.CRITICAL("An error occurred setting up an SQS Connection.")
-            exit(1)
+        if self.queue is None:
+            error_msg = "Queue %s does not exist." % queue_name
+            self.logger.critical(error_msg)
+            raise MissingQueueException(error_msg)
+        if self.response_queue is None:
+            error_msg = "Queue %s does not exist." % response_queue_name
+            self.logger.critical(error_msg)
+            raise MissingQueueException(error_msg)
 
         ### Import Jobs definition ###
         self.logger.info("Importing jobs definition from: %s ..." % jobs_config_path)
@@ -127,6 +106,27 @@ class SQSListener:
         self.pool = MyPool(processes=DEFAULT_POOL_PROCESSES)
 
         self.logger.info("Set up complete.")
+
+    def load_sqs_listener_config(self, listener_config_path=None):
+        if listener_config_path is None or listener_config_path == "":
+            listener_config_path = os.path.join(os.environ['HOME'], '.sqslistener')
+        try:
+            with open(listener_config_path) as f:
+                ret = yaml.safe_load(f)
+                return ret
+        except Exception, e:
+            raise SQSListenerException("Problem loading listener config file, %s: %s " % (listener_config_path, str(e)))
+
+    def setup_logging(self, logging_config_path):
+        if os.path.exists(logging_config_path):
+            with open(logging_config_path, 'rt') as f:
+                config = yaml.load(f.read())
+
+            logging.config.dictConfig(config)
+        else:
+            logging.basicConfig(level=DEFAULT_CONFIG_LEVEL)
+
+        return logging.getLogger("SQSListener")
 
     def connect_to_sqs(self, aws_region):
         self.logger.info("Connecting to SQS...")
@@ -184,6 +184,9 @@ class SQSListener:
         self.logger.info("Starting polling...")
         self.polling = True
 
+        self.pool.apply_async(self.polling_loop)
+
+    def polling_loop(self):
         while self.polling:
             self.poll_queue()
             time.sleep(self.polling_interval)

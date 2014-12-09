@@ -30,14 +30,21 @@ class TestRequestMessage(unittest.TestCase):
 
         message_body=("---\n"
                       "test_job_1:\n"
-                      "  request_id: 12\n")
+                      "  request_id: asdfjkl;test\n"
+                      "  parameters:\n"
+                      "    - one\n"
+                      "    - two\n"
+                      "    - three\n")
 
         message = Message(body=message_body)
 
         request_message = RequestMessage(message)
 
         assert request_message.job_name == 'test_job_1'
-        assert request_message.request_id == 12
+        assert request_message.request_id == 'asdfjkl;test'
+        assert request_message.job_parameters[0] == 'one'
+        assert request_message.job_parameters[1] == 'two'
+        assert request_message.job_parameters[2] == 'three'
 
 
     def test_parse_yaml_missing_request_id(self):
@@ -66,3 +73,33 @@ class TestRequestMessage(unittest.TestCase):
 
         with self.assertRaises(RequestMessageException):
             request_message = RequestMessage(Message(body=message_body_bad))
+
+    def test_empty_message_body(self):
+        message_body_empty = ""
+        empty_message = Message(body=message_body_empty)
+
+        with self.assertRaises(RequestMessageException):
+            request_message = RequestMessage(empty_message)
+
+    def test_no_key_message_body(self):
+        message_body_no_key = "  one"
+        message_no_key = Message(body=message_body_no_key)
+
+        with self.assertRaises(RequestMessageException):
+            request_message = RequestMessage(message_no_key)
+
+    def test_none_message_body(self):
+        message_body_none = None
+        none_body_message = Message(body=message_body_none)
+
+        with self.assertRaises(RequestMessageException):
+            request_message = RequestMessage(none_body_message)
+
+    def test_none_message(self):
+        none_body_message = None
+        with self.assertRaises(RequestMessageException):
+            request_message = RequestMessage(none_body_message)
+
+    def test_missing_job_name_yaml_key(self):
+        pass
+

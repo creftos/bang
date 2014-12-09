@@ -19,6 +19,7 @@ import unittest
 import yaml
 from bang.sqslistener.sqsjobs import SQSJobs
 from bang.sqslistener.sqsjobs import SQSJobError
+from bang.sqslistener.sqsjobs import SQSJobsError
 
 
 class TestSQSJobs(unittest.TestCase):
@@ -53,3 +54,9 @@ class TestSQSJobs(unittest.TestCase):
 
         with self.assertRaises(SQSJobError):
             job_set.generate_job("test_job_name_missing", ("param1", "param2"))
+
+    def test_load_jobs_from_file_missing_file(self):
+        job_set = SQSJobs()
+
+        with self.assertRaises(SQSJobsError):
+            job_set.load_jobs_from_file('this/file/is/missing')
