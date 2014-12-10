@@ -1,7 +1,7 @@
 ---
 test_job_1:
   bang-stacks:
-   - /this/is/just/a/test.yml
+   - tests/resources/sqslistener/bang-stacks/test-bang-stack.yml
 test_job_2:
   bang-stacks:
    - /this/is/just/a/test2.yml

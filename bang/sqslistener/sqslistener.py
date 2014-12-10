@@ -105,7 +105,9 @@ class SQSListener:
         self.polling_interval = polling_interval
         self.pool = MyPool(processes=DEFAULT_POOL_PROCESSES)
 
+        self.polling = False
         self.logger.info("Set up complete.")
+
 
     def load_sqs_listener_config(self, listener_config_path=None):
         if listener_config_path is None or listener_config_path == "":
@@ -156,6 +158,7 @@ class SQSListener:
             request_message = RequestMessage(message)
             self.logger.info("Processing message %s for job %s" % (request_message.request_id, request_message.job_name))
             job = self.job_set.generate_job(request_message.job_name, request_message.job_parameters)
+
             started_response_message = ResponseMessage(job_name=request_message.job_name,
                                                        request_id=request_message.request_id,
                                                        job_state="started",
@@ -163,7 +166,11 @@ class SQSListener:
 
             started_response_message_body = started_response_message.dump_yaml()
             self.post_response(started_response_message_body)
-            completed_message_body = start_job_process(self.pool, job, request_message.request_id, self.response_queue, request_message)
+
+            completed_message_body = start_job_process(self.pool,
+                                                       job, request_message.request_id,
+                                                       self.response_queue,
+                                                       request_message)
             request_id = request_message.request_id
             self.logger.info("Sending message to response queue: %s" % request_id)
             self.post_response(completed_message_body)
@@ -184,14 +191,8 @@ class SQSListener:
         self.logger.info("Starting polling...")
         self.polling = True
 
-        self.pool.apply_async(self.polling_loop)
-
-    def polling_loop(self):
         while self.polling:
             self.poll_queue()
             time.sleep(self.polling_interval)
-        self.logger.info("Polling stopped.")
 
-    def stop_polling(self):
-        self.logger.info("Stopping polling...")
-        self.polling = False
+        self.logger.info("Polling stopped.")

@@ -26,7 +26,6 @@ from mock import MagicMock
 from mock import patch
 from boto.sqs.message import Message
 import yaml
-import tornado.testing
 
 JOBS_CONFIG_PATH = 'tests/resources/sqslistener/jobs.yml'
 LISTENER_CONFIG_PATH = 'tests/resources/sqslistener/.sqslistener'
@@ -141,35 +140,6 @@ class TestSQSListener(unittest.TestCase):
         self.sqslistener.queue.write(message)
         self.sqslistener.poll_queue()
         assert mock_process_message.called
-
-    # def poll_queue_test_problem_with_message_body(self):
-    #     example_message_body = "problem"
-    #     message = Message()
-    #     message.set_body(example_message_body)
-    #     self.sqslistener.queue.write(message)
-    #     self.sqslistener.poll_queue()
-
-
-class AsyncTests(tornado.testing.AsyncTestCase):
-    pass
-    # @mock_sqs
-    # @patch('bang.sqslistener.sqslistener.SQSListener.poll_queue')
-    # def test_start_polling(self, mock_poll_queue):
-    #     boto_sqs_patcher = mock_sqs()
-    #     mockClass = boto_sqs_patcher.start()
-    #
-    #     mock_connection = boto.connect_sqs()
-    #     mock_connection.create_queue('bang-queue')
-    #     mock_connection.create_queue('bang-response')
-    #
-    #     sqslistener = SQSListener(listener_config_path=LISTENER_CONFIG_PATH)
-    #
-    #     sqslistener.start_polling()
-    #     sqslistener.stop_polling()
-    #
-    #     assert mock_poll_queue.called
-    #
-    #     boto_sqs_patcher.stop()
 
 
 class TestSQSListenerNoSetup(unittest.TestCase):

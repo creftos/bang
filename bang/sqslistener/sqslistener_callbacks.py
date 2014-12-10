@@ -21,7 +21,7 @@
 
 from ansible.callbacks import DefaultRunnerCallbacks, PlaybookCallbacks, PlaybookRunnerCallbacks
 from ansible import utils
-from ansible.callbacks import call_callback_module
+# from ansible.callbacks import #call_callback_module
 from ansible.callbacks import banner
 import logging
 from response_message import ResponseMessage
@@ -199,18 +199,20 @@ class SQSListenerPlaybookCallbacks(PlaybookCallbacks):
         self.sqs_request_message = request_message
 
     def on_start(self):
-        call_callback_module('playbook_on_start')
+        pass
+        #call_callback_module('playbook_on_start')
 
     def on_notify(self, host, handler):
-        call_callback_module('playbook_on_notify', host, handler)
+        pass
+        #call_callback_module('playbook_on_notify', host, handler)
 
     def on_no_hosts_matched(self):
         display("skipping: no hosts matched", self.sqs_response_queue, self.sqs_request_message)
-        call_callback_module('playbook_on_no_hosts_matched')
+        #call_callback_module('playbook_on_no_hosts_matched')
 
     def on_no_hosts_remaining(self):
         display("\nFATAL: all hosts have already failed -- aborting", self.sqs_response_queue, self.sqs_request_message)
-        call_callback_module('playbook_on_no_hosts_remaining')
+        #call_callback_module('playbook_on_no_hosts_remaining')
 
     def on_task_start(self, name, is_conditional):
         msg = "TASK: [%s]" % name
@@ -245,7 +247,7 @@ class SQSListenerPlaybookCallbacks(PlaybookCallbacks):
             self.skip_task = False
             display(banner(msg), self.sqs_response_queue, self.sqs_request_message)
 
-        call_callback_module('playbook_on_task_start', name, is_conditional)
+        #call_callback_module('playbook_on_task_start', name, is_conditional)
 
     def on_vars_prompt(self, varname, private=True, prompt=None, encrypt=None, confirm=False, salt_size=None, salt=None, default=None):
 
@@ -276,33 +278,33 @@ class SQSListenerPlaybookCallbacks(PlaybookCallbacks):
         if not result and default:
             result = default
 
-
         if encrypt:
-            result = utils.do_encrypt(result,encrypt,salt_size,salt)
+            result = utils.do_encrypt(result, encrypt, salt_size, salt)
 
-        call_callback_module( 'playbook_on_vars_prompt', varname, private=private, prompt=prompt,
-                               encrypt=encrypt, confirm=confirm, salt_size=salt_size, salt=None, default=default
-                            )
+        #call_callback_module( 'playbook_on_vars_prompt', varname, private=private, prompt=prompt,
+        #                       encrypt=encrypt, confirm=confirm, salt_size=salt_size, salt=None, default=default
+        #                    )
 
         return result
 
     def on_setup(self):
         display(banner("GATHERING FACTS"), self.sqs_response_queue, self.sqs_request_message)
-        call_callback_module('playbook_on_setup')
+        #call_callback_module('playbook_on_setup')
 
     def on_import_for_host(self, host, imported_file):
         msg = "%s: importing %s" % (host, imported_file)
         display(msg, self.sqs_response_queue, self.sqs_request_message)
-        call_callback_module('playbook_on_import_for_host', host, imported_file)
+        #call_callback_module('playbook_on_import_for_host', host, imported_file)
 
     def on_not_import_for_host(self, host, missing_file):
         msg = "%s: not importing file: %s" % (host, missing_file)
         display(msg, self.sqs_response_queue, self.sqs_request_message)
-        call_callback_module('playbook_on_not_import_for_host', host, missing_file)
+        #call_callback_module('playbook_on_not_import_for_host', host, missing_file)
 
     def on_play_start(self, name):
         display(banner("PLAY [%s]" % name), self.sqs_response_queue, self.sqs_request_message)
-        call_callback_module('playbook_on_play_start', name)
+        #call_callback_module('playbook_on_play_start', name)
 
     def on_stats(self, stats):
-        call_callback_module('playbook_on_stats', stats)
+        pass
+        #call_callback_module('playbook_on_stats', stats)

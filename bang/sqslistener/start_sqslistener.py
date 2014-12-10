@@ -23,4 +23,4 @@ def start_sqslistener(configfile_path):
     listener.start_polling()
 
 if __name__ == "__main__":
-  start_sqslistener(None)
+    start_sqslistener(None)

@@ -41,29 +41,28 @@ ansible.callbacks.verbose = monkey_patched_verbose
 
 def start_job_process(pool, job, request_id, message_queue, request_message):
     if job is not None:
-        result = pool.apply_async(perform_job, [job, request_id, message_queue, request_message])
-        return result.get()
+        # result = pool.apply_async(perform_job, [job, request_id, message_queue, request_message])
+        # return result.get()
+        return perform_job(job, request_id, message_queue, request_message)
     else:
         logger.error("Job with request_id %s, does not exist." % str(request_id))
 
 
 def perform_job(job, request_id, message_queue, request_message):
-    try:
-        config = Config.from_config_specs(job.bang_stacks)
-        stack = Stack(config)
-        stack.deploy()
 
-        ansible_callbacks = stack.configure(playbook_callbacks_class=SQSListenerPlaybookCallbacks,
-                                            playbook_runner_callbacks_class=SQSListenerPlaybookRunnerCallbacks,
-                                            sqs_response_queue=message_queue,
-                                            request_message=request_message)
-        ansible_callbacks.log_summary()
+    config = Config.from_config_specs(job.bang_stacks)
+    stack = Stack(config)
+    stack.deploy()
 
-    except Exception as e:
-        logger.exception(e)
-        yaml_response = ResponseMessage(job.name, request_id, "failure",
+    ansible_callbacks = stack.configure(playbook_callbacks_class=SQSListenerPlaybookCallbacks,
+                                        playbook_runner_callbacks_class=SQSListenerPlaybookRunnerCallbacks,
+                                        sqs_response_queue=message_queue,
+                                        request_message=request_message)
+    ansible_callbacks.log_summary()
+
+    yaml_response = ResponseMessage(job.name, request_id, "failure",
                                         "%s. See sqslistener logs for a complete stack trace." % str(e))
-        return yaml_response.dump_yaml()
+
 
     yaml_response = ResponseMessage(job.name, request_id, "success")
     return yaml_response.dump_yaml()
