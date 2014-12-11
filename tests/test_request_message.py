@@ -19,9 +19,13 @@
 
 import unittest
 from boto.sqs.message import Message
-
+# from yaml import ParserError
 from bang.sqslistener.request_message import RequestMessage
 from bang.sqslistener.request_message import RequestMessageException
+from bang.sqslistener.request_message import MissingDataRequestMessageException
+from bang.sqslistener.request_message import EmptyBodyRequestMessageException
+from bang.sqslistener.request_message import NoneMessageRequestMessageException
+from bang.sqslistener.request_message import MissingJobNameRequestMessageException
 
 
 class TestRequestMessage(unittest.TestCase):
@@ -85,21 +89,38 @@ class TestRequestMessage(unittest.TestCase):
         message_body_no_key = "  one"
         message_no_key = Message(body=message_body_no_key)
 
-        with self.assertRaises(RequestMessageException):
+        with self.assertRaises(MissingJobNameRequestMessageException):
             request_message = RequestMessage(message_no_key)
 
     def test_none_message_body(self):
         message_body_none = None
         none_body_message = Message(body=message_body_none)
 
-        with self.assertRaises(RequestMessageException):
+        with self.assertRaises(EmptyBodyRequestMessageException):
             request_message = RequestMessage(none_body_message)
 
     def test_none_message(self):
         none_body_message = None
-        with self.assertRaises(RequestMessageException):
+        with self.assertRaises(NoneMessageRequestMessageException):
             request_message = RequestMessage(none_body_message)
 
     def test_missing_job_name_yaml_key(self):
-        pass
+        job_name_missing_body = ("---\n"
+                                 "  request_id: asdfjkl;test\n"
+                                 "  parameters:\n"
+                                 "    - one\n"
+                                 "    - two\n"
+                                 "    - three\n")
+        job_name_missing_message = Message(body=job_name_missing_body)
+        with self.assertRaises(RequestMessageException): # TODO Should be MissingJobNameRequestMessageException
+            # TODO: Exception is actually being raised at missing request Id because it thinks parameters is the key name.
+            request_message = RequestMessage(job_name_missing_message)
+
+
+    def test_missing_request_content(self):
+        missing_content_body = ("---\n"
+                                 "test_job_1:\n")
+        missing_content_message = Message(body=missing_content_body)
+        with self.assertRaises(MissingDataRequestMessageException):
+            request_message = RequestMessage(missing_content_message)
 

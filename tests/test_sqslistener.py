@@ -19,6 +19,7 @@ import unittest
 from bang.sqslistener.sqslistener import SQSListener
 from bang.sqslistener.sqslistener import SQSListenerException
 from bang.sqslistener.sqslistener import MissingQueueException
+from bang.sqslistener import response_states
 import boto
 import boto.sqs.connection
 from moto import mock_sqs
@@ -109,7 +110,7 @@ class TestSQSListener(unittest.TestCase):
         # Note: 'A started' message does not get put on the queue if the job is missing.
         for msg in self.sqslistener.response_queue.get_messages():
             msg_yaml = yaml.load(msg.get_body())
-            assert msg_yaml['result'] == 'failed'
+            assert msg_yaml['result'] == response_states.failure
 
 
     def load_sqs_listener_config_test_none_path(self):

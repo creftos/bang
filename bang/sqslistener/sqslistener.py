@@ -22,6 +22,7 @@ import logging
 import logging.config
 import time
 import boto.sqs
+import response_states
 from sqsjobs import SQSJobs
 from boto.sqs.message import Message
 from boto.exception import SQSError
@@ -155,6 +156,8 @@ class SQSListener:
             self.logger.ERROR("An error occurred polling a queue.")
 
     def process_message(self, message):
+        if type(message) is not Message:
+            raise Exception("Message could not be read.")
         try:
             request_message = RequestMessage(message)
             self.logger.info("Processing message %s for job %s" % (request_message.request_id, request_message.job_name))
@@ -179,7 +182,7 @@ class SQSListener:
             self.logger.exception(e)
             job_missing_response_message = ResponseMessage(job_name="unknown",
                                                            request_id="unknown",
-                                                           job_state="failed",
+                                                           job_state=response_states.failure,
                                                            additional_message="Invalid Message: %s" % str(e))
             response_body = job_missing_response_message.dump_yaml()
             self.post_response(response_body)
@@ -187,12 +190,18 @@ class SQSListener:
             self.logger.error("An error occurred with the job: %s", str(e))
             job_missing_response_message = ResponseMessage(job_name=request_message.job_name,
                                                            request_id=request_message.request_id,
-                                                           job_state="failed",
+                                                           job_state=response_states.failure,
                                                            additional_message="Job definition is missing.")
             response_body = job_missing_response_message.dump_yaml()
             self.post_response(response_body)
         except Exception, e:
             self.logger.error("An error occurred processing a message: %s", str(e))
+            job_missing_response_message = ResponseMessage(job_name='unknown',
+                                                           request_id='unknown',
+                                                           job_state=response_states.failure,
+                                                           additional_message="There was a problem with your request Message, %s:\n%s"% (str(e), message.get_body()))
+            response_body = job_missing_response_message.dump_yaml()
+            self.post_response(response_body)
         finally:
             self.queue.delete_message(message)
 

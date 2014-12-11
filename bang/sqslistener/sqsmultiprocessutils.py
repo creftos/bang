@@ -21,7 +21,7 @@ from bang.stack import Stack
 from response_message import ResponseMessage
 from sqslistener_callbacks import SQSListenerPlaybookCallbacks, SQSListenerPlaybookRunnerCallbacks
 import ansible
-from ansible.callbacks import verbose
+import response_states
 
 import logging
 logger = logging.getLogger("SQSListener")
@@ -61,9 +61,9 @@ def perform_job(job, request_id, message_queue, request_message):
 
     except Exception as e:
         logger.exception(e)
-        yaml_response = ResponseMessage(job.name, request_id, "failure",
+        yaml_response = ResponseMessage(job.name, request_id, response_states.failure,
                                         "%s. See sqslistener logs for a complete stack trace." % str(e))
         return yaml_response.dump_yaml()
 
-    yaml_response = ResponseMessage(job.name, request_id, "success")
+    yaml_response = ResponseMessage(job.name, request_id, response_states.success)
     return yaml_response.dump_yaml()

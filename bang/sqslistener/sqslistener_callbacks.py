@@ -26,6 +26,7 @@ from ansible.callbacks import banner
 import logging
 from response_message import ResponseMessage
 from boto.sqs.message import Message
+import response_states
 
 logger = logging.getLogger("SQSListener")
 
@@ -35,7 +36,7 @@ def display(msg, response_queue, request_message):
     if response_queue is not None:
         progress_message = ResponseMessage(job_name=request_message.job_name,
                                            request_id=request_message.request_id,
-                                           job_state="working",
+                                           job_state=response_states.working,
                                            additional_message=msg)
 
         yaml_body = progress_message.dump_yaml()
