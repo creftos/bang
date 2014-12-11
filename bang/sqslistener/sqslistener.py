@@ -28,6 +28,7 @@ from boto.exception import SQSError
 from non_daemonized_pool import MyPool
 from sqsmultiprocessutils import start_job_process
 from request_message import RequestMessage
+from request_message import RequestMessageException
 from response_message import ResponseMessage
 from sqsjobs import SQSJobError
 
@@ -174,10 +175,14 @@ class SQSListener:
             request_id = request_message.request_id
             self.logger.info("Sending message to response queue: %s" % request_id)
             self.post_response(completed_message_body)
-            self.queue.delete_message(message)
-            self.logger.info("Message deleted with id: %s" % request_id)
-        except SQSError:
-            self.logger.error("An error occurred processing a message")
+        except RequestMessageException, e:
+            self.logger.exception(e)
+            job_missing_response_message = ResponseMessage(job_name="unknown",
+                                                           request_id="unknown",
+                                                           job_state="failed",
+                                                           additional_message="Invalid Message: %s" % str(e))
+            response_body = job_missing_response_message.dump_yaml()
+            self.post_response(response_body)
         except SQSJobError, e:
             self.logger.error("An error occurred with the job: %s", str(e))
             job_missing_response_message = ResponseMessage(job_name=request_message.job_name,
@@ -186,6 +191,10 @@ class SQSListener:
                                                            additional_message="Job definition is missing.")
             response_body = job_missing_response_message.dump_yaml()
             self.post_response(response_body)
+        except Exception, e:
+            self.logger.error("An error occurred processing a message: %s", str(e))
+        finally:
+            self.queue.delete_message(message)
 
     def start_polling(self):
         self.logger.info("Starting polling...")

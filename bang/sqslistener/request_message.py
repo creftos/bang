@@ -24,26 +24,30 @@ logger = logging.getLogger("SQSListener")
 class RequestMessageException(Exception):
     pass
 
+class EmptyBodyRequestMessageException(RequestMessageException):
+    pass
+
+
 class RequestMessage:
     def __init__(self, message=None):
         if message is not None:
             yaml_message_body = message.get_body()
             self.parse_yaml(yaml_message_body)
         else:
-            raise RequestMessageException("Message Body required.")
+            raise EmptyBodyRequestMessageException("Message Body required.")
 
     def parse_yaml(self, message_body):
         if message_body is None:
-            raise RequestMessageException("Message body cannot be None.")
+            raise EmptyBodyRequestMessageException("Message body cannot be None.")
 
         yaml_message_body = yaml.safe_load(message_body)
         if yaml_message_body is None:
-            raise RequestMessageException("Can't have an empty message body.")
+            raise EmptyBodyRequestMessageException("Can't have an empty message body.")
 
         try:
             self.job_name = yaml_message_body.keys()[0]
-        except AttributeError:
-            raise RequestMessageException("Unable to get job name yaml key from message.")
+        except AttributeError, e:
+            raise RequestMessageException("Unable to get job name yaml key from message: %s" % str(e))
 
         if yaml_message_body[self.job_name] is None or "request_id" not in yaml_message_body[self.job_name]:
             raise RequestMessageException("Request messages must contain a request id.")
