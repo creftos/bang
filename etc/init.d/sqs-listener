@@ -9,13 +9,16 @@
 . /etc/init.d/functions
 
 # Default options
-CONFIG_PATH="~/.sqslistener"
-PIDFILE="/var/lock/subsys/sqs-listener"
 BANG_DISPATCHER="bang-dispatcher" # Uses system executable unless overriden.
-RUN_AS_USER='root'
 
 # User-specified variables
 . /etc/default/bang-dispatcher
+
+CONFIG_PATH="~$RUN_AS_USER/.sqslistener"
+
+if [ -z RUN_AS_USER ]; then
+	RUN_AS_USER='root'
+fi
 
 if [ -z $BANG_DISPATCHER ]; then
         >&2 echo "Error: BANG_DISPATCHER variable cannot be empty."
@@ -23,34 +26,27 @@ if [ -z $BANG_DISPATCHER ]; then
 fi
 
 start() {
-    if [ ! -e $PIDFILE ]; then
+    pgrep $BANG_DISPATCHER &> /dev/null
+	running=$?
+	if [ ! $running ]; then
 		echo -n "Starting sqs-listener: "
-      	daemon --user $RUN_AS_USER -p $PIDFILE $BANG_DISPATCHER $CONFIG_PATH &>/dev/null &
-       	RET=$?
-       	echo $! > $PIDFILE
-       	return $RET
+      	daemon $BANG_DISPATCHER $CONFIG_PATH --user $RUN_AS_USER &> /home/bang-dispatcher/sqslistener/logs/debug.log &
+       	return $?
 	else
-		if [ -d /proc/`cat $PIDFILE` ]; then
-			echo "Sqs-listener is already running."
-			return 0
-		else
-			echo "A stale pid file exists, deleting..."
-			rm -f $PIDFILE
-			start
-		fi
+		echo "Sqs-listener is already running."
+		return 0
 	fi
 }
 
 stop() {
+
     echo -n "Shutting down sqs-listener: "
-    killproc -p $PIDFILE $BANG_DISPATCHER
-    RET=$?
-    rm -f $PIDFILE
-    return $RET
+    killproc $BANG_DISPATCHER
+    return $?
 }
 
 check_status() {
-    status -p $PIDFILE $BANG_DISPATCHER
+    status $BANG_DISPATCHER
 }
 
 case "$1" in
