@@ -243,7 +243,6 @@ class Stack(object):
         self.have_inventory = True
 
     @require_inventory
-
     def configure(self,
                   playbook_callbacks_class=None,
                   playbook_runner_callbacks_class=None,
