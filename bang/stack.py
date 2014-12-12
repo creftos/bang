@@ -46,6 +46,15 @@ def require_inventory(f):
     return wrapper
 
 
+def require_inventory(f):
+    @functools.wraps(f)
+    def wrapper(self, *args, **kwargs):
+        if not self.have_inventory:
+            self.gather_inventory()
+        return f(self, *args, **kwargs)
+    return wrapper
+
+
 class Stack(object):
     """
     Deploys infrastructure/platform resources, then configures any deployed
@@ -234,6 +243,7 @@ class Stack(object):
         self.have_inventory = True
 
     @require_inventory
+
     def configure(self,
                   playbook_callbacks_class=None,
                   playbook_runner_callbacks_class=None,
