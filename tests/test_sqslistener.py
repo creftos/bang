@@ -112,7 +112,6 @@ class TestSQSListener(unittest.TestCase):
             msg_yaml = yaml.load(msg.get_body())
             assert msg_yaml['result'] == response_states.failure
 
-
     def load_sqs_listener_config_test_none_path(self):
         with patch.dict('os.environ', {'HOME': 'tests/resources/sqslistener/fake-home'}):
             test_yaml = self.sqslistener.load_sqs_listener_config(listener_config_path=None)

@@ -32,7 +32,7 @@ def monkey_patched_verbose(msg, host=None, caplevel=2):
         Rationale: This seemed a lot better than copying and pasting the whole library and fixing the output
                    wherever I found it.
     """
-    logger.info("%s - %s" % (host, msg))
+    logger.info("%s - %s" % (host, msg)) # TODO: Find a way to send a message with this information as well.
 
 ansible.callbacks.verbose = monkey_patched_verbose
 # logger.debug("Note that ansible.callbacks.verbose has been monkey patched!")

@@ -49,7 +49,7 @@ class SQSListener:
                  aws_region=None,               # eg. "us-east-1"
                  queue_name=None,               # eg. "bang-queue",
                  response_queue_name=None,      # eg. "bang-response",
-                 polling_interval=None,         # eg. 2
+                 polling_interval=None,         # eg. 2 # in seconds
                  jobs_config_path=None,         # eg. /home/user/sqslistener/sqs-jobs.yml
                  logging_config_path=None,      # eg. /home/user/sqslistener/logging-config.yml
                  listener_config_path=None):    # eg. /home/user/.sqslistener
@@ -196,10 +196,16 @@ class SQSListener:
             self.post_response(response_body)
         except Exception, e:
             self.logger.error("An error occurred processing a message: %s", str(e))
+
+            if type(message) is boto.sqs.message.Message:
+                msg = message.get_body()
+            else:
+                msg = str(message)
+
             job_missing_response_message = ResponseMessage(job_name='unknown',
                                                            request_id='unknown',
                                                            job_state=response_states.failure,
-                                                           additional_message="There was a problem with your request Message, %s:\n%s"% (str(e), message.get_body()))
+                                                           additional_message="There was a problem with your request Message, %s:\n%s"% (str(e), msg))
             response_body = job_missing_response_message.dump_yaml()
             self.post_response(response_body)
         finally:
