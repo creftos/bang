@@ -62,13 +62,14 @@ def find_component_tarball(bucket, comp_name, comp_config):
 
 
 def read_raw_bangrc():
-    bangrc_path = os.path.join(os.environ['HOME'], '.bangrc')
     try:
+        # the path creation is in the try/except because $HOME might not exist
+        # in the current environ (e.g. init scripts)
+        bangrc_path = os.path.join(os.environ['HOME'], '.bangrc')
         with open(bangrc_path) as f:
             return yaml.safe_load(f)
-    except IOError:
-        pass
-    return {}
+    except:
+        return {}
 
 
 def parse_bangrc():
@@ -341,6 +342,14 @@ class Config(dict):
                     svars.update(scope)
                 else:
                     svars[scope] = self[scope]
+
+            # make all of the launch-time attributes (e.g. disk_image_id,
+            # launch_timeout_s, ssh_key_name, etc...) available as facts in
+            # case you need them in a playbook.
+            sattrs = server.copy()
+            sattrs.pop(A.server.SCOPES, None)
+            svars[A.server.BANG_ATTRS] = sattrs
+
             server[A.server.VARS] = svars
 
     def _prepare_load_balancers(self):

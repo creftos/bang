@@ -266,13 +266,13 @@ class SecurityGroupRulesetDeployer(RegionedDeployer):
 
         """
         # TODO: add error handling
+        for rule in self.delete_these_rules:
+            self.consul.delete_secgroup_rule(rule)
+            log.info("Revoked: %s" % rule)
         for rule in self.create_these_rules:
             args = rule + (self.name, )
             self.consul.create_secgroup_rule(*args)
             log.info("Authorized: %s" % str(rule))
-        for rule in self.delete_these_rules:
-            self.consul.delete_secgroup_rule(rule)
-            log.info("Revoked: %s" % rule)
 
 
 class BucketDeployer(BaseDeployer):
@@ -340,16 +340,18 @@ class LoadBalancerDeployer(RegionedDeployer):
     'instance' per distinct load balancer needs to be created (i.e.
     that any elasticity is handled by the cloud service).
 
-    Example config::
+    Example config:
 
-      load_balancers:
-        test_balancer:
-          balance_server_name: server_defined_in_servers_section
-          region: region-1.geo-1
-          provider: hpcloud
-          backend_port: '8080'
-          protocol: tcp
-          port: '443'
+    .. code-block:: yaml
+
+        load_balancers:
+          test_balancer:
+            balance_server_name: server_defined_in_servers_section
+            region: region-1.geo-1
+            provider: hpcloud
+            backend_port: '8080'
+            protocol: tcp
+            port: '443'
 
     """
 

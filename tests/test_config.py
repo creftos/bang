@@ -48,6 +48,10 @@ class TestBangrc(TestWithTmpDir):
         with patch.dict('os.environ', {'HOME': self.tmpdir}):
             return C.parse_bangrc()
 
+    def test_no_home_in_env(self):
+        with patch.dict('os.environ', clear=True):
+            self.assertEqual({}, C.parse_bangrc())
+
     def test_creds_from_bangrc(self):
         aws_id = 'AKIAIKFIE8FKSLR8FIE3'
         aws_secret = 'EU859vjksor73gkY378f9gkslbkrabcxwfyW2loo'
@@ -97,6 +101,7 @@ class TestBangrc(TestWithTmpDir):
 class TestConfigSpec(unittest.TestCase):
 
     def test_path(self):
+        # gozinta == gozoutta
         for exp in (
                 '/home/deployer/bang-stacks/fubar.yml',
                 '../blargh/asdf.yml',
@@ -105,6 +110,16 @@ class TestConfigSpec(unittest.TestCase):
                 'buya.yml',
                 ):
             act = C.resolve_config_spec(exp)
+            self.assertEqual(exp, act)
+
+        # transformation
+        for args, exp in (
+                (('foo', ), 'foo.yml'),
+                (('foo', '/path/to/configs'), '/path/to/configs/foo.yml'),
+                (('bar', '/path/to/configs/'), '/path/to/configs/bar.yml'),
+                (('fullstack', '/etc/bang'), '/etc/bang/fullstack.yml'),
+                ):
+            act = C.resolve_config_spec(*args)
             self.assertEqual(exp, act)
 
     def test_basename(self):

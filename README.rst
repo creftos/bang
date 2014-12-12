@@ -26,7 +26,9 @@ configuration of all servers whether they are in a server room in the office,
 across the country in a private datacenter, or hosted by a public cloud
 provider.
 
-The latest online documentation lives at http://fr33jc.github.com/bang/.
+Read the `latest online documentation <http://bang.readthedocs.org/>`_ or
+browse through `examples of stack configurations and playbooks
+<https://github.com/fr33jc/bang/tree/master/examples>`_.
 
 .. image:: https://travis-ci.org/fr33jc/bang.png
     :target: http://travis-ci.org/fr33jc/bang

@@ -49,7 +49,9 @@ class EC2SecGroup(object):
     The :attr:`rules` attribute is a specialized dict whose keys are the
     *normalized* rule definitions, and whose values are EC2 grants which can be
     kwargs-expanded when passing
-    :meth:`boto.ec2.securitygroup.SecurityGroup.revoke`.  E.g.::
+    :meth:`boto.ec2.securitygroup.SecurityGroup.revoke`.  E.g.:
+
+    .. code-block:: python
 
         {
             ('tcp', 1, 65535, 'group-foo'): {
@@ -90,12 +92,12 @@ class EC2SecGroup(object):
             for g in rule.grants:
                 parsed = {}
                 if g.cidr_ip:
-                    s = parsed['source'] = str(g.cidr_ip)
+                    s = parsed['cidr_ip'] = str(g.cidr_ip)
                 elif g.owner_id == owner_id and g.name == ec2sg.name:
                     parsed['source_self'] = True
                     s = ec2sg.name
                 else:
-                    parsed['source_group'] = '%s/%s' % (g.owner_id, g.name)
+                    parsed['src_group'] = g 
                     s = g.name
                 parsed.update(core)
                 rules[(p, f, t, s)] = parsed
