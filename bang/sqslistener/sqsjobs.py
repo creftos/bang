@@ -41,7 +41,7 @@ class SQSJobs():
     def load_jobs_from_file(self, jobs_definition_path):
         if os.path.exists(jobs_definition_path):
             with open(jobs_definition_path, 'rt') as f:
-                self.jobs_yaml = yaml.load(f.read())
+                self.jobs_yaml = yaml.safe_load(f.read())
         else:
             raise SQSJobsError("No job definition found at: " + jobs_definition_path)
 

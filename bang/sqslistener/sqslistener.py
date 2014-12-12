@@ -124,7 +124,7 @@ class SQSListener:
     def setup_logging(self, logging_config_path):
         if os.path.exists(logging_config_path):
             with open(logging_config_path, 'rt') as f:
-                config = yaml.load(f.read())
+                config = yaml.safe_load(f.read())
 
             logging.config.dictConfig(config)
         else:
