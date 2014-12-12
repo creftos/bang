@@ -9,7 +9,8 @@
 . /etc/init.d/functions
 
 # Default options
-BANG_DISPATCHER="bang-dispatcher" # Uses system executable unless overriden.
+BANG_DISPATCHER_PATH="bang-dispatcher" # Override this to change which executable to run.
+BANG_DISPATCHER_NAME="bang-dispatcher"
 
 # User-specified variables
 . /etc/default/bang-dispatcher
@@ -20,18 +21,20 @@ if [ -z RUN_AS_USER ]; then
 	RUN_AS_USER='root'
 fi
 
-if [ -z $BANG_DISPATCHER ]; then
-        >&2 echo "Error: BANG_DISPATCHER variable cannot be empty."
+if [ -z $BANG_DISPATCHER_NAME -o -z $BANG_DISPATCHER_PATH ]; then
+	>&2 echo "Error: BANG_DISPATCHER_NAME and BANG_DISPATCHER_PATH variables cannot be empty."
         exit 1
 fi
 
 start() {
-    pgrep $BANG_DISPATCHER &> /dev/null
+   	pgrep $BANG_DISPATCHER_NAME &> /dev/null
 	running=$?
-	if [ ! $running ]; then
+
+	if [ $running -ne 0 ]; then
 		echo -n "Starting sqs-listener: "
-      	daemon $BANG_DISPATCHER $CONFIG_PATH --user $RUN_AS_USER &> /home/bang-dispatcher/sqslistener/logs/debug.log &
-       	return $?
+      		daemon $BANG_DISPATCHER_PATH $CONFIG_PATH --user $RUN_AS_USER &> /home/bang-dispatcher/sqslistener/logs/debug.log &
+       		RET=$?
+       		return $RET
 	else
 		echo "Sqs-listener is already running."
 		return 0
@@ -41,12 +44,13 @@ start() {
 stop() {
 
     echo -n "Shutting down sqs-listener: "
-    killproc $BANG_DISPATCHER
-    return $?
+    killproc $BANG_DISPATCHER_PATH
+    RET=$?
+    return $RET
 }
 
 check_status() {
-    status $BANG_DISPATCHER
+    status $BANG_DISPATCHER_PATH
 }
 
 case "$1" in
