@@ -21,24 +21,30 @@ if [ -z $BANG_DISPATCHER ]; then
         exit 1
 fi
 
-if [ -z $HOME ]; then
-        export HOME='/root'
-fi
-
 start() {
-        echo -n "Starting sqs-listener: "
-        daemon $BANG_DISPATCHER $CONFIG_PATH
-        RET=$?
-        touch $PIDFILE
-        return $RET
+    if [ ! -e $PIDFILE ]; then
+		echo -n "Starting sqs-listener: "
+      	daemon $BANG_DISPATCHER $CONFIG_PATH -p $PIDFILE &>/dev/null &
+       	RET=$?
+       	echo $! > $PIDFILE
+       	return $RET
+	else
+		if [ -d /proc/`cat $PIDFILE` ]; then
+			echo "Sqs-listener is already running."
+		else
+			echo "A stale pid file exists, deleting..."
+			rm -f $PIDFILE
+			start
+		fi
+	fi
 }
 
 stop() {
-        echo -n "Shutting down sqs-listener: "
-        killproc $BANG_DISPATCHER
-        RET=$?
-        rm -f $PIDFILE
-        return $RET
+    echo -n "Shutting down sqs-listener: "
+    killproc -p $PIDFILE $BANG_DISPATCHER
+    RET=$?
+    rm -f $PIDFILE
+    return $RET
 }
 
 check_status() {
