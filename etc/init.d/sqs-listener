@@ -12,6 +12,7 @@
 CONFIG_PATH="~/.sqslistener"
 PIDFILE="/var/lock/subsys/sqs-listener"
 BANG_DISPATCHER="bang-dispatcher" # Uses system executable unless overriden.
+RUN_AS_USER='root'
 
 # User-specified variables
 . /etc/default/bang-dispatcher
@@ -24,13 +25,14 @@ fi
 start() {
     if [ ! -e $PIDFILE ]; then
 		echo -n "Starting sqs-listener: "
-      	daemon $BANG_DISPATCHER $CONFIG_PATH -p $PIDFILE &>/dev/null &
+      	daemon --user $RUN_AS_USER -p $PIDFILE $BANG_DISPATCHER $CONFIG_PATH &>/dev/null &
        	RET=$?
        	echo $! > $PIDFILE
        	return $RET
 	else
 		if [ -d /proc/`cat $PIDFILE` ]; then
 			echo "Sqs-listener is already running."
+			return 0
 		else
 			echo "A stale pid file exists, deleting..."
 			rm -f $PIDFILE
