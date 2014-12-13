@@ -101,7 +101,6 @@ Example of a Response Message
 -----------------------------
 The SQS Listener puts a response message in yaml format onto the response queue
 specified in the .sqslistener config file. An example follows:
-
 ::
     ---
     job_name: test_job_1
