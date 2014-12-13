@@ -110,6 +110,7 @@ specified in the .sqslistener config file. An example follows:
     message: |-
       Everything was A-OK
 
+
 The job_name will be the same as the name you gave in the request message.
 The request_id will be the same as the request_id given in the request message as well.
 The result can be any single-line string.

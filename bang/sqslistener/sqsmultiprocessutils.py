@@ -53,11 +53,10 @@ def perform_job(job, request_id, message_queue, request_message):
         stack = Stack(config)
         stack.deploy()
 
-        ansible_callbacks = stack.configure(playbook_callbacks_class=SQSListenerPlaybookCallbacks,
-                                            playbook_runner_callbacks_class=SQSListenerPlaybookRunnerCallbacks,
-                                            sqs_response_queue=message_queue,
-                                            request_message=request_message)
-        ansible_callbacks.log_summary()
+        stack.configure(playbook_callbacks_class=SQSListenerPlaybookCallbacks,
+                        playbook_runner_callbacks_class=SQSListenerPlaybookRunnerCallbacks,
+                        sqs_response_queue=message_queue,
+                        request_message=request_message)
 
     except Exception as e:
         logger.exception(e)
