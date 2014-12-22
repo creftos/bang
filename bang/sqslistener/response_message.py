@@ -41,7 +41,7 @@ class ResponseMessage:
     def __init__(self,
                  job_name,
                  request_id,
-                 job_state,  # Eg. success, failure, started, working
+                 job_state,  # see: response_states.py
                  additional_message=""):
 
         self.name = job_name

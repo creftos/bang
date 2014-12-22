@@ -15,130 +15,150 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with bang.  If not, see <http://www.gnu.org/licenses/>.
+#
 
-import os
-import yaml
-import logging
-import logging.config
-import time
-import boto.sqs
-import response_states
-from sqsjobs import SQSJobs
 from boto.sqs.message import Message
-from boto.exception import SQSError
 from non_daemonized_pool import MyPool
-from sqsmultiprocessutils import start_job_process
 from request_message import RequestMessage
 from request_message import RequestMessageException
 from response_message import ResponseMessage
 from sqsjobs import SQSJobError
+from sqsjobs import SQSJobs
+from sqsmultiprocessutils import start_job_process
+import boto.sqs
+import logging
+import logging.config
+import os
+import response_states
+import sys
+import time
+import yaml
 
 DEFAULT_POOL_PROCESSES = 5
 DEFAULT_CONFIG_LEVEL = logging.INFO
+DEFAULT_LOGGING_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
+
 
 class SQSListenerException(Exception):
     pass
+
 
 class MissingQueueException(Exception):
     pass
 
 
 class SQSListener:
+    """The SQS Listener is a tool for polling Amazon's SQS service for bang-stacks to be run."""
 
     def __init__(self,
-                 aws_region=None,               # eg. "us-east-1"
-                 queue_name=None,               # eg. "bang-queue",
-                 response_queue_name=None,      # eg. "bang-response",
-                 polling_interval=None,         # eg. 2 # in seconds
-                 jobs_config_path=None,         # eg. /home/user/sqslistener/sqs-jobs.yml
-                 logging_config_path=None,      # eg. /home/user/sqslistener/logging-config.yml
-                 listener_config_path=None):    # eg. /home/user/.sqslistener
+                 listener_config_path=os.path.join(os.environ['HOME'], '.sqslistener'),  # eg. /home/user/.sqslistener
+                 jobs_config_path='/home/bang-dispatcher/jobs.yml',
+                 logging_config_path='/home/bang-dispatcher/logging-config',     # If None, it will log to stderr.
+                 aws_region='us-east-1',
+                 queue_name='bang-queue',
+                 response_queue_name='bang-response',
+                 polling_interval=2):  # in seconds
 
-        ### Load Sqslistener Configuration ###
+        """SQSListener Constructor
+        :param listener_config_path:    The primary config file path for the SQSListener which contains information
+                                            about other config files and values.
+        :param jobs_config_path:        The config file that defines all the jobs and their corresponding bang-stacks
+                                            that can be invoked via request messages.
+        :param logging_config_path:     Logging configuration yaml file. Logger name must be SQSListener.
+        :param aws_region:              Which AWS region to use.
+        :param queue_name:              The name in SQS of the request queue to be polled.
+        :param response_queue_name:     The name in SQS where response messages will be sent.
+        :param polling_interval:        The time in seconds between each poll of the request queue.
+
+        Precedence order for configuration values (Highest to lowest):
+                1. In Config file
+                2. Passed in in the constructor
+                3. Constructor Default
+        """
+        # Set initial configs based on arguments
+        config = dict()
+        config['logging_config_path'] = logging_config_path
+        config['jobs_config_path'] = jobs_config_path
+        config['aws_region'] = aws_region
+        config['job_queue_name'] = queue_name
+        config['response_queue_name'] = response_queue_name
+        config['polling_interval'] = polling_interval
+
+        ### Load SQSListener Configuration ###
         listener_config_yaml = self.load_sqs_listener_config(listener_config_path)
+        for key in listener_config_yaml:
+            config[key] = listener_config_yaml.get(key)
 
-        ### Set up logging ###
-        if logging_config_path is None:
-            logging_config_path = listener_config_yaml['logging_config_path']
-
-        self.logger = self.setup_logging(logging_config_path)
+        ### Setup Logging
+        self.logger = self.setup_logging(config.get('logging_config_path'))
         self.logger.info("Starting up SQS Listener...")
 
-        ### Set up the remainder of the listener configuration ###
-        if jobs_config_path is None:
-            self.logger.info("Getting jobs config path from listener config...")
-            jobs_config_path = listener_config_yaml['jobs_config_path']
-        if aws_region is None:
-            self.logger.info("Getting aws region from listener config...")
-            aws_region = listener_config_yaml['aws_region']
-        if queue_name is None:
-            self.logger.info("Getting job queue name config path from listener config...")
-            queue_name = listener_config_yaml['job_queue_name']
-        if response_queue_name is None:
-            self.logger.info("Getting response queue name from listener config...")
-            response_queue_name = listener_config_yaml['response_queue_name']
-        if polling_interval is None:
-            self.logger.info("Getting polling interval length from listener config...")
-            polling_interval = listener_config_yaml['polling_interval']
-
         ### Connect to AWS ###
-        self.conn = self.connect_to_sqs(aws_region)
-        self.logger.info("Connecting to request queue: %s" % queue_name)
-        self.queue = self.conn.get_queue(queue_name)
-        self.logger.info("Connecting to response queue: %s" % response_queue_name)
-        self.response_queue = self.conn.get_queue(response_queue_name)
+        self.conn = self.connect_to_sqs(config.get('aws_region'))
+        self.logger.info("Connecting to request queue: %s" % config.get('job_queue_name'))
+        self.queue = self.conn.get_queue(config.get('job_queue_name'))
+        self.logger.info("Connecting to response queue: %s" % config.get('response_queue_name'))
+        self.response_queue = self.conn.get_queue(config.get('response_queue_name'))
 
-        if self.queue is None:
-            error_msg = "Queue %s does not exist." % queue_name
+        if not self.queue:
+            error_msg = "Queue %s does not exist." % config.get('job_queue_name')
             self.logger.critical(error_msg)
             raise MissingQueueException(error_msg)
-        if self.response_queue is None:
-            error_msg = "Queue %s does not exist." % response_queue_name
+        if not self.response_queue:
+            error_msg = "Queue %s does not exist." % config.get('response_queue_name')
             self.logger.critical(error_msg)
             raise MissingQueueException(error_msg)
 
         ### Import Jobs definition ###
-        self.logger.info("Importing jobs definition from: %s ..." % jobs_config_path)
+        self.logger.info("Importing jobs definition from: %s ..." % config.get('jobs_config_path'))
         self.job_set = SQSJobs()
-        self.job_set.load_jobs_from_file(jobs_config_path)
+        self.job_set.load_jobs_from_file(config.get('jobs_config_path'))
 
         ### Set up polling ###
         self.logger.info("Setting up polling...")
         self.polling_interval = polling_interval
         self.pool = MyPool(processes=DEFAULT_POOL_PROCESSES)
 
-        self.polling = False
+        self.polling = False  # Polling doesn't start until you tell it to.
         self.logger.info("Set up complete.")
 
-
-    def load_sqs_listener_config(self, listener_config_path=None):
-        if listener_config_path is None or listener_config_path == "":
-            listener_config_path = os.path.join(os.environ['HOME'], '.sqslistener')
-        try:
-            with open(listener_config_path) as f:
-                ret = yaml.safe_load(f)
-                return ret
-        except Exception, e:
-            raise SQSListenerException("Problem loading listener config file, %s: %s " % (listener_config_path, str(e)))
+    def load_sqs_listener_config(self, listener_config_path):
+        """Loads the primary listener config file.
+        :param listener_config_path: The path to the listener config file.
+        """
+        with open(listener_config_path) as f:
+            ret = yaml.safe_load(f)
+        return ret
 
     def setup_logging(self, logging_config_path):
+        """Sets up logging for the SQSListener by using the path provided, or upon not being able to find the logging
+        config file instead uses a default logged-to-stderr logger.
+        :logging_config_path: The path to the logging config file.
+        """
         if os.path.exists(logging_config_path):
             with open(logging_config_path, 'rt') as f:
                 config = yaml.safe_load(f.read())
-
             logging.config.dictConfig(config)
         else:
-            logging.basicConfig(level=DEFAULT_CONFIG_LEVEL)
+            logging.basicConfig(format=DEFAULT_LOGGING_FORMAT, level=DEFAULT_CONFIG_LEVEL)
 
         return logging.getLogger("SQSListener")
 
+
     def connect_to_sqs(self, aws_region):
+        """Connects to the AWS Region with the given name.
+        :param aws_region: The name of the AWS region to connect to.
+        """
         self.logger.info("Connecting to SQS...")
         self.logger.info("Connecting to Region: %s" % aws_region)
         return boto.sqs.connect_to_region(aws_region)
 
     def post_response(self, response):
-        """Post a response to the response queue."""
+        """
+        Used to post a response on the response queue.
+        :param response: The yaml body for the response message.
+
+        """
         message = Message()
         message.set_body(response)
 
@@ -146,21 +166,26 @@ class SQSListener:
         self.response_queue.write(message)
 
     def poll_queue(self):
-        try:
-            polling_response = self.queue.get_messages()
+        """Poll the request message queue one, grabbing the first job off the top. By default, boto's get_messages only
+        gets a single message at a time.
+        """
+        polling_response = self.queue.get_messages()
 
-            for message in polling_response:
-                self.process_message(message)
-
-        except SQSError:
-            self.logger.ERROR("An error occurred polling a queue.")
+        for message in polling_response:
+            self.process_message(message)
+            self.logger.info("Deleting received message from queue.")
+            self.queue.delete_message(message)
 
     def process_message(self, message):
-        if type(message) is not Message:
-            raise Exception("Message could not be read.")
+        """Process_message takes a boto library Message object, processes it appropriately based on the job definitions
+        and then returns an appropriate message based on success or failure.
+        :param message: The boto Message to process.
+        """
         try:
             request_message = RequestMessage(message)
-            self.logger.info("Processing message %s for job %s" % (request_message.request_id, request_message.job_name))
+            self.logger.info("Processing message %s for job %s" % (request_message.request_id,
+                                                                   request_message.job_name))
+
             job = self.job_set.generate_job(request_message.job_name, request_message.job_parameters)
 
             started_response_message = ResponseMessage(job_name=request_message.job_name,
@@ -172,7 +197,8 @@ class SQSListener:
             self.post_response(started_response_message_body)
 
             completed_message_body = start_job_process(self.pool,
-                                                       job, request_message.request_id,
+                                                       job,
+                                                       request_message.request_id,
                                                        self.response_queue,
                                                        request_message)
             request_id = request_message.request_id
@@ -208,10 +234,10 @@ class SQSListener:
                                                            additional_message="There was a problem with your request Message, %s:\n%s"% (str(e), msg))
             response_body = job_missing_response_message.dump_yaml()
             self.post_response(response_body)
-        finally:
-            self.queue.delete_message(message)
 
     def start_polling(self):
+        """Begin the main SQSListener polling loop."""
+
         self.logger.info("Starting polling...")
         self.polling = True
 

@@ -40,7 +40,7 @@ ansible.callbacks.verbose = monkey_patched_verbose
 
 
 def start_job_process(pool, job, request_id, message_queue, request_message):
-    if job is not None:
+    if job:
         result = pool.apply_async(perform_job, [job, request_id, message_queue, request_message])
         return result.get()
     else:
@@ -58,7 +58,7 @@ def perform_job(job, request_id, message_queue, request_message):
                         sqs_response_queue=message_queue,
                         request_message=request_message)
 
-    except Exception as e:
+    except Exception as e:  # Catch exception to send as response message.
         logger.exception(e)
         yaml_response = ResponseMessage(job.name, request_id, response_states.failure,
                                         "%s. See sqslistener logs for a complete stack trace." % str(e))

@@ -18,9 +18,9 @@
 
 from sqslistener import SQSListener
 
-def start_sqslistener(configfile_path):
-    listener = SQSListener(listener_config_path=configfile_path)
+def start_sqslistener():
+    listener = SQSListener()
     listener.start_polling()
 
 if __name__ == "__main__":
-    start_sqslistener(None)
+    start_sqslistener()

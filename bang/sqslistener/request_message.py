@@ -18,66 +18,43 @@
 
 import yaml
 import logging
-from boto.sqs.message import Message
 
 logger = logging.getLogger("SQSListener")
+
 
 class RequestMessageException(Exception):
     pass
 
-class MissingDataRequestMessageException(RequestMessageException):
+class EmptyBodyRequestMessageException(RequestMessageException):
     pass
 
-class NoneMessageRequestMessageException(MissingDataRequestMessageException):
-    pass
-
-class InvalidMessageException(RequestMessageException):
-    pass
-
-class MissingRequestIdRequestMessageException(MissingDataRequestMessageException):
-    pass
-
-class EmptyBodyRequestMessageException(MissingDataRequestMessageException):
-    pass
-
-class MissingRequestIdRequestMessageException(MissingDataRequestMessageException):
-    pass
-
-class MissingJobNameRequestMessageException(MissingDataRequestMessageException):
+class MissingJobNameRequestMessageException(RequestMessageException):
     pass
 
 
 class RequestMessage:
-    def __init__(self, message=None):
-        if message is None:
-            raise NoneMessageRequestMessageException("Message was not instantiated.")
-        if type(message) is Message:
-            yaml_message_body = message.get_body()
-            self.parse_yaml(yaml_message_body)
-        else:
-            raise InvalidMessageException("Incoming Message was invalid. Was not converted to boto Message type:\n%s" % str(message))
+    def __init__(self, message):
+        yaml_message_body = message.get_body()
+        self.job_name = None
+        self.request_id = None
+        self.job_parameters = None
+        self.parse_yaml(yaml_message_body)
 
+    # Raise helpful error messages to be seen by response-queue consumer/client.
     def parse_yaml(self, message_body):
-        if message_body is None:
-            raise EmptyBodyRequestMessageException("Message body cannot be None.")
+        if not message_body:
+            raise EmptyBodyRequestMessageException("Message must have message body.")
 
         yaml_message_body = yaml.safe_load(message_body)
-        if yaml_message_body is None:
-            raise EmptyBodyRequestMessageException("Can't have an empty message body.")
 
         try:
             self.job_name = yaml_message_body.keys()[0]
         except AttributeError, e:
-            raise MissingJobNameRequestMessageException("Unable to get job name yaml key from message: %s" % str(e))
-
-        if yaml_message_body[self.job_name] is None:
-            raise MissingJobNameRequestMessageException("Request messages must contain a body.")
-
-        if "request_id" not in yaml_message_body[self.job_name]:
-            raise MissingRequestIdRequestMessageException("Request messages must contain a request id.")
+            raise MissingJobNameRequestMessageException("Unable to get job name yaml key from request message: %s" % str(e))
 
         self.request_id = yaml_message_body[self.job_name]['request_id']
-        if yaml_message_body[self.job_name].has_key("parameters"):
+
+        if 'parameters' in yaml_message_body[self.job_name]:
             self.job_parameters = yaml_message_body[self.job_name]["parameters"]
         else:
             self.job_parameters = None

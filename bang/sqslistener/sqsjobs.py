@@ -31,32 +31,27 @@ class SQSJobsError(Exception):
     pass
 
 class SQSJobs():
-    """SQS Jobs"""
     def __init__(self):
-        pass
+        self.jobs_yaml = None
 
     def load_jobs_from_yaml_object(self, yaml_object):
         self.jobs_yaml = yaml_object
 
     def load_jobs_from_file(self, jobs_definition_path):
-        if os.path.exists(jobs_definition_path):
-            with open(jobs_definition_path, 'rt') as f:
-                self.jobs_yaml = yaml.safe_load(f.read())
-        else:
-            raise SQSJobsError("No job definition found at: " + jobs_definition_path)
+        with open(jobs_definition_path, 'rt') as f:
+            self.jobs_yaml = yaml.safe_load(f.read())
 
     def generate_job(self, job_name, parameters=()):
         try:
-            bang_stacks = self.jobs_yaml[job_name]["bang-stacks"]
+            bang_stacks = self.jobs_yaml.get(job_name).get("bang-stacks")
             return SQSJob(job_name, bang_stacks, parameters)
 
         except KeyError, e:
             logger.exception("YAML missing key in jobs config: %s" % str(e))
             raise SQSJobError("Missing job from jobs yaml: %s " % e)
 
-
 class SQSJob():
-    """A single job"""
+    # A single job.
     def __init__(self, name, bang_stacks, parameters=None):
         self.name = name
         self.bang_stacks = bang_stacks  # Paths to yaml files to be merged for job.
